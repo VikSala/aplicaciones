@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+    <t t-name="web_widget_x2many_2d_matrix.X2Many2DMatrixField">
+        <div class="table-responsive">
+            <X2Many2DMatrixRenderer
+                list="list"
+                matrixFields="props.matrixFields"
+                showRowTotals="props.showRowTotals"
+                showColumnTotals="props.showColumnTotals"
+                readonly="props.readonly"
+                canOpen="props.canOpen"
+                canCreate="props.canCreate"
+                canWrite="props.canWrite"
+                canQuickCreate="props.canQuickCreate"
+                canCreateEdit="props.canCreateEdit"
+                domain="props.domain"
+            />
+        </div>
+    </t>
+</templates>
