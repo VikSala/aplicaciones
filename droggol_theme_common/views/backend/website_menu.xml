@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="website_menus_form_view_inherit_droggol_theme_common" model="ir.ui.view">
+        <field name="name">website.menu.view.form.inherit</field>
+        <field name="model">website.menu</field>
+        <field name="inherit_id" ref="website.website_menus_form_view"/>
+        <field name="arch" type="xml">
+            <field name="is_mega_menu" position="after">
+                <field name="dr_menu_label_id"/>
+                <label for="dr_is_highlight_menu" />
+                <div class="d-flex align-items-center">
+                    <field name="dr_is_highlight_menu" class="w-auto m-0 me-1"/>
+                    <field name="dr_highlight_menu_bg_color" widget="color" invisible="dr_is_highlight_menu == False" class="w-auto m-0 me-1"/>
+                    <field name="dr_highlight_menu_text_color" widget="color" invisible="dr_is_highlight_menu == False" class="w-auto m-0"/>
+                </div>
+                <field name="dr_menu_visible_on"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="menu_tree_inherit_droggol_theme_common" model="ir.ui.view">
+        <field name="name">website.menu.tree.inherit.droggol.theme.common</field>
+        <field name="model">website.menu</field>
+        <field name="inherit_id" ref="website.menu_tree"/>
+        <field name="arch" type="xml">
+            <field name="url" position="after">
+                <field name="dr_menu_label_id"/>
+                <field name="dr_is_highlight_menu"/>
+                <field name="dr_menu_visible_on"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

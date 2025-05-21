@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="dr_pwa_screenshots_view_form" model="ir.ui.view">
+        <field name="name">dr.pwa.screenshots.view.form</field>
+        <field name="model">dr.pwa.screenshots</field>
+        <field name="arch" type="xml">
+            <form string="Screenshots">
+                <sheet>
+                    <div class="alert alert-info oe_edit_only" role="alert">
+                        Screenshot type must be JPG.
+                        <div><a href="https://web.dev/articles/add-manifest#screenshots" target="_blank">Know more</a> about screenshots.</div>
+                    </div>
+                    <field name="image" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="sizes" placeholder="540x420"/>
+                            <field name="form_factor"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="dr_pwa_screenshots_view_tree" model="ir.ui.view">
+        <field name="name">dr.pwa.screenshots.view.list</field>
+        <field name="model">dr.pwa.screenshots</field>
+        <field name="arch" type="xml">
+            <list string="Screenshots">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="sizes"/>
+                <field name="form_factor"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="dr_pwa_screenshots_action" model="ir.actions.act_window">
+        <field name="name">PWA Screenshots</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">dr.pwa.screenshots</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

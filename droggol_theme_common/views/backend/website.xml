@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        Due to wrong placemenent odoo test case we need to enable few menus
+        Sale root menu is mandatory to test product configurator test case.
+        See: https://github.com/odoo/odoo/blob/15.0/addons/sale_product_configurator/static/tests/tours/product_configurator_advanced_ui.js#L12
+    -->
+    <record id="sale.sale_menu_root" model="ir.ui.menu">
+        <field name="active" eval="True"/>
+    </record>
+
+    <record id="sale.menu_sale_quotations" model="ir.ui.menu">
+        <field name="active" eval="True"/>
+    </record>
+
+    <record id="view_website_sale_website_form" model="ir.ui.view">
+        <field name="name">website_sale.website.form</field>
+        <field name="model">website</field>
+        <field name="inherit_id" ref="website_sale.view_website_sale_website_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='shop_extra_field_ids']/list" position="inside">
+                <field name="dr_label"/>
+            </xpath>
+            <page name="page_product_page_extra_fields" position="after">
+                <page string="Theme Prime" name="theme_prime">
+                    <group>
+                        <group string="Global">
+                            <field name="dr_product_tab_ids" widget="many2many_tags" context="{'default_content_type': 'tab'}" domain="[('content_type', '=', 'tab')]"/>
+                            <field name="dr_product_info_ids" widget="many2many_tags" context="{'default_content_type': 'offer_popup'}" domain="[('content_type', '=', 'offer_popup')]"/>
+                            <div>Display on all products belong to this website</div>
+                        </group>
+                    </group>
+                </page>
+            </page>
+        </field>
+    </record>
+
+</odoo>

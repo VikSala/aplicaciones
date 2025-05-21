@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="dr_website_content_view_form" model="ir.ui.view">
+        <field name="name">dr.website.content.view.form</field>
+        <field name="model">dr.website.content</field>
+        <field name="arch" type="xml">
+            <form string="Content">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object" name="open_design_page" icon="fa-paint-brush">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    Design
+                                </span>
+                                <span class="o_stat_text">
+                                    Content
+                                </span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="content_type" widget="radio" readonly="id"/>
+                            <field name="identifier"/>
+                            <field name="product_info_visibility" widget="radio" options="{'horizontal': true}" invisible="content_type in ['tab', 'attribute_popup']"/>
+                            <field name="popup_style" widget="radio" options="{'horizontal': true}" invisible="content_type in ['tab']"/>
+                            <field name="description" invisible="content_type in ['tab', 'attribute_popup'] or product_info_visibility in ['link']"/>
+                            <field name="active" invisible="1"/> <!-- Need for archive action  -->
+                        </group>
+                        <group>
+                            <field name="image" widget="image" options="{'size': [90, 90]}" invisible="content_type in ['tab', 'attribute_popup'] or product_info_visibility in ['link']"/>
+                            <field name="icon" invisible="content_type == 'attribute_popup'"/>
+                            <div class="o_row fst-italic text-muted" colspan="2" invisible="content_type == 'attribute_popup'">
+                                You can find icon at <a href="https://fontawesome.com/v4.7.0/icons/" target="_blank">FontAwesome</a>.
+                            </div>
+                            <div class="o_row fst-italic text-muted" colspan="2" invisible="content_type in ['tab', 'attribute_popup'] or product_info_visibility in ['link']">
+                                If an image is set, it will be used as the icon; otherwise, the icon field will be used.
+                            </div>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="tab_products" string="Products" invisible="content_type in ['offer_popup', 'attribute_popup']">
+                            <field name="dr_tab_products_ids" />
+                        </page>
+                        <page name="offer_products" string="Products" invisible="content_type in ['tab', 'attribute_popup']">
+                            <field name="dr_offer_products_ids" />
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="dr_website_content_view_tree" model="ir.ui.view">
+        <field name="name">dr.website.content.view.list</field>
+        <field name="model">dr.website.content</field>
+        <field name="arch" type="xml">
+            <list string="Content">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="identifier"/>
+                <field name="content_type" widget="badge" decoration-info="content_type == 'tab'" decoration-success="content_type == 'offer_popup'" decoration-warning="content_type == 'attribute_popup'"/>
+                <button type="object" name="open_design_page" title="Design" string="Design" icon="fa-paint-brush"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="dr_website_content_view_search" model="ir.ui.view">
+        <field name="name">dr.website.content.view.search</field>
+        <field name="model">dr.website.content</field>
+        <field name="arch" type="xml">
+            <search string="Content">
+                <field name="name"/>
+                <field name="identifier"/>
+                <filter string="Product Tab" name="product_tab" domain="[('content_type', '=', 'tab')]"/>
+                <filter string="Product Info" name="product_info" domain="[('content_type', '=', 'offer_popup')]"/>
+                <filter string="Attribute Guide" name="attribute_guide" domain="[('content_type', '=', 'attribute_popup')]"/>
+                <separator/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Type" name="group_by_content_type" domain="[]" context="{'group_by': 'content_type'}"/>
+                </group>
+                <searchpanel>
+                    <field name="content_type" icon="fa-cube" groupby="content_type" limit="0"/>
+                </searchpanel>
+            </search>
+        </field>
+    </record>
+
+    <record id="dr_website_content_action" model="ir.actions.act_window">
+        <field name="name">Contents</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">dr.website.content</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_dr_website_content"
+        action="dr_website_content_action"
+        parent="website_sale.menu_catalog" sequence="5"/>
+
+</odoo>

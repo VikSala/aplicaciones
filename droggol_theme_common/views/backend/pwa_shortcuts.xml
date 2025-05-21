@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="dr_pwa_shortcuts_view_form" model="ir.ui.view">
+        <field name="name">dr.pwa.shortcuts.view.form</field>
+        <field name="model">dr.pwa.shortcuts</field>
+        <field name="arch" type="xml">
+            <form string="Shortcuts">
+                <sheet>
+                    <div class="alert alert-info oe_edit_only" role="alert">
+                        The icon must be a 192x192 PNG.
+                    </div>
+                    <field name="icon" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="short_name"/>
+                            <field name="url"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="description" string="Description">
+                            <field name="description"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="dr_pwa_shortcuts_view_tree" model="ir.ui.view">
+        <field name="name">dr.pwa.shortcuts.view.list</field>
+        <field name="model">dr.pwa.shortcuts</field>
+        <field name="arch" type="xml">
+            <list string="Shortcuts">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="short_name"/>
+                <field name="url"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="dr_pwa_shortcuts_action" model="ir.actions.act_window">
+        <field name="name">PWA Shortcuts</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">dr.pwa.shortcuts</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

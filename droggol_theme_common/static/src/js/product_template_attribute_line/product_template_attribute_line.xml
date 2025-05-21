@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+    <t t-inherit="sale.ptav_color" t-inherit-mode="extension">
+        <xpath expr="//t[@t-set='img_style']" position="after">
+            <t t-if="this.props.extraInfo[ptav.id].dr_thumb_image" t-set="img_style"
+                t-value="this.props.extraInfo[ptav.id].dr_thumb_image ? 'background:url(/web/image/product.template.attribute.value/'+ptav.id+'/dr_thumb_image); background-size:cover;' : ''"
+            />
+        </xpath>
+    </t>
+
+    <t t-name="droggolSaleProductConfigurator.ptav_radio_image">
+        <ul class="list-inline list-unstyled flex-grow-1 mb-0">
+            <li t-foreach="this.props.attribute_values" t-as="ptav" t-key="ptav.id"
+                t-att-class="{'active': this.props.selected_attribute_value_ids.includes(ptav.id)}"
+                style="width: 50px;"
+                class="o_sale_product_configurator_ptav_pills list-inline-item">
+                <t t-set="img_src" t-value="'/web/static/img/placeholder.png'"/>
+                <t t-if="props.extraInfo[ptav.id].dr_image">
+                    <t t-set="img_src" t-value="'/web/image/product.template.attribute.value/'+ptav.id+'/dr_image'"/>
+                </t>
+                <label
+                    class="btn btn-outline-secondary p-1"
+                    t-att-class="{ 'css_not_available': ptav.excluded }"
+                    t-attf-for="ptav-{{ptav.id}}-input">
+                        <img t-attf-src="{{img_src}}" class="img-fluid" style="height: 40px; width: 40px; object-fit: contain;"/>
+                </label>
+                <BadgeExtraPrice
+                    t-if="ptav.price_extra"
+                    price="ptav.price_extra"
+                    currencyId="this.env.currency.id"/>
+                <input
+                    class="btn-check"
+                    type="radio"
+                    t-attf-id="ptav-{{ptav.id}}-input"
+                    t-att-value="ptav.id"
+                    t-att-name="'ptal-' + this.props.id"
+                    t-att-checked="this.props.selected_attribute_value_ids.includes(ptav.id)"
+                    t-on-change="updateSelectedPTAV"/>
+            </li>
+        </ul>
+    </t>
+
+</templates>
