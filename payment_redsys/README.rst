@@ -2,6 +2,10 @@
    :target: https://odoo-community.org/get-involved?utm_source=readme
    :alt: Odoo Community Association
 
+1. sudo docker exec -it odoo0-odoo-1 bash
+2. pip install pycryptodome --break-system-packages
+3. exit y reinicia odoo0
+
 =======================
 Pasarela de pago Redsys
 =======================
