@@ -1,4 +1,6 @@
 from odoo import models, api
+import requests
+import io
 
 class SaleOrder(models.Model):
     _inherit = "sale.order"
@@ -25,5 +27,17 @@ class SaleOrder(models.Model):
                 )
             except Exception as e:
                 order.message_post(body=f"⚠️ Error al enviar correo automático: {e}")
+
+            #Imprimir
+            try:
+                # Acción de descarga directa del PDF
+                pdf_url = f"/report/pdf/sale.report_saleorder/{order.id}"
+                return {
+                    "type": "ir.actions.act_url",
+                    "url": pdf_url,
+                    "target": "new",  # abre en nueva pestaña
+                }
+            except Exception as e:
+                order.message_post(body=f"⚠️ Error al generar descarga PDF: {e}")
 
         return res
