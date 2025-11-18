@@ -17,14 +17,22 @@ class OptimaConnector(models.Model):
     @api.model
     def create_sale_order_from_api(self, vals):
         """Recibe un pedido vía XML-RPC y lo convierte en pedido de venta."""
-        partner_vat = vals.get("partner_vat")
-        if not partner_vat:
-            raise UserError("No se ha proporcionado el VAT (NIF) del cliente.")
+        partner_vat = (vals.get("partner_vat") or "").strip()
+        partner_name = (vals.get("partner_name") or "").strip()
 
-        partner = self.env["res.partner"].search([("vat", "=", partner_vat)], limit=1)
+        # Buscar cliente por VAT o nombre
+        partner = None
+        if partner_vat:
+            partner = self.env["res.partner"].search([("vat", "=", partner_vat)], limit=1)
+        if not partner and partner_name:
+            partner = self.env["res.partner"].search([("name", "=", partner_name)], limit=1)
+
         if not partner:
-            raise UserError(f"No se encontró ningún cliente con VAT {partner_vat}.")
+            raise UserError(
+                f"No se encontró ningún cliente con VAT '{partner_vat}' ni nombre '{partner_name}'."
+            )
 
+        # Construir líneas del pedido
         order_lines = []
         for l in vals.get("order_lines", []):
             product = self.env["product.product"].search([
@@ -40,6 +48,7 @@ class OptimaConnector(models.Model):
                 "name": product.name,
             }))
 
+        # Crear pedido de venta
         sale_vals = {
             "partner_id": partner.id,
             "origin": vals.get("order_ref"),
@@ -48,6 +57,7 @@ class OptimaConnector(models.Model):
 
         order = self.env["sale.order"].create(sale_vals)
 
+        # Registrar la creación en optima.connector
         self.create({
             "name": vals.get("order_ref"),
             "partner_id": partner.id,
@@ -55,4 +65,9 @@ class OptimaConnector(models.Model):
             "state": "processed",
         })
 
-        return {"status": "success", "order_id": order.id, "order_name": order.name}
+        return {
+            "status": "success",
+            "order_id": order.id,
+            "order_name": order.name,
+            "partner": partner.display_name,
+        }

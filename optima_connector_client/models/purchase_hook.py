@@ -30,7 +30,8 @@ class PurchaseOrder(models.Model):
                 })
 
             vals = {
-                "partner_vat": self.partner_id.vat,
+                "partner_vat": self.company_id.vat,
+                "partner_name": self.company_id.name,
                 "order_ref": self.name,
                 "order_lines": order_lines,
             }
