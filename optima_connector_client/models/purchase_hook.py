@@ -8,7 +8,7 @@ class PurchaseOrder(models.Model):
         """Envía el pedido de compra al Odoo del proveedor (Óptima)."""
         res = super().button_confirm()
 
-        OPTIMA_URL = "http://79.72.55.217:8069/"  # dominio del proveedor
+        OPTIMA_URL = "http://158.179.220.107:8069/"  # dominio del proveedor
         OPTIMA_DB = "odoo0"
         OPTIMA_USER = "admin"
         OPTIMA_PASS = "admin"
