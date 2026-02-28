@@ -6,6 +6,11 @@ $x2many_2d_matrix_max_height: 450px;
         overflow-y: auto;
     }
 
+    /* Prevent having double border for monetary fields (for instance if you use web_theme_classic) */
+    span.o_input:has(span.o_monetary_ghost_value) + input.o_input {
+        border-color: transparent;
+    }
+
     .o_input {
         padding: 1px 0px;
     }
@@ -16,6 +21,7 @@ $x2many_2d_matrix_max_height: 450px;
             position: sticky;
             top: 0;
             z-index: 1;
+            background-color: $o-gray-100;
 
             &.total {
                 right: 0;
@@ -33,6 +39,10 @@ $x2many_2d_matrix_max_height: 450px;
                         text-align: left;
                     }
 
+                    .o_monetary_ghost_value {
+                        width: 100%;
+                    }
+
                     &:first-child {
                         position: sticky;
                         left: 0;
@@ -40,7 +50,9 @@ $x2many_2d_matrix_max_height: 450px;
                         border-right-width: 1px;
                         border-right-color: $gray-300;
                         border-right-style: solid;
+                        background-color: $o-view-background-color;
                     }
+
                     &.row-total {
                         padding: 0.5rem 0.75rem;
                         font-weight: bold;
@@ -49,6 +61,7 @@ $x2many_2d_matrix_max_height: 450px;
                         border-left-width: 1px;
                         border-left-color: $gray-300;
                         border-left-style: solid;
+                        background-color: $o-view-background-color;
                     }
                 }
             }
@@ -58,6 +71,7 @@ $x2many_2d_matrix_max_height: 450px;
             text-align: right;
             position: sticky;
             bottom: 0;
+            background-color: $o-gray-100;
 
             &.col-total {
                 padding: 0.75rem;
