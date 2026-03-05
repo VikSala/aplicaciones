@@ -6,7 +6,7 @@
     <field name="inherit_id" ref="sale.view_order_form"/>
     <field name="arch" type="xml">
             <xpath expr="//field[@name='order_line']/list/field[@name='name']" position="after">
-                <field name="x_product_image_line" widget="image" readonly="1"/>
+                <field name="x_product_image_line" widget="image" optional="hide"/>
             </xpath>
     </field>
 </record>
