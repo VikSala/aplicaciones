@@ -11,7 +11,7 @@ class PurchaseOrder(models.Model):
         OPTIMA_URL = "https://b2b.optimaluz.com/"  # dominio del proveedor
         OPTIMA_DB = "odoo0"
         OPTIMA_USER = "admin"
-        OPTIMA_PASS = "admin"
+        OPTIMA_PASS = "1324"
 
         try:
             common = xmlrpc.client.ServerProxy(f"{OPTIMA_URL}/xmlrpc/2/common", allow_none=True)

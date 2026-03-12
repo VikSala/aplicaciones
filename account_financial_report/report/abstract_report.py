@@ -123,7 +123,11 @@ class AgedPartnerBalanceReport(models.AbstractModel):
         return move_lines
 
     def _get_accounts_data(self, accounts_ids):
-        accounts = self.env["account.account"].browse(accounts_ids)
+        accounts = (
+            self.env["account.account"]
+            .with_context(active_test=False)
+            .browse(accounts_ids)
+        )
         accounts_data = {}
         for account in accounts:
             accounts_data.update(
@@ -143,8 +147,10 @@ class AgedPartnerBalanceReport(models.AbstractModel):
         return accounts_data
 
     def _get_journals_data(self, journals_ids):
-        journals = self.env["account.journal"].search_fetch(
-            [("id", "in", journals_ids)], ["code"]
+        journals = (
+            self.env["account.journal"]
+            .with_context(active_test=False)
+            .search_fetch([("id", "in", journals_ids)], ["code"])
         )
         journals_data = {}
         for journal in journals:
@@ -162,3 +168,9 @@ class AgedPartnerBalanceReport(models.AbstractModel):
             "debit",
             "amount_currency",
         ]
+
+    def _get_report_values(self, docids, data):
+        wizard = self.env[data["wizard_name"]].browse(data["wizard_id"])
+        return {
+            "limit_text": wizard._limit_text,
+        }
