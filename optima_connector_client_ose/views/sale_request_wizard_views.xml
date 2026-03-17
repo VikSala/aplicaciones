@@ -1,0 +1,54 @@
+<odoo>
+
+    <!-- WIZARD -->
+    <record id="view_request_optima_wizard_form" model="ir.ui.view">
+        <field name="name">sale.order.request.optima.wizard.form</field>
+        <field name="model">sale.order.request.optima.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Pedir a Óptima">
+
+                <field name="sale_id" invisible="1"/>
+
+                <field name="product_lines">
+                    <tree editable="bottom">
+                        <field name="product_id"/>
+                        <field name="quantity"/>
+                        <field name="uom_id"/>
+                    </tree>
+                </field>
+
+                <footer>
+                    <button name="action_request"
+                            string="Pedir"
+                            type="object"
+                            class="btn-primary"/>
+
+                    <button name="action_request_all"
+                            string="Pedir todo"
+                            type="object"
+                            class="btn-primary"/>
+
+                    <button string="Cancelar"
+                            special="cancel"
+                            class="btn-secondary"/>
+                </footer>
+
+            </form>
+        </field>
+    </record>
+	
+	<record id="view_sale_order_form_inherit_optima" model="ir.ui.view">
+		<field name="name">sale.order.form.optima.button</field>
+		<field name="model">sale.order</field>
+		<field name="inherit_id" ref="sale.view_order_form"/>
+		<field name="arch" type="xml">
+			<xpath expr="//header" position="inside">
+				<button name="action_open_request_optima"
+						type="object"
+						string="Pedir a OSE"
+						class="btn-primary"/>
+			</xpath>
+		</field>
+	</record>
+
+</odoo>

@@ -8,6 +8,14 @@ class PurchaseOrder(models.Model):
         """Envía el pedido de compra al Odoo del proveedor (Óptima)."""
         res = super().button_confirm()
         
+        # --- FILTRADO DE SEGURIDAD ---
+        nombre_partner = self.partner_id.name
+        es_optima = ("Óptima Soluciones Eficientes, S.L." in nombre_partner)
+
+        if not es_optima:
+            # Si no es Óptima, salimos sin chatter
+            return res
+
         OPTIMA_URL = "https://b2b.optimaluz.com/"  # dominio del proveedor
         OPTIMA_DB = "odoo0"
         OPTIMA_USER = "admin"
@@ -46,6 +54,33 @@ class PurchaseOrder(models.Model):
             self.message_post(body=f"⚠️ Error enviando pedido a Óptima: {e}")
         return res
 
+class SaleOrder(models.Model):
+    _inherit = "sale.order"
+
+    def action_open_request_optima(self):
+        self.ensure_one()
+
+        lines = []
+        for l in self.order_line:
+            lines.append((0, 0, {
+                "product_id": l.product_id.id,
+                "quantity": l.product_uom_qty,
+                "uom_id": l.product_uom.id,
+                "sale_line_id": l.id,
+            }))
+
+        wizard = self.env["sale.order.request.optima.wizard"].create({
+            "sale_id": self.id,
+            "product_lines": lines,
+        })
+
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "sale.order.request.optima.wizard",
+            "view_mode": "form",
+            "res_id": wizard.id,
+            "target": "new",
+        }
 
 class StockReturnPicking(models.TransientModel):
     _inherit = "stock.return.picking"
@@ -94,6 +129,13 @@ class StockReturnPicking(models.TransientModel):
         if not purchase:
             return
 
+        # --- FILTRADO DE SEGURIDAD ---
+        nombre_partner = purchase.partner_id.name
+        es_optima = ("Óptima Soluciones Eficientes, S.L." in nombre_partner)
+
+        if not es_optima:
+            return
+        
         # --- escribir comentario si está vacío ---
         if not purchase.x_comentarios:
 
