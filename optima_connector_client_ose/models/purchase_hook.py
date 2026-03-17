@@ -59,6 +59,9 @@ class SaleOrder(models.Model):
 
     def action_open_request_optima(self):
         self.ensure_one()
+        
+        if self.state != "sale":
+            raise UserError("El pedido debe estar confirmado para pedir a OSE")
 
         lines = []
         for l in self.order_line:

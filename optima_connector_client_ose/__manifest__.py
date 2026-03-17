@@ -12,4 +12,9 @@
     "data": [
         "views/sale_request_wizard_views.xml",
     ],
+    "depends": [
+        "base",
+        "purchase",
+        "sale",
+    ],
 }

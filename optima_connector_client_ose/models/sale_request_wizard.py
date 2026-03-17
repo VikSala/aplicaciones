@@ -38,6 +38,13 @@ class SaleOrderRequestOptimaWizard(models.TransientModel):
             if not all_lines and qty <= 0:
                 continue
 
+            if l.sale_line_id and qty > l.sale_line_id.product_uom_qty:
+                raise UserError(
+                    f"No puedes pedir más cantidad que la del pedido de venta.\n"
+                    f"Producto: {l.product_id.display_name}\n"
+                    f"Máximo permitido: {l.sale_line_id.product_uom_qty}"
+                )
+            
             lines.append((0, 0, {
                 "product_id": l.product_id.id,
                 "product_qty": qty,
