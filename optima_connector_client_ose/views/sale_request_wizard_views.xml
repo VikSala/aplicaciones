@@ -47,7 +47,7 @@
 						type="object"
 						string="Pedir a OSE"
 						class="btn-primary"
-						attrs="{'invisible': [('state', '!=', 'sale')]}"/>
+						invisible="state != 'sale'"/>
 			</xpath>
 		</field>
 	</record>
