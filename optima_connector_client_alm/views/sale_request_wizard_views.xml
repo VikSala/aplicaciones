@@ -1,0 +1,58 @@
+<odoo>
+
+    <!-- WIZARD -->
+    <record id="view_picking_request_optima_wizard_form" model="ir.ui.view">
+		<field name="name">stock.picking.request.optima.wizard.form</field>
+		<field name="model">stock.picking.request.optima.wizard</field>
+		<field name="arch" type="xml">
+			<form string="Ceder a Óptima">
+
+				<field name="picking_id" invisible="1"/>
+
+				<field name="product_lines">
+					<list editable="bottom">
+						<field name="product_id"/>
+						<field name="quantity"/>
+						<field name="uom_id"/>
+					</list>
+				</field>
+
+				<footer>
+					<button name="action_ceder"
+							string="Ceder"
+							type="object"
+							class="btn-primary"/>
+
+					<button name="action_ceder_all"
+							string="Ceder todo"
+							type="object"
+							class="btn-primary"/>
+
+					<button string="Cancelar"
+							special="cancel"
+							class="btn-secondary"/>
+				</footer>
+
+			</form>
+		</field>
+	</record>
+	
+	<record id="view_picking_form_inherit_optima_ceder" model="ir.ui.view">
+		<field name="name">stock.picking.form.optima.ceder.button</field>
+		<field name="model">stock.picking</field>
+		<field name="inherit_id" ref="stock.view_picking_form"/>
+		<field name="arch" type="xml">
+
+			<xpath expr="//header" position="inside">
+				<button name="action_open_request_optima_from_picking"
+						type="object"
+						string="Ceder a OSE"
+						class="btn-primary"
+						invisible="state != 'done' or picking_type_code != 'incoming'"/>
+			</xpath>
+
+		</field>
+	</record>
+
+
+</odoo>
