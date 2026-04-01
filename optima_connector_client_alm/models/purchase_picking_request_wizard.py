@@ -52,20 +52,31 @@ class StockPickingRequestOptimaWizard(models.TransientModel):
             if not all_lines and qty <= 0:
                 continue
 
-            # Seguridad: no ceder más de lo recibido
-            if l.move_id and qty > l.move_id.quantity_done:
-                raise UserError(
-                    f"No puedes ceder más cantidad que la recibida.\n"
-                    f"Producto: {l.product_id.display_name}\n"
-                    f"Máximo permitido: {l.move_id.quantity_done}"
-                )
+            # Seguridad: no ceder más de lo recibido o cedido
+            if l.move_id
+                if qty > l.move_id.quantity_done:
+                    raise UserError(
+                        f"No puedes ceder más cantidad que la recibida.\n"
+                        f"Producto: {l.product_id.display_name}\n"
+                        f"Máximo permitido: {l.move_id.quantity_done}"
+                    )
 
+                max_qty = l.move_id.quantity_done - l.cedido_qty
+
+                if qty > max_qty:
+                    raise UserError(
+                        f"No puedes ceder más de lo disponible.\n"
+                        f"Producto: {l.product_id.display_name}\n"
+                        f"Disponible: {max_qty}"
+                    )
+            
             lines.append((0, 0, {
                 "product_id": l.product_id.id,
                 "product_uom_qty": qty,
                 "price_unit": 0.0,
                 "name": l.product_id.name,
                 "product_uom": l.uom_id.id,
+                "x_source_move_id": l.move_id.id,
             }))
 
         if not lines:
@@ -100,14 +111,23 @@ class StockPickingRequestOptimaWizard(models.TransientModel):
         picking = self.env["stock.picking"].browse(picking_id)
 
         lines = []
+        SaleLine = self.env["sale.order.line"]
 
         for move in picking.move_ids_without_package:
             if move.quantity_done <= 0:
                 continue
 
+            cedido = sum(SaleLine.search([
+                ("x_source_move_id", "=", move.id),
+                ("state", "in", ["sale", "done"])
+            ]).mapped("product_uom_qty"))
+
+            disponible = move.quantity_done - cedido
+            
             lines.append((0, 0, {
                 "product_id": move.product_id.id,
-                "quantity": move.quantity_done,
+                "quantity": disponible,
+                "cedido_qty": cedido,
                 "uom_id": move.product_uom.id,
                 "move_id": move.id,
             }))
@@ -126,7 +146,8 @@ class StockPickingRequestOptimaLine(models.TransientModel):
         ondelete="cascade"
     )
 
-    product_id = fields.Many2one("product.product", required=True)
+    product_id = fields.Many2one("product.product", string="Producto", required=True)
     quantity = fields.Float(string="Cantidad")
-    uom_id = fields.Many2one("uom.uom", string="UdM")
+    cedido_qty = fields.Float(string="Cedido", readonly=True)
+    uom_id = fields.Many2one("uom.uom", string="Unidad")
     move_id = fields.Many2one("stock.move")

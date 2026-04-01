@@ -1,6 +1,13 @@
-from odoo import models
+from odoo import models, fields
 import xmlrpc.client
 
+class SaleOrderLine(models.Model):
+    _inherit = "sale.order.line"
+
+    x_source_move_id = fields.Many2one(
+        "stock.move",
+        string="Movimiento origen"
+    )
 
 class SaleOrder(models.Model):
     _inherit = "sale.order"

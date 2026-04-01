@@ -5,11 +5,10 @@
     "author": "Óptima Iluminación Profesional",
     "website": "https://optimaluz.com",
     "license": "LGPL-3",
-    "depends": ["purchase"],
-    "data": [],
     "installable": True,
     "application": False,
     "data": [
+        "security/ir.model.access.csv",
         "views/sale_request_wizard_views.xml",
     ],
     "depends": [
