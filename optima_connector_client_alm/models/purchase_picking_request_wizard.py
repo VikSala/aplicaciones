@@ -53,7 +53,7 @@ class StockPickingRequestOptimaWizard(models.TransientModel):
                 continue
 
             # Seguridad: no ceder más de lo recibido o cedido
-            if l.move_id
+            if l.move_id:
                 if qty > l.move_id.quantity_done:
                     raise UserError(
                         f"No puedes ceder más cantidad que la recibida.\n"
