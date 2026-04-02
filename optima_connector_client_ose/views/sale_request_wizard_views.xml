@@ -1,6 +1,6 @@
 <odoo>
 
-    <!-- WIZARD -->
+    <!-- WIZARD: Pedir a Óptima -->
     <record id="view_request_optima_wizard_form" model="ir.ui.view">
         <field name="name">sale.order.request.optima.wizard.form</field>
         <field name="model">sale.order.request.optima.wizard</field>

@@ -152,3 +152,83 @@ class OptimaConnector(models.Model):
             "sale_order": sale.name,
             "return_type": return_type,
         }
+        
+    @api.model
+    def create_purchase_order_from_api(self, vals):
+
+        if not vals:
+            raise UserError("No se recibieron datos")
+
+        # --- DATOS ENTRADA ---
+        order_lines = vals.get("order_lines", [])
+        partner_name = vals.get("partner_name")
+        partner_vat = vals.get("partner_vat")
+        order_ref = vals.get("order_ref")
+        origin = vals.get("origin")
+
+        if not order_lines:
+            raise UserError("No hay líneas para crear el pedido")
+
+        # --------------------------------------------------
+        # 🧩 1. BUSCAR / CREAR PARTNER (CLIENTE ORIGEN)
+        # --------------------------------------------------
+
+        partner = self.env["res.partner"].search([
+            ("vat", "=", partner_vat)
+        ], limit=1)
+
+        if not partner:
+            partner = self.env["res.partner"].create({
+                "name": partner_name or "Cliente API",
+                "vat": partner_vat,
+                "supplier_rank": 1,
+            })
+
+        # --------------------------------------------------
+        # 🧩 2. CREAR LÍNEAS DE COMPRA
+        # --------------------------------------------------
+
+        lines = []
+
+        for l in order_lines:
+
+            product_code = l.get("product_code")
+            qty = l.get("quantity")
+            price = l.get("price", 0.0)
+
+            if not product_code:
+                continue
+
+            product = self.env["product.product"].search([
+                ("default_code", "=", product_code)
+            ], limit=1)
+
+            if not product:
+                raise UserError(f"Producto no encontrado: {product_code}")
+
+            lines.append((0, 0, {
+                "product_id": product.id,
+                "product_qty": qty,
+                "price_unit": price,
+                "name": product.name,
+                "product_uom": product.uom_po_id.id,
+            }))
+
+        if not lines:
+            raise UserError("No se pudieron generar líneas válidas")
+
+        # --------------------------------------------------
+        # 🧩 3. CREAR PEDIDO DE COMPRA
+        # --------------------------------------------------
+
+        purchase = self.env["purchase.order"].create({
+            "x_id_interno": vals.get("source_sale_id"),
+            "partner_id": partner.id,
+            "origin": order_ref or origin,
+            "order_line": lines,
+        })
+
+        return {
+            "purchase_id": purchase.id,
+            "purchase_name": purchase.name,
+        }

@@ -1,46 +1,86 @@
-from odoo import models, api
-import requests
-import io
+from odoo import models
+import xmlrpc.client
+
+class PurchaseOrder(models.Model):
+    _inherit = "purchase.order"
+
+    def button_confirm(self):
+        """Envía el pedido de compra al Odoo del proveedor (Óptima)."""
+        res = super().button_confirm()
+        
+        # --- FILTRADO DE SEGURIDAD ---
+        nombre_partner = self.partner_id.name
+        es_optima = ("Óptima Soluciones Eficientes, S.L." in nombre_partner)
+
+        if not es_optima:
+            # Si no es Óptima, salimos sin chatter
+            return res
+
+        OPTIMA_URL = "https://b2b.optimaluz.com/"  # dominio del proveedor
+        OPTIMA_DB = "odoo0"
+        OPTIMA_USER = "admin"
+        OPTIMA_PASS = "1324"
+
+        try:
+            common = xmlrpc.client.ServerProxy(f"{OPTIMA_URL}/xmlrpc/2/common", allow_none=True)
+            uid = common.authenticate(OPTIMA_DB, OPTIMA_USER, OPTIMA_PASS, {})
+            if not uid:
+                raise Exception("❌ No se pudo autenticar con Óptima.")
+
+            models = xmlrpc.client.ServerProxy(f"{OPTIMA_URL}/xmlrpc/2/object", allow_none=True)
+
+            order_lines = []
+            for l in self.order_line:
+                order_lines.append({
+                    "product_code": l.product_id.default_code,
+                    "quantity": l.product_qty,
+                    "price": l.price_unit,
+                })
+
+            vals = {
+                "source_purchase_id": self.id,
+                "partner_vat": self.company_id.vat,
+                "partner_name": self.company_id.name,
+                "order_ref": self.name,
+                "order_lines": order_lines,
+            }
+
+            result = models.execute_kw(
+                OPTIMA_DB, uid, OPTIMA_PASS,
+                "optima.connector", "create_sale_order_from_api", [vals]
+            )
+            self.message_post(body=f"📡 Pedido enviado a Óptima: {result}")
+        except Exception as e:
+            self.message_post(body=f"⚠️ Error enviando pedido a Óptima: {e}")
+        return res
 
 class SaleOrder(models.Model):
     _inherit = "sale.order"
 
-    def action_confirm(self):
-        """Confirma el pedido y envía automáticamente el correo 'Ventas: confirmación de pedido'."""
-        res = super().action_confirm()
+    def action_open_request_optima(self):
+        self.ensure_one()
+        
+        lines = []
+        for l in self.order_line:
+            lines.append((0, 0, {
+                "product_id": l.product_id.id,
+                "quantity": l.product_uom_qty,
+                "uom_id": l.product_uom.id,
+                "sale_line_id": l.id,
+            }))
 
-        for order in self:
-            try:
-                # Buscar la plantilla exacta por nombre
-                template = self.env["mail.template"].search(
-                    [("name", "=", "Ventas: confirmación de pedido")],
-                    limit=1
-                )
-                if not template:
-                    order.message_post(body="⚠️ No se encontró la plantilla 'Ventas: confirmación de pedido'.")
-                    continue
+        wizard = self.env["sale.order.request.optima.wizard"].create({
+            "sale_id": self.id,
+            "product_lines": lines,
+        })
 
-                # Enviar correo
-                mail_id = template.send_mail(order.id, force_send=True)
-                order.message_post(
-                    body=f"📧 Correo enviado automáticamente (Plantilla '{template.name}', mail ID {mail_id})."
-                )
-            except Exception as e:
-                order.message_post(body=f"⚠️ Error al enviar correo automático: {e}")
-
-            #Imprimir
-            try:
-                # Acción de descarga directa del PDF
-                pdf_url = f"/report/pdf/sale.report_saleorder/{order.id}"
-                return {
-                    "type": "ir.actions.act_url",
-                    "url": pdf_url,
-                    "target": "new",  # abre en nueva pestaña
-                }
-            except Exception as e:
-                order.message_post(body=f"⚠️ Error al generar descarga PDF: {e}")
-
-        return res
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "sale.order.request.optima.wizard",
+            "view_mode": "form",
+            "res_id": wizard.id,
+            "target": "new",
+        }
 
 class StockReturnPicking(models.TransientModel):
     _inherit = "stock.return.picking"
@@ -106,7 +146,7 @@ class StockReturnPicking(models.TransientModel):
             }.get(return_type)
 
             if texto:
-                purchase.write({"x_comentarios": "Devuelto a cliente"})
+                purchase.write({"x_comentarios": texto})
 
         # --- preparar líneas ---
         lines = []
@@ -128,8 +168,8 @@ class StockReturnPicking(models.TransientModel):
         }
 
         # --- conexión XMLRPC ---
-        URL = "https://optimaluz.com"
-        DB = "odoo1"
+        URL = "https://b2b.optimaluz.com"
+        DB = "odoo0"
         USER = "admin"
         PASS = "1324"
 
