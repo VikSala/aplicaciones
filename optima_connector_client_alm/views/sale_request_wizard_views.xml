@@ -12,7 +12,7 @@
 				<field name="product_lines">
 					<list editable="bottom">
 						<field name="product_id" string="Producto"/>
-						<field name="quantity" string="Cantidad"/>
+						<field name="quantity" string="Cantidad" readonly="quantity &lt;= 0"/>
 						<field name="cedido_qty" string="Cedido" readonly="1"/>
 						<field name="uom_id" string="Unidades"/>
 					</list>

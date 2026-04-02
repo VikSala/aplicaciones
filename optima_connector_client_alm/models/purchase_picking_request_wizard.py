@@ -46,29 +46,41 @@ class StockPickingRequestOptimaWizard(models.TransientModel):
 
         lines = []
 
+        SaleLine = self.env["sale.order.line"]
+
         for l in self.product_lines:
             qty = l.quantity
 
             if not all_lines and qty <= 0:
                 continue
 
-            # Seguridad: no ceder más de lo recibido o cedido
-            if l.move_id:
-                if qty > l.move_id.quantity:
-                    raise UserError(
-                        f"No puedes ceder más cantidad que la recibida.\n"
-                        f"Producto: {l.product_id.display_name}\n"
-                        f"Máximo permitido: {l.move_id.quantity}"
-                    )
+            # Seguridad
+            moves = self.picking_id.move_ids_without_package.filtered(
+                lambda m: m.product_id.id == l.product_id.id
+            )
 
-                max_qty = l.move_id.quantity - l.cedido_qty
+            total_qty = sum(moves.mapped("product_uom_qty"))
 
-                if qty > max_qty:
-                    raise UserError(
-                        f"No puedes ceder más de lo disponible.\n"
-                        f"Producto: {l.product_id.display_name}\n"
-                        f"Disponible: {max_qty}"
-                    )
+            cedido = sum(SaleLine.search([
+                ("x_source_picking_id", "=", self.picking_id.id),
+                ("product_id", "=", l.product_id.id),
+                ("state", "in", ["sale", "done"])
+            ]).mapped("x_cedido_qty"))
+
+            max_qty = max(total_qty - cedido, 0)
+
+            if max_qty <= 0:
+                raise UserError(
+                    f"No hay cantidad disponible para ceder.\n"
+                    f"Producto: {l.product_id.display_name}"
+                )
+
+            if qty > max_qty:
+                raise UserError(
+                    f"No puedes ceder más de lo disponible.\n"
+                    f"Producto: {l.product_id.display_name}\n"
+                    f"Disponible: {max_qty}"
+                )
             
             lines.append((0, 0, {
                 "product_id": l.product_id.id,
@@ -115,7 +127,7 @@ class StockPickingRequestOptimaWizard(models.TransientModel):
         SaleLine = self.env["sale.order.line"]
 
         for move in picking.move_ids_without_package:
-            if move.quantity <= 0:
+            if move.product_uom_qty <= 0:
                 continue
 
             cedido = sum(SaleLine.search([
@@ -124,7 +136,7 @@ class StockPickingRequestOptimaWizard(models.TransientModel):
                 ("state", "in", ["sale", "done"])
             ]).mapped("x_cedido_qty"))
 
-            disponible = move.quantity - cedido
+            disponible = move.product_uom_qty - cedido
             
             lines.append((0, 0, {
                 "product_id": move.product_id.id,
