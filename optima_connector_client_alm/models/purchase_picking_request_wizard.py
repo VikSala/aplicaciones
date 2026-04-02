@@ -76,7 +76,8 @@ class StockPickingRequestOptimaWizard(models.TransientModel):
                 "price_unit": 0.0,
                 "name": l.product_id.name,
                 "product_uom": l.uom_id.id,
-                "x_source_move_id": l.move_id.id,
+                "x_cedido_qty": l.quantity,
+                "x_source_picking_id": self.picking_id.id,
             }))
 
         if not lines:
@@ -118,9 +119,10 @@ class StockPickingRequestOptimaWizard(models.TransientModel):
                 continue
 
             cedido = sum(SaleLine.search([
-                ("x_source_move_id", "=", move.id),
+                ("x_source_picking_id", "=", picking.id),
+                ("product_id", "=", move.product_id.id),
                 ("state", "in", ["sale", "done"])
-            ]).mapped("product_uom_qty"))
+            ]).mapped("x_cedido_qty"))
 
             disponible = move.quantity - cedido
             

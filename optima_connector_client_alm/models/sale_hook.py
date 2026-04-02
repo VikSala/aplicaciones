@@ -4,10 +4,8 @@ import xmlrpc.client
 class SaleOrderLine(models.Model):
     _inherit = "sale.order.line"
 
-    x_source_move_id = fields.Many2one(
-        "stock.move",
-        string="Movimiento origen"
-    )
+    x_cedido_qty = fields.Float(string="Cantidad cedida acumulada")
+    x_source_picking_id = fields.Many2one("stock.picking")
 
 class SaleOrder(models.Model):
     _inherit = "sale.order"
