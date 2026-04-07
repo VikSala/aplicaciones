@@ -11,9 +11,10 @@
 
                 <field name="product_lines">
                     <list editable="bottom">
-                        <field name="product_id"/>
-                        <field name="quantity"/>
-                        <field name="uom_id"/>
+                        <field name="product_id" string="Producto"/>
+                        <field name="quantity" string="Cantidad"/>
+						<field name="pedido_qty" string="Pedido" invisible="1"/>
+                        <field name="uom_id" string="Unidades"/>
                     </list>
                 </field>
 
