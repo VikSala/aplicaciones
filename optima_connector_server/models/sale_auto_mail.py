@@ -1,4 +1,5 @@
 from odoo import models, api
+import xmlrpc.client
 import requests
 import io
 
@@ -122,7 +123,7 @@ class StockReturnPicking(models.TransientModel):
 
         # --- datos enviados al proveedor ---
         vals = {
-            "source_purchase_id": purchase.id,
+            "x_id_interno": purchase.x_id_interno,
             "return_type": return_type,
             "lines": lines,
         }

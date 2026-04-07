@@ -1,4 +1,4 @@
-from odoo import models
+from odoo import models, fields
 import xmlrpc.client
 
 class PurchaseOrder(models.Model):
@@ -54,9 +54,14 @@ class PurchaseOrder(models.Model):
             self.message_post(body=f"⚠️ Error enviando pedido a Óptima: {e}")
         return res
 
+class PurchaseOrderLine(models.Model):
+    _inherit = "purchase.order.line"
+
+    x_sale_line_id = fields.Many2one("sale.order.line")
+
 class SaleOrder(models.Model):
     _inherit = "sale.order"
-
+    
     def action_open_request_optima(self):
         self.ensure_one()
         
@@ -69,17 +74,14 @@ class SaleOrder(models.Model):
                 "sale_line_id": l.id,
             }))
 
-        wizard = self.env["sale.order.request.optima.wizard"].create({
-            "sale_id": self.id,
-            "product_lines": lines,
-        })
-
         return {
             "type": "ir.actions.act_window",
             "res_model": "sale.order.request.optima.wizard",
             "view_mode": "form",
-            "res_id": wizard.id,
             "target": "new",
+            "context": {
+                "default_sale_id": self.id,
+            }
         }
 
 class StockReturnPicking(models.TransientModel):

@@ -20,10 +20,10 @@ class SaleOrder(models.Model):
                 continue
 
             # --- DATOS CONEXIÓN ---
-            URL = "http://143.47.33.148:8070"#"https://b2b.optimaluz.com"
-            DB = "odoo1"#"odoo0"
+            URL = "https://b2b.optimaluz.com"
+            DB = "odoo0"
             USER = "admin"
-            PASS = "admin"#"1324"
+            PASS = "1324"
 
             try:
                 common = xmlrpc.client.ServerProxy(

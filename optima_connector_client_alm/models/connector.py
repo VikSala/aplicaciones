@@ -17,21 +17,21 @@ class OptimaConnector(models.Model):
     @api.model
     def register_return_from_api(self, vals):
 
-        source_purchase_id = vals.get("source_purchase_id")
+        x_id_interno = vals.get("x_id_interno")
         return_type = vals.get("return_type")
         lines = vals.get("lines", [])
 
-        if not source_purchase_id:
-            raise UserError("No se ha recibido source_purchase_id")
+        if not x_id_interno:
+            raise UserError("No se ha recibido x_id_interno")
 
         # Buscar el pedido de venta vinculado
         sale = self.env["sale.order"].search(
-            [("x_id_interno", "=", source_purchase_id)],
+            [("id", "=", x_id_interno)],
             limit=1
         )
 
         if not sale:
-            raise UserError(f"No se encontró sale.order con x_id_interno={source_purchase_id}")
+            raise UserError(f"No se encontró sale.order con x_id_interno={x_id_interno}")
 
         # Buscar picking de entrega ya validado
         picking = sale.picking_ids.filtered(lambda p: p.state == "done")[:1]
@@ -78,8 +78,8 @@ class OptimaConnector(models.Model):
 
         # --- escribir comentario en el pedido ---
         texto = {
-            "action_create_returns": "Devuelto parcial",
-            "action_create_returns_all": "Devuelto completo",
+            "action_create_returns": "Devuelto a cliente",
+            "action_create_returns_all": "Devuelto a cliente",
             "action_create_exchanges": "Devuelto para cambio",
         }.get(return_type)
 
