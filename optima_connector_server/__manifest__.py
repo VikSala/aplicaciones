@@ -9,7 +9,7 @@
         "sale_management",
         "mail",  # Asegura que mail.template esté disponible
     ],
-    "data": [],
+    "data": ["security/ir.model.access.csv",],
     "installable": True,
     "application": False,
 }
