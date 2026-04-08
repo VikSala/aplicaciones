@@ -92,7 +92,7 @@ class StockReturnPicking(models.TransientModel):
 
         # --- FILTRADO DE SEGURIDAD ---
         nombre_partner = purchase.partner_id.name
-        es_optima = ("Óptima Soluciones Eficientes, S.L." in nombre_partner)
+        es_optima = ("ALMAITANA DE LUZ, S.L." in nombre_partner)
 
         if not es_optima:
             return
@@ -101,13 +101,13 @@ class StockReturnPicking(models.TransientModel):
         if not purchase.x_comentarios:
 
             texto = {
-                "action_create_returns": "Devuelto parcial",
-                "action_create_returns_all": "Devuelto completo",
+                "action_create_returns": "Devuelto a cliente",
+                "action_create_returns_all": "Devuelto a cliente",
                 "action_create_exchanges": "Devuelto para cambio",
             }.get(return_type)
 
             if texto:
-                purchase.write({"x_comentarios": "Devuelto a cliente"})
+                purchase.write({"x_comentarios": texto})
 
         # --- preparar líneas ---
         lines = []
