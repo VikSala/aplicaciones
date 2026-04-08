@@ -64,18 +64,10 @@ class SaleOrder(models.Model):
     
     def action_open_request_optima(self):
         self.ensure_one()
-        
-        lines = []
-        for l in self.order_line:
-            lines.append((0, 0, {
-                "product_id": l.product_id.id,
-                "quantity": l.product_uom_qty,
-                "uom_id": l.product_uom.id,
-                "sale_line_id": l.id,
-            }))
 
         return {
             "type": "ir.actions.act_window",
+            "name": "Pedir a OSE",
             "res_model": "sale.order.request.optima.wizard",
             "view_mode": "form",
             "target": "new",

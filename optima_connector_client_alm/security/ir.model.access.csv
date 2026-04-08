@@ -3,3 +3,4 @@ access_picking_request_optima_wizard,picking.request.optima.wizard,model_stock_p
 access_picking_request_optima_line,picking.request.optima.line,model_stock_picking_request_optima_line,base.group_user,1,1,1,1
 access_sale_request_optima_wizard,sale.request.optima.wizard,model_sale_order_request_optima_wizard,base.group_user,1,1,1,1
 access_sale_request_optima_line,sale.request.optima.line,model_sale_order_request_optima_line,base.group_user,1,1,1,1
+access_optima_connector,optima.connector,model_optima_connector,base.group_user,1,1,1,1
