@@ -116,7 +116,7 @@ class SaleOrderRequestOptimaWizard(models.TransientModel):
                 "product_id": line.product_id.id,
                 "product_qty": line.quantity,
                 "product_uom": line.uom_id.id,
-                "price_unit": sale_line.price_unit,
+                "price_unit": 0.0,
                 "date_planned": fields.Datetime.now(),
                 "x_sale_line_id": sale_line.id,
                 "name": line.product_id.display_name,
