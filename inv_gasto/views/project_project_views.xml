@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_project_project_form_inherit_rentabilidad" model="ir.ui.view">
+        <field name="name">project.project.form.inherit.rentabilidad</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="attributes">
+                <attribute name="placeholder">Nombre del Proyecto</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

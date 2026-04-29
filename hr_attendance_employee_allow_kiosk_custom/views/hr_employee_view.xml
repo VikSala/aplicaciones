@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_employee_form_inherit_hr_attendance" model="ir.ui.view">
+        <field name="name">hr.employee.form.kiosk.individual.url</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr_attendance.view_employee_form_inherit_hr_attendance"/>
+        <field name="arch" type="xml">
+            <field name="pin" position="before">
+                <field name="allow_kiosk_access" invisible="1"/>
+                <field name="employee_kiosk_key" invisible="1" groups="hr_attendance.group_hr_attendance_manager"/>
+                
+                <label for="employee_kiosk_url" string="URL Quiosco Personal" groups="hr_attendance.group_hr_attendance_manager"/>
+                <div class="o_row" groups="hr_attendance.group_hr_attendance_manager">
+                    <field
+                        name="employee_kiosk_url"
+                        readonly="1"
+                        placeholder="Generar URL..."
+                        class="oe_inline text-truncate"
+                        style="max-width: 350px;"
+                    />
+                    
+                    <button
+                        string="Copiar"
+                        class="btn btn-link ps-0"
+                        icon="fa-copy"
+                        title="Copiar al portapapeles"
+                        special="cancel" 
+                        onclick="const url = document.getElementsByName('employee_kiosk_url')[0].innerText; navigator.clipboard.writeText(url); return false;"
+                        invisible="not employee_kiosk_url"
+                    />
+
+                    <button
+                        name="action_generate_employee_kiosk_url"
+                        string="Nueva URL"
+                        type="object"
+                        class="btn btn-secondary btn-sm"
+                        icon="fa-refresh"
+                    />
+                </div>
+            </field>
+        </field>
+    </record>
+</odoo>

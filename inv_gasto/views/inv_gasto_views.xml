@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_inv_gasto_form" model="ir.ui.view">
+        <field name="name">inv.gasto.form</field>
+        <field name="model">inv.gasto</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_confirm" string="Confirmar Gasto" type="object" 
+                            class="oe_highlight" invisible="state == 'confirmed'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Referencia"/>
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="project_id"/>
+                            <field name="analytic_account_id"/>
+                            <field name="journal_id" options="{'no_create': True}"/>
+                        </group>
+                        <group>
+                            <field name="date"/>
+                            <field name="analytic_distribution" widget="analytic_distribution" 
+                                   options="{'account_field': 'analytic_account_id', 'business_domain': 'general'}"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Líneas de Gasto" name="lines">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="quantity"/>
+                                    <field name="price_unit"/>
+                                    <field name="subtotal" sum="Total"/>
+                                    <field name="stock_move_id" optional="hide" readonly="1"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_inv_gasto" model="ir.actions.act_window">
+        <field name="name">Gestión de Gastos</field>
+        <field name="res_model">inv.gasto</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crea el primer gasto de inventario.
+            </p>
+        </field> </record>
+
+    <menuitem id="menu_inv_gasto_root" name="Gastos Inventario" sequence="10"/>
+    <menuitem id="menu_inv_gasto_main" name="Gastos" parent="menu_inv_gasto_root" action="action_inv_gasto"/>
+</odoo>

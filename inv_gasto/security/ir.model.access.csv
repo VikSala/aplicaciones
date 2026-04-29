@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_inv_gasto_user,inv.gasto,model_inv_gasto,base.group_user,1,1,1,1
+access_inv_gasto_line_user,inv.gasto.line,model_inv_gasto_line,base.group_user,1,1,1,1
