@@ -66,32 +66,51 @@ class InvGasto(models.Model):
             record.state = 'confirmed'
 
     def _create_stock_moves(self):
+        """
+        Resta el stock real inmediatamente usando el método oficial de Odoo.
+        Evita el error de 'creación de cuanto restringida'.
+        """
+        # Ubicación de salida (Ajuste de Inventario / Gasto)
         location_dest = self.env['stock.location'].search([
             ('usage', '=', 'inventory'),
             ('company_id', '=', self.company_id.id)
         ], limit=1)
+        
+        # Ubicación de origen (Física)
         warehouse = self.env['stock.warehouse'].search([
             ('company_id', '=', self.company_id.id)
         ], limit=1)
         location_src = warehouse.lot_stock_id
 
+        if not location_dest:
+            raise UserError("No se encontró ubicación de Inventario.")
+
         for line in self.line_ids:
-            move = self.env['stock.move'].create({
-                'name': f"Consumo: {self.name}",
+            # MÉTODO SEGURO: Actualizar cantidad disponible directamente
+            # Ponemos la cantidad en negativo para que reste del stock real
+            self.env['stock.quant'].sudo()._update_available_quantity(
+                line.product_id, 
+                location_src, 
+                -line.quantity
+            )
+
+            # Creamos el registro del movimiento en estado 'Hecho' solo para historial[cite: 1]
+            # Al poner state='done' y picked=True, Odoo sabe que ya se ejecutó[cite: 1]
+            move = self.env['stock.move'].sudo().create({
+                'name': f"Gasto Directo: {self.name}",
                 'product_id': line.product_id.id,
                 'product_uom_qty': line.quantity,
                 'product_uom': line.product_id.uom_id.id,
                 'location_id': location_src.id,
                 'location_dest_id': location_dest.id,
                 'company_id': self.company_id.id,
-                'procure_method': 'make_to_stock',
+                'state': 'done',
+                'is_inventory': True,
                 'picked': True,
             })
-            move._action_confirm()
-            move._action_assign()
-            for ml in move.move_line_ids:
-                ml.quantity = line.quantity
-            move._action_done()
+            
+            # Vinculamos para trazabilidad[cite: 1]
+            line.stock_move_id = move.id
 
     def _create_account_move(self):
         for record in self:
