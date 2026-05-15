@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Vista lista -->
+    <record id="view_custom_report_modifier_tree" model="ir.ui.view">
+        <field name="name">custom.report.modifier.tree</field>
+        <field name="model">custom.report.modifier</field>
+        <field name="arch" type="xml">
+            <list string="Herencias dinámicas"
+                  decoration-danger="state == 'error'"
+                  decoration-muted="not active">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="parent_view_id"/>
+                <field name="active"/>
+                <field name="state"
+                       decoration-success="state == 'active'"
+                       decoration-danger="state == 'error'"
+                       decoration-muted="state == 'draft'"
+                       widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista formulario — Odoo 18: sin attrs, invisible/readonly como atributos directos -->
+    <record id="view_custom_report_modifier_form" model="ir.ui.view">
+        <field name="name">custom.report.modifier.form</field>
+        <field name="model">custom.report.modifier</field>
+        <field name="arch" type="xml">
+            <form string="Herencia dinámica">
+                <header>
+                    <button name="action_activate"
+                            string="Activar"
+                            type="object"
+                            class="btn-primary"
+                            invisible="active == True"/>
+                    <button name="action_deactivate"
+                            string="Desactivar"
+                            type="object"
+                            invisible="active == False"/>
+                    <button name="action_test_xpath"
+                            string="Validar XPath"
+                            type="object"
+                            class="btn-secondary"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,active,error"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" placeholder="Nombre descriptivo del cambio"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Configuración">
+                            <field name="parent_view_id"
+                                   options="{'no_create': True}"
+                                   help="Vista Qweb base que se heredará"/>
+                            <field name="active"/>
+                            <field name="sequence"/>
+                            <field name="technical_view_id" readonly="1"/>
+                        </group>
+                        <group string="Estado">
+                            <field name="state" readonly="1"/>
+                            <field name="last_error"
+                                   readonly="1"
+                                   invisible="not last_error"
+                                   widget="text"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Código XPath">
+                            <field name="xpath_code"
+                                   widget="ace"
+                                   options="{'mode': 'xml'}"
+                                   placeholder="&lt;xpath expr=&quot;//t[@t-call='web.external_layout']&quot; position=&quot;inside&quot;&gt;&#10;    &lt;!-- Tu modificación aquí --&gt;&#10;&lt;/xpath&gt;"
+                                   style="min-height: 250px;"/>
+                        </page>
+                        <page string="Notas">
+                            <field name="notes"
+                                   placeholder="Explica el motivo de este cambio, la fecha, quién lo solicitó..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista búsqueda -->
+    <record id="view_custom_report_modifier_search" model="ir.ui.view">
+        <field name="name">custom.report.modifier.search</field>
+        <field name="model">custom.report.modifier</field>
+        <field name="arch" type="xml">
+            <search string="Buscar herencias">
+                <field name="name"/>
+                <field name="parent_view_id"/>
+                <filter string="Activos" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Con error" name="error" domain="[('state', '=', 'error')]"/>
+                <filter string="Inactivos" name="inactive" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Vista padre" name="group_parent"
+                            context="{'group_by': 'parent_view_id'}"/>
+                    <filter string="Estado" name="group_state"
+                            context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Acción principal -->
+    <record id="action_custom_report_modifier" model="ir.actions.act_window">
+        <field name="name">Herencias dinámicas</field>
+        <field name="res_model">custom.report.modifier</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crea tu primera herencia dinámica
+            </p>
+            <p>
+                Define modificaciones XPath sobre vistas Qweb sin necesidad de
+                desplegar módulos. Los cambios se aplican en tiempo real.
+            </p>
+        </field>
+    </record>
+
+    <!-- Acción botón de pánico (server action vinculada al modelo) -->
+    <record id="action_panic_deactivate_all" model="ir.actions.server">
+        <field name="name">🚨 Pánico: desactivar todas las herencias</field>
+        <field name="model_id" ref="model_custom_report_modifier"/>
+        <field name="binding_model_id" ref="model_custom_report_modifier"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">action = model.action_panic_deactivate_all()</field>
+    </record>
+
+</odoo>

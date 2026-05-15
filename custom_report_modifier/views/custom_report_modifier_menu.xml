@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_custom_report_modifier_root"
+              name="Herencias Dinámicas"
+              sequence="90"
+              groups="base.group_system"/>
+
+    <menuitem id="menu_custom_report_modifier_list"
+              name="Modificadores de vistas"
+              parent="menu_custom_report_modifier_root"
+              action="action_custom_report_modifier"
+              sequence="10"
+              groups="base.group_system"/>
+
+</odoo>
