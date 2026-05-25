@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Local Provider Views -->
+    <record id="view_backup_provider_local_list" model="ir.ui.view">
+        <field name="name">backup.provider.local.list</field>
+        <field name="model">backup.provider.local</field>
+        <field name="arch" type="xml">
+            <list string="Local Storage Providers" decoration-muted="not active">
+                <field name="name"/>
+                <field name="provider_type"/>
+                <field name="backup_directory"/>
+                <field name="check_disk_space" widget="boolean_toggle"/>
+                <field name="min_free_space_gb" string="Min Space (GB)"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_backup_provider_local_form" model="ir.ui.view">
+        <field name="name">backup.provider.local.form</field>
+        <field name="model">backup.provider.local</field>
+        <field name="arch" type="xml">
+            <form string="Local Storage Provider">
+                <header>
+                    <button name="test_connection_action" type="object" string="Test Connection" class="btn-secondary"/>
+                </header>
+
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <field name="provider_type" readonly="1"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Storage Settings">
+                            <group>
+                                <group string="Directory Configuration">
+                                    <field name="backup_directory"/>
+                                    <field name="create_subdirectories"/>
+                                    <field name="directory_pattern" invisible="not create_subdirectories"/>
+                                </group>
+                                <group string="Space Management">
+                                    <field name="check_disk_space"/>
+                                    <field name="min_free_space_gb" invisible="not check_disk_space"/>
+                                    <field name="max_directory_size_gb"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Connection Test">
+                            <group>
+                                <field name="test_connection_date" readonly="1"/>
+                                <field name="test_connection_result" readonly="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_backup_provider_local_search" model="ir.ui.view">
+        <field name="name">backup.provider.local.search</field>
+        <field name="model">backup.provider.local</field>
+        <field name="arch" type="xml">
+            <search string="Local Storage Providers">
+                <field name="name" string="Name"/>
+                <field name="backup_directory" string="Directory"/>
+
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Inactive" name="inactive" domain="[('active', '=', False)]"/>
+
+                <group>
+                    <filter string="Status" name="group_status" context="{'group_by': 'active'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_backup_provider_local" model="ir.actions.act_window">
+        <field name="name">Local Storage Providers</field>
+        <field name="res_model">backup.provider.local</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first local storage provider
+            </p>
+            <p>
+                Configure local filesystem locations where your database backups will be stored.
+                Local providers are fast and reliable for on-premise backup storage.
+            </p>
+        </field>
+    </record>
+
+    <!-- SFTP Provider Views -->
+    <record id="view_backup_provider_sftp_list" model="ir.ui.view">
+        <field name="name">backup.provider.sftp.list</field>
+        <field name="model">backup.provider.sftp</field>
+        <field name="arch" type="xml">
+            <list string="SFTP Storage Providers" decoration-muted="not active">
+                <field name="name"/>
+                <field name="provider_type"/>
+                <field name="hostname"/>
+                <field name="port"/>
+                <field name="username"/>
+                <field name="remote_directory"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_backup_provider_sftp_form" model="ir.ui.view">
+        <field name="name">backup.provider.sftp.form</field>
+        <field name="model">backup.provider.sftp</field>
+        <field name="arch" type="xml">
+            <form string="SFTP Storage Provider">
+                <header>
+                    <button name="test_connection_action" type="object" string="Test Connection" class="btn-secondary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder="Provider Name"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <field name="provider_type" readonly="1"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Connection Settings">
+                            <group>
+                                <group string="Server Configuration">
+                                    <field name="hostname"/>
+                                    <field name="port"/>
+                                    <field name="username"/>
+                                    <field name="remote_directory"/>
+                                </group>
+                                <group string="Authentication">
+                                    <field name="password" password="True"/>
+                                </group>
+                            </group>
+
+                            <group>
+                                <group string="Directory Settings">
+                                    <field name="create_remote_dirs"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Transfer Settings">
+                            <group>
+                                <group string="Timeouts">
+                                    <field name="connection_timeout" widget="integer"/>
+                                    <field name="transfer_timeout" widget="integer"/>
+                                </group>
+                                <group string="Performance">
+                                    <field name="max_concurrent_transfers"/>
+                                    <field name="preserve_file_permissions"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Connection Test">
+                            <group>
+                                <field name="test_connection_date" readonly="1"/>
+                                <field name="test_connection_result" readonly="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_backup_provider_sftp_search" model="ir.ui.view">
+        <field name="name">backup.provider.sftp.search</field>
+        <field name="model">backup.provider.sftp</field>
+        <field name="arch" type="xml">
+            <search string="SFTP Storage Providers">
+                <field name="name" string="Name"/>
+                <field name="hostname" string="Hostname"/>
+                <field name="username" string="Username"/>
+
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Inactive" name="inactive" domain="[('active', '=', False)]"/>
+
+                <group>
+                    <filter string="Status" name="group_status" context="{'group_by': 'active'}"/>
+                    <filter string="Hostname" name="group_hostname" context="{'group_by': 'hostname'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_backup_provider_sftp" model="ir.actions.act_window">
+        <field name="name">SFTP Storage Providers</field>
+        <field name="res_model">backup.provider.sftp</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first SFTP storage provider
+            </p>
+            <p>
+                Configure remote SFTP servers where your database backups will be stored.
+                SFTP providers offer secure, encrypted transfer to remote locations.
+            </p>
+        </field>
+    </record>
+</odoo>

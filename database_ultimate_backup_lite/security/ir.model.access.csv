@@ -1,0 +1,15 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_backup_config_user,backup.config.user,model_backup_config,database_ultimate_backup_lite.group_backup_user,1,0,0,0
+access_backup_config_admin,backup.config.admin,model_backup_config,database_ultimate_backup_lite.group_backup_admin,1,1,1,1
+
+access_backup_job_user,backup.job.user,model_backup_job,database_ultimate_backup_lite.group_backup_user,1,0,0,0
+access_backup_job_admin,backup.job.admin,model_backup_job,database_ultimate_backup_lite.group_backup_admin,1,1,1,1
+
+access_backup_provider_abstract_user,backup.provider.abstract.user,model_backup_provider_abstract,database_ultimate_backup_lite.group_backup_user,1,0,0,0
+access_backup_provider_abstract_admin,backup.provider.abstract.admin,model_backup_provider_abstract,database_ultimate_backup_lite.group_backup_admin,1,1,1,1
+
+access_backup_provider_local_user,backup.provider.local.user,model_backup_provider_local,database_ultimate_backup_lite.group_backup_user,1,0,0,0
+access_backup_provider_local_admin,backup.provider.local.admin,model_backup_provider_local,database_ultimate_backup_lite.group_backup_admin,1,1,1,1
+
+access_backup_provider_sftp_user,backup.provider.sftp.user,model_backup_provider_sftp,database_ultimate_backup_lite.group_backup_user,1,0,0,0
+access_backup_provider_sftp_admin,backup.provider.sftp.admin,model_backup_provider_sftp,database_ultimate_backup_lite.group_backup_admin,1,1,1,1

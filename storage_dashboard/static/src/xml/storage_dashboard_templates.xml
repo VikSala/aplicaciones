@@ -1,0 +1,145 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Templet for Storage dashboard. -->
+<templates id="template" xml:space="preserve">
+    <t t-name="DashboardDashboard">
+        <div class="vh-100 overflow-auto">
+            <div class="card" style="margin:20px;">
+                <div class="card-header" style="background:linear-gradient(to right, #8e9eab, #eef2f3);">
+                    <div class="row">
+                        <div class="col">
+                            <h3>Monitor del Sistema</h3>
+                        </div>
+                    </div>
+                </div>
+                <!--card-body for system monitor values -->
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="chart" style="display:flex;">
+                                <table class="table table-bordered" style="margin-right:10px;">
+                                    <tbody>
+                                        <tr>
+                                            <th>Memoria Total</th>
+                                            <td><t t-esc="state.data.total_memory"/></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Memoria Utilizada</th>
+                                            <td><t t-esc="state.data.used_memory"/></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Memoria Disponible</th>
+                                            <td><t t-esc="state.data.available_memory"/></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Uso de CPU</th>
+                                            <td><t t-esc="state.data.cpu_usage"/></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Uso de RAM de Odoo</th>
+                                            <td><t t-esc="state.data.ram_usage"/></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Sistema Operativo</th>
+                                            <td><t t-esc="state.data.os"/></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Usuario de la Base de Datos</th>
+                                            <td><t t-esc=" state.data.db_user"/></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <table class="table table-bordered">
+                                    <tbody>
+                                        <tr>
+                                            <th>Límite de Memoria Flexible</th>
+                                            <td><t t-esc="state.data.soft_limit"/></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Límite de Memoria Estricto</th>
+                                            <td><t t-esc="state.data.hard_limit"/></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Límite de Antigüedad Transitoria</th>
+                                            <td><t t-esc="state.data.transient_age_limit"/></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Límite de Tiempo de CPU</th>
+                                            <td><t t-esc="state.data.limit_time_cpu"/></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Límite de Solicitudes</th>
+                                            <td><t t-esc="state.data.limit_request"/></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Límite de Tiempo Real</th>
+                                            <td><t t-esc="state.data.limit_time_real"/></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Puerto HTTP</th>
+                                            <td><t t-esc="state.data.http_port"/></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex;justify-content:center;margin-bottom:85px;">
+<!--        card for database details-->
+                <div class="card" style="margin:20px;width:585px;">
+                    <div class="card-header" style="background:honeydew;">
+                        <div class="row">
+                            <div class="col">
+                                <h3>Detalles de la Base de Datos</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body mt-3" id="in_ex_body_hide">
+                        <div class="row">
+                            <div class="col">
+                                <table class="table table-bordered">
+                                    <tbody>
+                                        <tr>
+                                            <th>Nombre de la Base de Datos</th>
+                                            <td><t t-esc="state.data.db_name"/></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Versión de la Base de Datos</th>
+                                            <td><t t-esc="state.data.db_version"/></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Base de Datos Creada el</th>
+                                            <td><t t-esc="state.data.db_date"/></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Tamaño de la Base de Datos</th>
+                                            <td><t t-esc="state.data.db_size"/></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Total de Tablas</th>
+                                            <td><t t-esc="state.data.db_tables"/></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+<!--            card for model size chart-->
+                <div class="card" style="margin:20px;">
+                    <div class="card-header" style="background:aliceblue;">
+                        <div class="row">
+                            <div class="col">
+                                <h3>Gráfico de Tamaño de Modelos</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body mt-3">
+                        <canvas t-ref="StorageChart" width="1000" height="500"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

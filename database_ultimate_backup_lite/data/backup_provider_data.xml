@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Default Local Provider -->
+        <record id="default_local_provider" model="backup.provider.local">
+            <field name="name">Default Local Storage</field>
+            <field name="provider_type">local</field>
+            <field name="active">False</field>
+            <field name="backup_directory">/home/backups</field>
+            <field name="create_subdirectories">True</field>
+            <field name="directory_pattern">yyyy-mm-dd</field>
+            <field name="check_disk_space">True</field>
+            <field name="min_free_space_gb">5.0</field>
+            <field name="max_directory_size_gb">100.0</field>
+        </record>
+
+        <!-- Default Backup Configuration (inactive by default) -->
+        <record id="default_backup_config" model="backup.config">
+            <field name="name">Default Database Backup</field>
+            <field name="active">False</field>
+            <field name="description">Default backup configuration for the current database</field>
+            <field name="backup_format">zip</field>
+            <field name="local_provider_ids" eval="[(4, ref('default_local_provider'))]"/>
+            <field name="retention_policy">count</field>
+            <field name="retention_count">7</field>
+            <field name="backup_name_template">{database}_{timestamp}.{format}</field>
+            <field name="verify_backups">True</field>
+            <field name="notify_success">False</field>
+            <field name="notify_failure">True</field>
+        </record>
+    </data>
+</odoo>

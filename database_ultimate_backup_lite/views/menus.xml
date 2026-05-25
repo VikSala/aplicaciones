@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem
+        id="database_ultimate_backup_menu_root"
+        name="Database Ultimate Backup Lite"
+        sequence="14"
+        web_icon="database_ultimate_backup_lite,static/description/icon.png">
+
+        <menuitem
+            id="menu_backup_configurations"
+            name="Backup Configurations"
+            action="action_backup_config"
+            sequence="10"
+        />
+
+        <menuitem
+            id="menu_backup_jobs"
+            name="Backup Jobs"
+            action="action_backup_job"
+            sequence="20"
+        />
+
+        <menuitem
+            id="menu_storage_providers"
+            name="Storage Providers"
+            sequence="30">
+
+            <menuitem
+                id="menu_local_providers"
+                name="Local Storage"
+                action="action_backup_provider_local"
+                sequence="10"
+            />
+
+            <menuitem
+                id="menu_sftp_providers"
+                name="SFTP Storage"
+                action="action_backup_provider_sftp"
+                sequence="20"
+            />
+
+        </menuitem>
+
+    </menuitem>
+
+</odoo>

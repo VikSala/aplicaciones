@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Backup Scheduler Cron Job -->
+        <record id="backup_cron" model="ir.cron">
+            <field name="name">Database Ultimate Backup Lite Scheduler</field>
+            <field name="model_id" ref="model_backup_config"/>
+            <field name="state">code</field>
+            <field name="code">model.run_scheduled_backups()</field>
+            <field name="priority">5</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="active">False</field>
+        </record>
+
+        <!-- Backup Cleanup Cron Job -->
+        <record id="backup_cleanup_cron" model="ir.cron">
+            <field name="name">Database Ultimate Backup Lite Cleanup</field>
+            <field name="model_id" ref="model_backup_config"/>
+            <field name="state">code</field>
+            <field name="code">
+# Clean up old backups for all active configurations
+configs = model.search([('active', '=', True)])
+for config in configs:
+    try:
+        config.with_context(manual_execution=False).cleanup_old_backups()
+    except Exception as e:
+        pass
+            </field>
+            <field name="priority">10</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="active">True</field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- List View -->
+    <record id="view_backup_config_list" model="ir.ui.view">
+        <field name="name">backup.config.list</field>
+        <field name="model">backup.config</field>
+        <field name="arch" type="xml">
+            <list string="Backup Configurations" decoration-muted="not active">
+                <field name="name"/>
+                <field name="database_name"/>
+                <field name="backup_format"/>
+                <field name="last_backup_date"/>
+                <field name="last_backup_status" decoration-success="last_backup_status == 'success'" decoration-danger="last_backup_status == 'failed'"/>
+                <field name="backup_success_rate"/>
+                <field name="total_backups_created"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_backup_config_form" model="ir.ui.view">
+        <field name="name">backup.config.form</field>
+        <field name="model">backup.config</field>
+        <field name="arch" type="xml">
+            <form string="Backup Configuration">
+                <header>
+                    <button name="create_backup" type="object" string="Create Backup Now" class="btn-primary"/>
+                    <button name="test_providers" type="object" string="Test Providers" class="btn-secondary"/>
+                    <button name="test_retention_policy" type="object" string="Test Retention Policy" class="btn-secondary"/>
+                    <button name="cleanup_old_backups" type="object" string="Cleanup Old Backups" class="btn-secondary" confirm="This will permanently delete old backups according to your retention policy. Are you sure?"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder="Configuration Name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <field name="description"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Database Settings">
+                            <group>
+                                <group string="Database Configuration">
+                                    <field name="database_name"/>
+                                    <field name="backup_format"/>
+                                    <field name="backup_name_template"/>
+                                </group>
+                                <group string="Storage Providers">
+                                    <field name="local_provider_ids" widget="many2many_tags"/>
+                                    <field name="sftp_provider_ids" widget="many2many_tags"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Retention Policy">
+                            <group>
+                                <group string="Cleanup Settings">
+                                    <field name="retention_policy"/>
+                                    <field name="retention_count" invisible="retention_policy != 'count'"/>
+                                    <field name="retention_days" invisible="retention_policy != 'days'"/>
+                                </group>
+                                <group string="Verification">
+                                    <field name="verify_backups"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Notifications">
+                            <group>
+                                <group string="Email Notifications">
+                                    <field name="notify_success"/>
+                                    <field name="notify_failure"/>
+                                    <field name="notification_emails" placeholder="email1@example.com, email2@example.com"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Statistics">
+                            <group>
+                                <group string="Backup History">
+                                    <field name="last_backup_date" readonly="1"/>
+                                    <field name="last_backup_status" readonly="1"/>
+                                    <field name="last_backup_message" readonly="1"/>
+                                </group>
+                                <group string="Performance Metrics">
+                                    <field name="total_backups_created" readonly="1"/>
+                                    <field name="backup_success_rate" readonly="1"/>
+                                </group>
+                            </group>
+
+                            <separator string="Recent Backup Jobs"/>
+                            <field name="backup_job_ids" readonly="1">
+                                <list limit="10">
+                                    <field name="start_time"/>
+                                    <field name="status" decoration-success="status == 'completed'" decoration-danger="status == 'failed'"/>
+                                    <field name="duration"/>
+                                    <field name="backup_size_human"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_backup_config_search" model="ir.ui.view">
+        <field name="name">backup.config.search</field>
+        <field name="model">backup.config</field>
+        <field name="arch" type="xml">
+            <search string="Backup Configurations">
+                <field name="name" string="Name"/>
+                <field name="database_name" string="Database"/>
+                <field name="local_provider_ids" string="Local Providers"/>
+
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Inactive" name="inactive" domain="[('active', '=', False)]"/>
+
+                <separator/>
+                <filter string="Success" name="recent_success"
+                        domain="[('last_backup_status', '=', 'success')]"/>
+                <filter string="Failed" name="recent_failures"
+                        domain="[('last_backup_status', '=', 'failed')]"/>
+                <filter string="Never Backed Up" name="never_backed_up"
+                        domain="[('last_backup_date', '=', False)]"/>
+
+                <group>
+                    <filter string="Database" name="group_database" context="{'group_by': 'database_name'}"/>
+                    <filter string="Format" name="group_format" context="{'group_by': 'backup_format'}"/>
+                    <filter string="Status" name="group_status" context="{'group_by': 'last_backup_status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_backup_config" model="ir.actions.act_window">
+        <field name="name">Backup Configurations</field>
+        <field name="res_model">backup.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first backup configuration
+            </p>
+            <p>
+                Configure automated database backups with local storage providers,
+                retention policies, and verification options.
+            </p>
+        </field>
+    </record>
+</odoo>
