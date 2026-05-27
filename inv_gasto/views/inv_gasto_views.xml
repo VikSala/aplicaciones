@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <record id="view_inv_gasto_tree" model="ir.ui.view">
+        <field name="name">inv.gasto.list</field>
+        <field name="model">inv.gasto</field>
+        <field name="arch" type="xml">
+            <list string="Gastos de Inventario">
+                <field name="name" string="Referencia"/>
+                <field name="project_id"/>
+                <field name="journal_id"/>
+                <field name="date"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'confirmed'"/>
+            </list>
+        </field>
+    </record>
+
     <record id="view_inv_gasto_form" model="ir.ui.view">
         <field name="name">inv.gasto.form</field>
         <field name="model">inv.gasto</field>
@@ -11,23 +25,27 @@
                     <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
                 </header>
                 <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Referencia"/>
+                        <h1><field name="name"/></h1>
+                    </div>
                     <group>
                         <group>
                             <field name="project_id"/>
-                            <field name="journal_id"/>
                         </group>
                         <group>
                             <field name="date"/>
                         </group>
                     </group>
                     <notebook>
-                        <page string="Líneas">
+                        <page string="Líneas de Gasto" name="lines">
                             <field name="line_ids">
                                 <list editable="bottom">
                                     <field name="product_id"/>
                                     <field name="quantity"/>
                                     <field name="price_unit"/>
-                                    <field name="subtotal"/>
+                                    <field name="subtotal" sum="Total"/>
+                                    <field name="stock_move_id" optional="hide" readonly="1"/>
                                 </list>
                             </field>
                         </page>
@@ -37,10 +55,36 @@
             </form>
         </field>
     </record>
+
+    <record id="view_inv_gasto_search" model="ir.ui.view">
+        <field name="name">inv.gasto.search</field>
+        <field name="model">inv.gasto</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Gastos">
+                <field name="name" string="Referencia"/>
+                <field name="project_id"/>
+                <field name="journal_id"/>
+                <filter string="Borrador" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Confirmado" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Proyecto" name="group_by_project" context="{'group_by': 'project_id'}"/>
+                    <filter string="Diario Contable" name="group_by_journal" context="{'group_by': 'journal_id'}"/>
+                    <filter string="Estado" name="group_by_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
     <record id="action_inv_gasto" model="ir.actions.act_window">
         <field name="name">Gestión de Gastos</field>
         <field name="res_model">inv.gasto</field>
         <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_inv_gasto_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crea el primer gasto de inventario.
+            </p>
+        </field>
     </record>
 
     <menuitem id="menu_inv_gasto_root" name="Gastos Inventario" sequence="10"/>

@@ -11,8 +11,28 @@ class InvGasto(models.Model):
     project_id = fields.Many2one('project.project', string='Proyecto', required=True)
     analytic_account_id = fields.Many2one('account.analytic.account', related='project_id.account_id', store=True, readonly=True)
     date = fields.Date(string='Fecha', default=fields.Date.context_today)
-    journal_id = fields.Many2one('account.journal', string='Diario Contable', required=True, 
-                                 domain="[('type', '=', 'general'), ('company_id', '=', company_id)]")
+    
+    @api.model
+    def _get_default_journal(self):
+        # Busca primero el diario de operaciones varias estándar (MISC)
+        journal = self.env['account.journal'].search([
+            ('type', '=', 'general'),
+            ('code', '=', 'MISC'),
+            ('company_id', '=', self.env.company.id)
+        ], limit=1)
+        if not journal:
+            # Si no existe, toma el primer diario general disponible
+            journal = self.env['account.journal'].search([
+                ('type', '=', 'general'),
+                ('company_id', '=', self.env.company.id)
+            ], limit=1)
+        return journal
+
+    journal_id = fields.Many2one(
+        'account.journal', string='Diario Contable', required=True, 
+        default=_get_default_journal,
+        domain="[('type', '=', 'general'), ('company_id', '=', company_id)]"
+    )
     
     line_ids = fields.One2many('inv.gasto.line', 'gasto_id', string='Líneas')
     account_move_id = fields.Many2one('account.move', string="Asiento Contable", readonly=True, copy=False)
@@ -35,7 +55,7 @@ class InvGasto(models.Model):
             record.state = 'confirmed'
 
     def action_cancel(self):
-        """ Método a prueba de fallos para cancelar gastos nuevos y antiguos """
+        """ Método para revertir stock, contabilidad y analítica """
         for record in self:
             # --- 1. REVERTIR STOCK ---
             warehouse = self.env['stock.warehouse'].search([('company_id', '=', record.company_id.id)], limit=1)
@@ -43,11 +63,9 @@ class InvGasto(models.Model):
             location_dest = self.env['stock.location'].search([('usage', '=', 'inventory'), ('company_id', '=', record.company_id.id)], limit=1)
             
             for line in record.line_ids:
-                # Devolvemos la cantidad real al stock disponible sumando en positivo
                 self.env['stock.quant'].sudo()._update_available_quantity(
                     line.product_id, location_src, line.quantity
                 )
-                # Creamos el registro del movimiento inverso en estado 'Hecho'
                 self.env['stock.move'].sudo().create({
                     'name': f"Devolución de Gasto: {record.name}",
                     'product_id': line.product_id.id,
@@ -60,10 +78,8 @@ class InvGasto(models.Model):
                 })
 
             # --- 2. BORRAR ASIENTO CONTABLE ---
-            # Busca por ID (registros nuevos) o por la referencia en el asiento (registros viejos)
             move_to_cancel = record.account_move_id or self.env['account.move'].search([('ref', '=', record.name)], limit=1)
             if move_to_cancel:
-                # Rompemos conciliaciones por seguridad antes de borrar
                 if move_to_cancel.line_ids:
                     move_to_cancel.line_ids.remove_move_reconcile()
                 move_to_cancel.button_draft()
@@ -71,8 +87,7 @@ class InvGasto(models.Model):
                 move_to_cancel.with_context(force_delete=True).unlink()
                 record.account_move_id = False
 
-            # --- 3. ELIMINAR GASTO DEL TABLERO DEL PROYECTO (Líneas analíticas) ---
-            # Busca usando la referencia (nuevos) o buscando por el nombre que le daba el código viejo
+            # --- 3. ELIMINAR GASTO DEL TABLERO DEL PROYECTO ---
             analytic_lines = self.env['account.analytic.line'].search([('ref', '=', record.name)])
             if not analytic_lines:
                 for line in record.line_ids:
@@ -80,11 +95,9 @@ class InvGasto(models.Model):
                         ('name', '=', f"Gasto: {line.product_id.name}"),
                         ('date', '=', record.date)
                     ])
-            
             if analytic_lines:
                 analytic_lines.unlink()
 
-            # --- 4. DEVOLVER A BORRADOR ---
             record.state = 'draft'
 
     def _create_stock_moves(self):
@@ -126,12 +139,26 @@ class InvGasto(models.Model):
 
     def _create_manual_analytic_lines(self):
         for record in self:
+            dist = {str(record.analytic_account_id.id): 100.0}
+            if hasattr(record, 'analytic_distribution') and record.analytic_distribution:
+                dist = record.analytic_distribution
+
             for line in record.line_ids:
-                self.env['account.analytic.line'].create({
-                    'name': f"Gasto: {line.product_id.name}",
-                    'account_id': record.analytic_account_id.id,
-                    'date': record.date,
-                    'amount': -line.subtotal,
-                    'ref': record.name,
-                    'company_id': record.company_id.id,
-                })
+                coste = line.subtotal
+                for account_id, percentage in dist.items():
+                    try:
+                        acc_id = int(account_id)
+                    except ValueError:
+                        continue
+                    self.env['account.analytic.line'].create({
+                        'name': f"Gasto: {line.product_id.name}",
+                        'account_id': acc_id,
+                        'date': record.date,
+                        'amount': -(coste * (percentage / 100.0)),
+                        'unit_amount': line.quantity,
+                        'product_id': line.product_id.id,
+                        'product_uom_id': line.product_id.uom_id.id,
+                        'company_id': record.company_id.id,
+                        'category': 'other',
+                        'ref': record.name,
+                    })
