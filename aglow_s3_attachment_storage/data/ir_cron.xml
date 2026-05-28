@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="ir_cron_migrate_filestore_to_s3" model="ir.cron">
+        <field name="name">S3: Phase 1 - Migrate Local Filestore to S3</field>
+        <field name="model_id" ref="base.model_ir_attachment"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_migrate_filestore_to_s3()</field>
+        <field name="user_id" ref="base.user_root"/>
+        <field name="interval_number">2</field>
+        <field name="interval_type">minutes</field>
+        <field name="nextcall" eval="'2099-01-01 22:00:00'"/>
+        <field name="active" eval="False"/>
+    </record>
+    <record id="ir_cron_gc_s3_filestore" model="ir.cron">
+        <field name="name">S3: Garbage Collect Orphaned S3 Objects</field>
+        <field name="model_id" ref="base.model_ir_attachment"/>
+        <field name="state">code</field>
+        <field name="code">model._gc_file_store_s3()</field>
+        <field name="user_id" ref="base.user_root"/>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="True"/>
+    </record>
+    <record id="ir_cron_cleanup_local_filestore" model="ir.cron">
+        <field name="name">S3: Phase 2 - Cleanup Local Filestore After Migration</field>
+        <field name="model_id" ref="base.model_ir_attachment"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_cleanup_local_filestore()</field>
+        <field name="user_id" ref="base.user_root"/>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="nextcall" eval="'2099-01-01 22:00:00'"/>
+        <field name="active" eval="False"/>
+    </record>
+    <record id="ir_cron_repair_local_excluded_attachments" model="ir.cron">
+        <field name="name">S3: Repair Local Copies of Excluded Attachments</field>
+        <field name="model_id" ref="base.model_ir_attachment"/>
+        <field name="state">code</field>
+        <field name="code">model.action_repair_local_excluded_attachments()</field>
+        <field name="user_id" ref="base.user_root"/>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="nextcall" eval="'2099-01-01 22:00:00'"/>
+        <field name="active" eval="False"/>
+    </record>
+</odoo>

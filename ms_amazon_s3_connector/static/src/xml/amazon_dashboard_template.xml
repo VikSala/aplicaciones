@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="AmazonDashboard">
+        <div class="s3-dashboard">
+            <!-- Header -->
+            <div class="s3-header">
+                <div class="s3-header-left">
+                   <img src="/ms_amazon_s3_connector/static/src/img/s3_icon.png"
+                        alt="S3" class="s3-logo"
+                        t-on-error="(ev) => ev.target.style.display='none'"/>
+                    <h2 class="s3-title">Amazon S3 Files</h2>
+                </div>
+                <div class="s3-header-right">
+                    <!-- Account Selector -->
+                    <select class="s3-filter-select"
+                            t-on-change="onAccountChange"
+                            t-if="state.accounts.length > 0">
+                        <option value="all"
+                                t-att-selected="state.selectedAccountId === 'all'">
+                            All Accounts
+                        </option>
+                        <t t-foreach="state.accounts" t-as="acc" t-key="acc.id">
+                            <option t-att-value="acc.id"
+                                    t-att-selected="acc.id === state.selectedAccountId">
+                                <t t-esc="acc.name"/> (<t t-esc="acc.bucket_name"/>)
+                            </option>
+                        </t>
+                    </select>
+                    <div class="s3-search-wrapper">
+                        <i class="fa fa-search s3-search-icon"/>
+                        <input type="search" class="s3-search-input"
+                               placeholder="Search files..."
+                               t-on-input="onSearchInput"
+                               t-att-value="state.searchQuery"/>
+                    </div>
+                    <select class="s3-filter-select" t-on-change="onFilterChange">
+                        <option value="ALL FILES">All Files</option>
+                        <option value="pdf">PDF</option>
+                        <option value="image">Images</option>
+                        <option value="zip">Archives</option>
+                        <option value="txt">Documents</option>
+                        <option value="xlsx">Spreadsheets</option>
+                    </select>
+                    <div class="s3-view-toggle">
+                        <button t-att-class="'s3-view-btn ' + (state.viewMode === 'grid' ? 'active' : '')"
+                                t-on-click="() => this.toggleView('grid')" title="Grid view">
+                            <i class="fa fa-th-large"/>
+                        </button>
+                        <button t-att-class="'s3-view-btn ' + (state.viewMode === 'list' ? 'active' : '')"
+                                t-on-click="() => this.toggleView('list')" title="List view">
+                            <i class="fa fa-list"/>
+                        </button>
+                    </div>
+                    <button class="s3-btn s3-btn-secondary" t-on-click="refresh" title="Refresh">
+                        <i class="fa fa-refresh"/>
+                    </button>
+                    <button class="s3-btn s3-btn-primary" t-on-click="upload">
+                        <i class="fa fa-cloud-upload"/>
+                        Upload
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div t-if="state.loading" class="s3-loading">
+                <i class="fa fa-spinner fa-spin fa-3x"/>
+                <p>Loading files from S3...</p>
+            </div>
+
+            <!-- Error State -->
+            <div t-elif="state.error" class="s3-error">
+                <i class="fa fa-exclamation-triangle fa-3x"/>
+                <p t-esc="state.error"/>
+                <button class="s3-btn s3-btn-primary" t-on-click="refresh">
+                    <i class="fa fa-refresh"/>
+                    Try Again
+                </button>
+            </div>
+
+            <!-- Empty State -->
+            <div t-elif="state.filteredFiles.length === 0 and !state.loading" class="s3-empty">
+                <i class="fa fa-cloud fa-3x"/>
+                <p t-if="state.searchQuery or state.filterType !== 'ALL FILES'">No files match your search or filter.</p>
+                <p t-else="">Your S3 bucket is empty. Upload your first file!</p>
+                <button t-if="!state.searchQuery and state.filterType === 'ALL FILES'"
+                        class="s3-btn s3-btn-primary" t-on-click="upload">
+                    <i class="fa fa-cloud-upload"/>
+                    Upload File
+                </button>
+            </div>
+
+            <!-- Content Area -->
+            <div t-else="" class="s3-content-wrapper">
+                <div t-att-class="'s3-content ' + (state.previewFile ? 's3-content-with-preview' : '')">
+                    <!-- File Count + Pager -->
+                    <div class="s3-toolbar">
+                        <div class="s3-file-count">
+                            <span t-esc="state.filteredFiles.length"/>
+                            file(s) on this page
+                        </div>
+                        <div class="s3-pager">
+                            <button class="s3-pager-btn"
+                                    t-on-click="prevPage"
+                                    t-att-disabled="state.page &lt;= 1">
+                                <i class="fa fa-chevron-left"/>
+                                Previous
+                            </button>
+                            <span class="s3-pager-info">
+                                Page <t t-esc="state.page"/>
+                            </span>
+                            <button class="s3-pager-btn"
+                                    t-on-click="nextPage"
+                                    t-att-disabled="!state.hasNextPage">
+                                Next
+                                <i class="fa fa-chevron-right"/>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Grid View -->
+                    <div t-if="state.viewMode === 'grid'" class="s3-grid">
+                        <t t-foreach="state.filteredFiles" t-as="file" t-key="file.name">
+                            <div t-att-class="'s3-card ' + (state.previewFile and state.previewFile.name === file.name ? 's3-card-selected' : '')"
+                                 t-on-click="() => this.selectFile(file)">
+                                <!-- Card Thumbnail -->
+                                <div class="s3-card-thumb">
+                                    <img t-if="file.is_image" t-att-src="file.url"
+                                         class="s3-card-img" alt="preview"
+                                         loading="lazy"/>
+                                    <div t-else="" class="s3-card-icon">
+                                        <i t-att-class="'fa ' + getFileIcon(file)"
+                                           t-att-style="'color: ' + getIconColor(file)"/>
+                                    </div>
+                                </div>
+                                <!-- Card Info -->
+                                <div class="s3-card-info">
+                                    <span class="s3-card-name" t-att-title="file.name" t-esc="file.name"/>
+                                    <div class="s3-card-meta">
+                                        <span class="s3-card-type" t-esc="file.file_type"/>
+                                        <span class="s3-card-size" t-esc="file.size"/>
+                                    </div>
+                                </div>
+                                <!-- Card Actions -->
+                                <div class="s3-card-actions">
+                                    <a t-att-href="file.url" target="_blank"
+                                       class="s3-icon-btn" title="Download"
+                                       t-on-click.stop="">
+                                        <i class="fa fa-download"/>
+                                    </a>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+
+                    <!-- List View -->
+                    <div t-if="state.viewMode === 'list'" class="s3-list">
+                        <table class="s3-table">
+                            <thead>
+                                <tr>
+                                    <th class="s3-th-name" t-on-click="() => this.sortBy('name')">
+                                        Name <i t-att-class="'fa ' + getSortIcon('name')"/>
+                                    </th>
+                                    <th t-on-click="() => this.sortBy('file_type')">
+                                        Type <i t-att-class="'fa ' + getSortIcon('file_type')"/>
+                                    </th>
+                                    <th t-on-click="() => this.sortBy('last_modified')">
+                                        Modified <i t-att-class="'fa ' + getSortIcon('last_modified')"/>
+                                    </th>
+                                    <th t-on-click="() => this.sortBy('size')">
+                                        Size <i t-att-class="'fa ' + getSortIcon('size')"/>
+                                    </th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="state.filteredFiles" t-as="file" t-key="file.name">
+                                    <tr t-att-class="'s3-table-row ' + (state.previewFile and state.previewFile.name === file.name ? 's3-row-selected' : '')"
+                                        t-on-click="() => this.selectFile(file)">
+                                        <td class="s3-td-name">
+                                            <i t-att-class="'fa ' + getFileIcon(file) + ' s3-row-icon'"
+                                               t-att-style="'color: ' + getIconColor(file)"/>
+                                            <span t-esc="file.name"/>
+                                        </td>
+                                        <td><span class="s3-type-badge" t-esc="file.file_type"/></td>
+                                        <td class="s3-td-date" t-esc="file.last_modified"/>
+                                        <td t-esc="file.size"/>
+                                        <td>
+                                            <a t-att-href="file.url" target="_blank"
+                                               class="s3-icon-btn" title="Download"
+                                               t-on-click.stop="">
+                                                <i class="fa fa-download"/>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Preview Panel -->
+                <div t-if="state.previewFile" class="s3-preview-panel">
+                    <div class="s3-preview-header">
+                        <h4>Preview</h4>
+                        <button class="s3-icon-btn" t-on-click="closePreview" title="Close preview">
+                            <i class="fa fa-times"/>
+                        </button>
+                    </div>
+                    <div class="s3-preview-body">
+                        <!-- Image Preview -->
+                        <div t-if="state.previewFile.is_image" class="s3-preview-image">
+                            <img t-att-src="state.previewFile.url" alt="Preview"/>
+                        </div>
+                        <!-- PDF Preview -->
+                        <div t-elif="state.previewFile.is_pdf" class="s3-preview-pdf">
+                            <iframe t-att-src="state.previewFile.url" width="100%" height="100%"/>
+                        </div>
+                        <!-- No Preview -->
+                        <div t-else="" class="s3-preview-none">
+                            <i t-att-class="'fa ' + getFileIcon(state.previewFile) + ' fa-4x'"
+                               t-att-style="'color: ' + getIconColor(state.previewFile)"/>
+                            <p>Preview not available for this file type.</p>
+                        </div>
+                    </div>
+                    <div class="s3-preview-details">
+                        <div class="s3-detail-row">
+                            <span class="s3-detail-label">Name</span>
+                            <span class="s3-detail-value" t-esc="state.previewFile.name"/>
+                        </div>
+                        <div class="s3-detail-row">
+                            <span class="s3-detail-label">Type</span>
+                            <span class="s3-detail-value" t-esc="state.previewFile.file_type"/>
+                        </div>
+                        <div class="s3-detail-row">
+                            <span class="s3-detail-label">Size</span>
+                            <span class="s3-detail-value" t-esc="state.previewFile.size"/>
+                        </div>
+                        <div class="s3-detail-row">
+                            <span class="s3-detail-label">Modified</span>
+                            <span class="s3-detail-value" t-esc="state.previewFile.last_modified"/>
+                        </div>
+                        <a t-att-href="state.previewFile.url" target="_blank"
+                           class="s3-btn s3-btn-primary s3-btn-block">
+                            <i class="fa fa-download"/>
+                            Download File
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

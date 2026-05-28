@@ -1,0 +1,276 @@
+<section class="container" style="padding: 48px 0;">
+  <div class="row">
+    <div class="col-12">
+      <p style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #6B6C72; margin: 0 0 16px;">
+        <span style="color: #6C5CE7;">M/01 &mdash;</span> Alpenglow module
+      </p>
+      <p style="margin: 0 0 20px;"><img src="hero_gradient_aglow_s3_attachment_storage.png" alt="S3 Attachment Storage, for Odoo filestores that outgrew the disk." style="max-width: 100%; height: auto; display: block;"/></p>
+      <p style="font-size: 18px; line-height: 1.55; color: #2D2F36; max-width: 60ch; margin: 0;">
+        Transparent S3 reads, writes, and deletes for every Odoo attachment &mdash; with automatic local fallback, retry with backoff, and two-phase migration tooling for existing filestores.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="container" style="padding: 48px 0; border-top: 1px solid #D6D6D4;">
+  <div class="row">
+    <div class="col-12">
+      <p style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #6B6C72; margin: 0 0 8px;">
+        <span style="color: #6C5CE7;">01 &mdash;</span> Overview
+      </p>
+      <h2 style="font-family: Georgia, serif; font-size: 32px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; color: #0B0D12; margin: 0 0 24px;">
+        Attachments live in S3. Odoo never notices.
+      </h2>
+    </div>
+    <div class="col-12 col-md-6">
+      <p style="font-size: 15px; line-height: 1.6; color: #2D2F36; margin: 0 0 16px;">
+        The module overrides three methods on <code>ir.attachment</code> so every read, write, and delete routes through S3. Works with Amazon S3, DigitalOcean Spaces, MinIO, Backblaze B2, and any S3-compatible provider.
+      </p>
+      <p style="font-size: 15px; line-height: 1.6; color: #2D2F36; margin: 0;">
+        If S3 is unreachable or unconfigured, operations fall back to the local filesystem silently &mdash; no errors, no downtime, no data loss.
+      </p>
+    </div>
+    <div class="col-12 col-md-6">
+      <p style="font-size: 15px; line-height: 1.6; color: #2D2F36; margin: 0 0 16px;">
+        Credentials persist in <code>ir.config_parameter</code>, so they survive Odoo SH builds where environment variables don&rsquo;t. A production-only mode prevents staging and dev branches from writing to your production bucket.
+      </p>
+      <p style="font-size: 15px; line-height: 1.6; color: #2D2F36; margin: 0;">
+        Purpose-built for <strong>Odoo SH</strong> instances approaching their storage limit.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="container" style="padding: 48px 0; border-top: 2px solid #6C5CE7; background: #F6F3EC;">
+  <div class="row">
+    <div class="col-12">
+      <p style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #6B6C72; margin: 0 0 8px;">
+        <span style="color: #2D3196;">02 &mdash;</span> What&rsquo;s included
+      </p>
+      <h2 style="font-family: Georgia, serif; font-size: 32px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; color: #0B0D12; margin: 0 0 32px;">
+        Three engines, one install.
+      </h2>
+    </div>
+    <div class="col-12 col-md-6 col-lg-4 mb-4">
+      <div style="padding: 24px; background: #FFFFFF; border: 1px solid #D6D6D4; height: 100%;">
+        <p style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #6C5CE7; letter-spacing: 0.1em; margin: 0 0 20px;">F/01</p>
+        <h3 style="font-family: Georgia, serif; font-size: 22px; font-weight: 500; letter-spacing: -0.01em; color: #0B0D12; margin: 0 0 12px;">S3 storage engine</h3>
+        <p style="font-size: 14px; line-height: 1.6; color: #2D2F36; margin: 0 0 12px;">Transparent read / write / delete that overrides Odoo&rsquo;s core file methods. Retry up to three times with exponential backoff and jitter before falling back.</p>
+        <p style="font-size: 14px; line-height: 1.6; color: #2D2F36; margin: 0;">Any provider that speaks the S3 API &mdash; configurable endpoint and region.</p>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 col-lg-4 mb-4">
+      <div style="padding: 24px; background: #FFFFFF; border: 1px solid #D6D6D4; height: 100%;">
+        <p style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #6C5CE7; letter-spacing: 0.1em; margin: 0 0 20px;">F/02</p>
+        <h3 style="font-family: Georgia, serif; font-size: 22px; font-weight: 500; letter-spacing: -0.01em; color: #0B0D12; margin: 0 0 12px;">Odoo SH ready</h3>
+        <p style="font-size: 14px; line-height: 1.6; color: #2D2F36; margin: 0 0 12px;">Credentials in <code>ir.config_parameter</code> persist across builds. Configure from <strong>Settings &rarr; General Settings &rarr; S3 Attachment Storage</strong>.</p>
+        <p style="font-size: 14px; line-height: 1.6; color: #2D2F36; margin: 0;">Production-only mode keeps staging and dev branches from mutating your production bucket.</p>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 col-lg-4 mb-4">
+      <div style="padding: 24px; background: #FFFFFF; border: 1px solid #D6D6D4; height: 100%;">
+        <p style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #6C5CE7; letter-spacing: 0.1em; margin: 0 0 20px;">F/03</p>
+        <h3 style="font-family: Georgia, serif; font-size: 22px; font-weight: 500; letter-spacing: -0.01em; color: #0B0D12; margin: 0 0 12px;">Migration tooling</h3>
+        <p style="font-size: 14px; line-height: 1.6; color: #2D2F36; margin: 0 0 12px;">Two-phase cron jobs upload every existing attachment to S3, verify with a HEAD request, then delete the local copy.</p>
+        <p style="font-size: 14px; line-height: 1.6; color: #2D2F36; margin: 0;">Batched, resumable, idempotent, deduplicated by checksum.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="container" style="padding: 48px 0; border-top: 1px solid #D6D6D4;">
+  <div class="row">
+    <div class="col-12">
+      <p style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #6B6C72; margin: 0 0 8px;">
+        <span style="color: #6C5CE7;">03 &mdash;</span> How it works
+      </p>
+      <h2 style="font-family: Georgia, serif; font-size: 32px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; color: #0B0D12; margin: 0 0 20px;">
+        Three overrides on <code>ir.attachment</code>. <em style="font-weight: 400;">No schema change.</em>
+      </h2>
+      <p style="font-size: 15px; line-height: 1.6; color: #2D2F36; max-width: 60ch; margin: 0 0 32px;">
+        The <code>store_fname</code> field serves double duty as the local path and the S3 object key &mdash; no database migration is needed to install or uninstall.
+      </p>
+    </div>
+    <div class="col-12 col-md-4 mb-3">
+      <div style="border-top: 1px solid #D6D6D4; padding: 20px 0 0;">
+        <p style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #6C5CE7; letter-spacing: 0.1em; margin: 0 0 8px;">OP/01 &mdash; READ</p>
+        <p style="font-size: 15px; line-height: 1.55; color: #2D2F36; margin: 0;">Tries S3 first. If the key doesn&rsquo;t exist or S3 is unreachable, falls back to the local filesystem.</p>
+      </div>
+    </div>
+    <div class="col-12 col-md-4 mb-3">
+      <div style="border-top: 1px solid #D6D6D4; padding: 20px 0 0;">
+        <p style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #6C5CE7; letter-spacing: 0.1em; margin: 0 0 8px;">OP/02 &mdash; WRITE</p>
+        <p style="font-size: 15px; line-height: 1.55; color: #2D2F36; margin: 0;">Uploads to S3. On failure, falls back to local storage so the attachment is never lost.</p>
+      </div>
+    </div>
+    <div class="col-12 col-md-4 mb-3">
+      <div style="border-top: 1px solid #D6D6D4; padding: 20px 0 0;">
+        <p style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #6C5CE7; letter-spacing: 0.1em; margin: 0 0 8px;">OP/03 &mdash; DELETE</p>
+        <p style="font-size: 15px; line-height: 1.55; color: #2D2F36; margin: 0;">Removes the object from S3, then marks any local copy for Odoo&rsquo;s garbage collector.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="container" style="padding: 48px 0; border-top: 1px solid #D6D6D4;">
+  <div class="row">
+    <div class="col-12">
+      <p style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #6B6C72; margin: 0 0 8px;">
+        <span style="color: #6C5CE7;">04 &mdash;</span> Configuration
+      </p>
+      <h2 style="font-family: Georgia, serif; font-size: 32px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; color: #0B0D12; margin: 0 0 32px;">
+        Four steps. <em style="font-weight: 400;">Takes about five minutes.</em>
+      </h2>
+    </div>
+    <div class="col-12">
+      <h3 style="font-family: Georgia, serif; font-size: 20px; font-weight: 500; color: #0B0D12; margin: 0 0 8px;">1. Install boto3</h3>
+      <p style="font-size: 15px; line-height: 1.6; color: #2D2F36; margin: 0 0 24px;">Add <code>boto3</code> to <code>requirements.txt</code> at the root of your Git repository (not inside the module folder). Odoo SH installs it automatically on each build. For self-hosted, run <code>pip install boto3</code>.</p>
+
+      <h3 style="font-family: Georgia, serif; font-size: 20px; font-weight: 500; color: #0B0D12; margin: 0 0 8px;">2. Enter S3 credentials</h3>
+      <p style="font-size: 15px; line-height: 1.6; color: #2D2F36; margin: 0 0 16px;">
+        Navigate to <strong>Settings &rarr; General Settings &rarr; S3 Attachment Storage</strong> and fill in the five fields below.
+      </p>
+      <table class="table" style="font-size: 14px; border-collapse: collapse; width: 100%; margin: 0 0 24px;">
+        <thead>
+          <tr style="border-bottom: 1px solid #6C5CE7;">
+            <th style="text-align: left; padding: 8px 12px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #6B6C72; width: 28%;">Field</th>
+            <th style="text-align: left; padding: 8px 12px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #6B6C72;">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid #E4E4E1;"><td style="padding: 12px;"><strong>S3 Bucket</strong></td><td style="padding: 12px; color: #2D2F36;">Bucket or Space name.</td></tr>
+          <tr style="border-bottom: 1px solid #E4E4E1;"><td style="padding: 12px;"><strong>Access Key ID</strong></td><td style="padding: 12px; color: #2D2F36;">AWS access key or provider equivalent.</td></tr>
+          <tr style="border-bottom: 1px solid #E4E4E1;"><td style="padding: 12px;"><strong>Secret Access Key</strong></td><td style="padding: 12px; color: #2D2F36;">AWS secret key or provider equivalent &mdash; masked in UI.</td></tr>
+          <tr style="border-bottom: 1px solid #E4E4E1;"><td style="padding: 12px;"><strong>Endpoint URL</strong></td><td style="padding: 12px; color: #2D2F36;">Leave empty for AWS. Otherwise e.g. <code>https://nyc3.digitaloceanspaces.com</code>.</td></tr>
+          <tr style="border-bottom: 1px solid #E4E4E1;"><td style="padding: 12px;"><strong>Region</strong></td><td style="padding: 12px; color: #2D2F36;">AWS region code (e.g. <code>us-east-1</code>) or provider region.</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="font-family: Georgia, serif; font-size: 20px; font-weight: 500; color: #0B0D12; margin: 0 0 8px;">3. Enable production-only mode (Odoo SH)</h3>
+      <p style="font-size: 15px; line-height: 1.6; color: #2D2F36; margin: 0 0 24px;">Check <strong>Production Only</strong>. Staging and dev builds will still read from S3 but will write locally, protecting your production bucket.</p>
+
+      <h3 style="font-family: Georgia, serif; font-size: 20px; font-weight: 500; color: #0B0D12; margin: 0 0 8px;">4. Migrate existing attachments</h3>
+      <p style="font-size: 15px; line-height: 1.6; color: #2D2F36; margin: 0;">Activate the two scheduled actions under <strong>Settings &rarr; Technical &rarr; Scheduled Actions</strong> &mdash; Phase 1 uploads, Phase 2 verifies and removes local copies. Both are inactive by default.</p>
+    </div>
+  </div>
+</section>
+
+<section class="container" style="padding: 48px 0; border-top: 1px solid #D6D6D4;">
+  <div class="row">
+    <div class="col-12">
+      <p style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #6B6C72; margin: 0 0 8px;">
+        <span style="color: #6C5CE7;">05 &mdash;</span> Supported providers
+      </p>
+      <h2 style="font-family: Georgia, serif; font-size: 32px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; color: #0B0D12; margin: 0 0 24px;">
+        Any storage that speaks S3.
+      </h2>
+      <table class="table" style="font-size: 14px; border-collapse: collapse; width: 100%;">
+        <thead>
+          <tr style="border-bottom: 1px solid #6C5CE7;">
+            <th style="text-align: left; padding: 8px 12px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #6B6C72; width: 32%;">Provider</th>
+            <th style="text-align: left; padding: 8px 12px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #6B6C72;">Endpoint URL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid #E4E4E1;"><td style="padding: 12px;"><strong>Amazon S3</strong></td><td style="padding: 12px; color: #6B6C72;"><em>leave empty</em></td></tr>
+          <tr style="border-bottom: 1px solid #E4E4E1;"><td style="padding: 12px;"><strong>DigitalOcean Spaces</strong></td><td style="padding: 12px;"><code>https://nyc3.digitaloceanspaces.com</code></td></tr>
+          <tr style="border-bottom: 1px solid #E4E4E1;"><td style="padding: 12px;"><strong>MinIO</strong></td><td style="padding: 12px;"><code>http://minio.internal:9000</code></td></tr>
+          <tr style="border-bottom: 1px solid #E4E4E1;"><td style="padding: 12px;"><strong>Backblaze B2</strong></td><td style="padding: 12px;"><code>https://s3.us-west-002.backblazeb2.com</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="container" style="padding: 48px 0; border-top: 1px solid #D6D6D4;">
+  <div class="row">
+    <div class="col-12">
+      <p style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #6B6C72; margin: 0 0 8px;">
+        <span style="color: #6C5CE7;">06 &mdash;</span> Compatibility
+      </p>
+      <h2 style="font-family: Georgia, serif; font-size: 32px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; color: #0B0D12; margin: 0 0 24px;">
+        Odoo 15 &ndash; 19. CE &amp; EE. Odoo SH and self-hosted.
+      </h2>
+      <table class="table" style="font-size: 14px; border-collapse: collapse; width: 100%;">
+        <thead>
+          <tr style="border-bottom: 1px solid #6C5CE7;">
+            <th style="text-align: left; padding: 8px 12px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #6B6C72; width: 32%;">Dependency</th>
+            <th style="text-align: left; padding: 8px 12px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #6B6C72;">Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid #E4E4E1;"><td style="padding: 12px;"><strong>base</strong></td><td style="padding: 12px; color: #2D2F36;">Core attachment model and system parameters.</td></tr>
+          <tr style="border-bottom: 1px solid #E4E4E1;"><td style="padding: 12px;"><strong>base_setup</strong></td><td style="padding: 12px; color: #2D2F36;">Settings UI framework.</td></tr>
+          <tr style="border-bottom: 1px solid #E4E4E1;"><td style="padding: 12px;"><strong>boto3</strong> <span style="color: #6B6C72;">(pip)</span></td><td style="padding: 12px; color: #2D2F36;">AWS SDK for Python &mdash; S3 API client.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="container" style="padding: 48px 0; border-top: 1px solid #D6D6D4;">
+  <div class="row">
+    <div class="col-12">
+      <p style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #6B6C72; margin: 0 0 8px;">
+        <span style="color: #6C5CE7;">07 &mdash;</span> Changelog
+      </p>
+      <h2 style="font-family: Georgia, serif; font-size: 32px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; color: #0B0D12; margin: 0 0 32px;">
+        What changed and why.
+      </h2>
+    </div>
+    <div class="col-12">
+      <div style="border-top: 1px solid #6C5CE7; padding: 20px 0 24px;">
+        <p style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #6C5CE7; letter-spacing: 0.1em; margin: 0 0 8px;">V/18.0.1.0.3</p>
+        <h3 style="font-family: Georgia, serif; font-size: 20px; font-weight: 500; color: #0B0D12; margin: 0 0 12px;">Excluded models, repair action, client caching</h3>
+        <ul style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.7; color: #2D2F36;">
+          <li><strong>Excluded models for local storage</strong> &mdash; attachments for <code>ir.ui.menu</code> and <code>ir.ui.view</code> now stay on local disk. Menu icons are read on every page load, so round-tripping to S3 was adding noticeable latency.</li>
+          <li><strong>Repair action</strong> &mdash; a new scheduled action rehydrates local copies of excluded-model attachments from S3. Useful for existing installations where the cleanup cron already removed them.</li>
+          <li><strong>S3 client caching</strong> &mdash; boto3 clients cached at module scope, keyed on the full credential tuple. Credential rotation handled automatically.</li>
+          <li><strong>Simplified read retry</strong> &mdash; removed the redundant application-level retry loop from <code>_file_read</code>. Boto3 retries internally; the double loop was amplifying tail latency.</li>
+        </ul>
+      </div>
+      <div style="border-top: 1px solid #E4E4E1; padding: 20px 0 24px;">
+        <p style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #6C5CE7; letter-spacing: 0.1em; margin: 0 0 8px;">V/18.0.1.0.2</p>
+        <h3 style="font-family: Georgia, serif; font-size: 20px; font-weight: 500; color: #0B0D12; margin: 0 0 12px;">Web assets stored locally</h3>
+        <ul style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.7; color: #2D2F36;">
+          <li><strong>Excluded mimetypes</strong> &mdash; CSS, JavaScript, SCSS, and icon files stay on local disk instead of S3. These assets are served on every page load.</li>
+          <li><strong>Local-first reads</strong> &mdash; <code>_file_read</code> checks local disk before hitting S3, improving performance for any file with a local copy.</li>
+          <li><strong>Context-aware writes</strong> &mdash; <code>_file_write</code> routes business documents to S3 and web assets to local disk.</li>
+          <li><strong>Migration cron skips assets</strong> &mdash; Phase 1 now skips web assets and system resources.</li>
+        </ul>
+      </div>
+      <div style="border-top: 1px solid #E4E4E1; padding: 20px 0 24px;">
+        <p style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #6C5CE7; letter-spacing: 0.1em; margin: 0 0 8px;">V/18.0.1.0.1</p>
+        <h3 style="font-family: Georgia, serif; font-size: 20px; font-weight: 500; color: #0B0D12; margin: 0 0 12px;">S3 garbage collection</h3>
+        <ul style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.7; color: #2D2F36;">
+          <li><strong>GC cron</strong> &mdash; a daily scheduled action safely removes orphaned S3 objects. Replaces immediate deletion in <code>_file_delete</code> which could remove shared content-addressed files.</li>
+          <li><strong>Safe delete deferral</strong> &mdash; <code>_file_delete</code> now defers to the GC cron, which verifies zero references before removing from S3.</li>
+        </ul>
+      </div>
+      <div style="border-top: 1px solid #E4E4E1; padding: 20px 0 0;">
+        <p style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #6C5CE7; letter-spacing: 0.1em; margin: 0 0 8px;">V/18.0.1.0.0</p>
+        <h3 style="font-family: Georgia, serif; font-size: 20px; font-weight: 500; color: #0B0D12; margin: 0 0 12px;">Initial release</h3>
+        <p style="font-size: 14px; line-height: 1.7; color: #2D2F36; margin: 0;">Transparent S3 attachment storage with automatic fallback, retry with exponential backoff, two-phase migration tooling, Settings UI, production-only mode, and S3-compatible provider support.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="container" style="padding: 48px 0; border-top: 1px solid #D6D6D4;">
+  <div class="row">
+    <div class="col-12">
+      <p style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #6B6C72; margin: 0 0 8px;">
+        <span style="color: #6C5CE7;">08 &mdash;</span> Support
+      </p>
+      <h2 style="font-family: Georgia, serif; font-size: 32px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; color: #0B0D12; margin: 0 0 20px;">
+        A real engineer reads every email.
+      </h2>
+      <p style="font-size: 15px; line-height: 1.6; color: #2D2F36; margin: 0;">
+        Email <a href="mailto:contact@aglow.dev" style="color: #6C5CE7; text-decoration: underline;">contact@aglow.dev</a>
+      </p>
+      <p style="font-size: 14px; line-height: 1.6; color: #6B6C72; margin: 24px 0 0;">
+        <strong>S3 Attachment Storage</strong> is developed and maintained by Alpenglow Technologies LLC. Provided &ldquo;as is&rdquo; without warranty of any kind.
+      </p>
+    </div>
+  </div>
+</section>
