@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="product_json_ld" inherit_id="website_sale.product" name="Google Rich Snippets JSON-LD">
+        <xpath expr="//t[@t-call='website.layout']" position="inside">
+            <t t-set="base_url" t-value="request.env['ir.config_parameter'].sudo().get_param('web.base.url')"/>
+            
+            <script type="application/ld+json">
+                {
+                    "@context": "https://schema.org/",
+                    "@type": "Product",
+                    "name": "<t t-esc="product.name"/>",
+                    "image": [
+                        "<t t-esc="base_url"/>/web/image/product.template/<t t-esc="product.id"/>/image_1920"
+                    ],
+                    "description": "<t t-esc="product.description_sale or product.name"/>",
+                    "sku": "<t t-esc="product.default_code or product.id"/>",
+                    "brand": {
+                        "@type": "Brand",
+                        "name": "<t t-esc="res_company.name"/>"
+                    },
+                    "offers": {
+                        "@type": "Offer",
+                        "url": "<t t-esc="request.httprequest.url"/>",
+                        "priceCurrency": "<t t-esc="website.currency_id.name"/>",
+                        "price": "<t t-esc="product.list_price"/>",
+                        "availability": "<t t-if='product.qty_available &gt; 0'>https://schema.org/InStock</t><t t-else=''>https://schema.org/OutOfStock</t>",
+                        "itemCondition": "https://schema.org/NewCondition"
+                    }
+                    <t t-if="product.rating_last_value and product.rating_last_value &gt; 0">
+                    ,"aggregateRating": {
+                        "@type": "AggregateRating",
+                        "ratingValue": "<t t-esc="product.rating_last_value"/>",
+                        "reviewCount": "<t t-esc="product.rating_count"/>"
+                    }
+                    </t>
+                }
+            </script>
+        </xpath>
+    </template>
+</odoo>

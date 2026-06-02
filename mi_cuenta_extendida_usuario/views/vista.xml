@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="portal_my_home_custom" inherit_id="portal.portal_my_home" priority="1">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+            <style>
+                /* Contenedor Grid: 3 columnas idénticas */
+                .cabrera-grid {
+                    display: grid !important;
+                    grid-template-columns: repeat(3, 1fr) !important;
+                    gap: 20px !important;
+                    width: 100% !important;
+                    margin-bottom: 40px !important;
+                }
+
+                /* El enlace/botón: Forzamos altura y comportamiento de caja */
+                .cabrera-btn {
+                    background-color: var(--secondary-color) !important;
+                    color: white !important;
+                    text-decoration: none !important;
+                    
+                    /* ALTURA FIJA: Aquí no hay error posible */
+                    height: 100px !important; 
+                    
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: flex-start !important;
+                    padding: 0 15px !important;
+                    border-radius: 8px !important;
+                    border: none !important;
+                    box-sizing: border-box !important;
+                }
+
+                .cabrera-btn:hover {
+                    filter: brightness(1.1);
+                    color: white !important;
+                }
+
+                /* Contenedor del icono: Ancho fijo para que el texto empiece igual */
+                .cabrera-icon {
+                    width: 50px !important;
+                    font-size: 2.2rem !important;
+                    display: flex !important;
+                    justify-content: center !important;
+                    align-items: center !important;
+                    flex-shrink: 0 !important;
+                    margin-right: 10px !important;
+                }
+
+                /* El texto: Quitamos márgenes de Odoo que descuadran todo */
+                .cabrera-label {
+                    flex: 1 !important;
+                    font-weight: bold !important;
+                    font-size: 1.1rem !important;
+                    line-height: 1 !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    text-align: left !important;
+                    color: white !important;
+                }
+
+                /* La flecha final */
+                .cabrera-arrow {
+                    font-size: 0.9rem !important;
+                    opacity: 0.5;
+                    flex-shrink: 0 !important;
+                }
+
+                /* Móviles */
+                @media (max-width: 992px) { .cabrera-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+                @media (max-width: 576px) { .cabrera-grid { grid-template-columns: 1fr !important; } }
+            </style>
+
+            <div class="cabrera-grid">
+                <a href="/my/account" class="cabrera-btn">
+                    <div class="cabrera-icon"><i class="fa fa-user-circle"/></div>
+                    <span class="cabrera-label">Información Personal</span>
+                    <i class="fa fa-chevron-right cabrera-arrow"/>
+                </a>
+
+                <a href="/my/orders" class="cabrera-btn">
+                    <div class="cabrera-icon"><i class="fa fa-shopping-bag"/></div>
+                    <span class="cabrera-label">Mis Pedidos</span>
+                    <i class="fa fa-chevron-right cabrera-arrow"/>
+                </a>
+
+                <a href="/my/invoices" class="cabrera-btn">
+                    <div class="cabrera-icon"><i class="fa fa-file-text"/></div>
+                    <span class="cabrera-label">Facturas</span>
+                    <i class="fa fa-chevron-right cabrera-arrow"/>
+                </a>
+
+                <a href="/my/quotes" class="cabrera-btn">
+                    <div class="cabrera-icon"><i class="fa fa-calculator"/></div>
+                    <span class="cabrera-label">Presupuestos</span>
+                    <i class="fa fa-chevron-right cabrera-arrow"/>
+                </a>
+
+                <a href="/my/picking" class="cabrera-btn">
+                    <div class="cabrera-icon"><i class="fa fa-truck"/></div>
+                    <span class="cabrera-label">Seguimiento</span>
+                    <i class="fa fa-chevron-right cabrera-arrow"/>
+                </a>
+
+                <a href="/my/security" class="cabrera-btn">
+                    <div class="cabrera-icon"><i class="fa fa-lock"/></div>
+                    <span class="cabrera-label">Seguridad 2FA</span>
+                    <i class="fa fa-chevron-right cabrera-arrow"/>
+                </a>
+            </div>
+        </xpath>
+
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="attributes">
+            <attribute name="style">display: none !important; visibility: hidden !important; height: 0 !important; margin: 0 !important; padding: 0 !important;</attribute>
+        </xpath>
+    </template>
+</odoo>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_catalog_pdf" model="ir.actions.report">
+        <field name="name">Catálogo de Productos</field>
+        <field name="model">product.template</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">sh_product_catalog_lite.catalog_template_view</field>
+    </record>
+</odoo>

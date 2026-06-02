@@ -1,0 +1,28 @@
+<odoo>
+    <record id="view_product_catalog_wizard_form" model="ir.ui.view">
+        <field name="name">product.catalog.wizard.form</field>
+        <field name="model">product.catalog.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <p>Se exportarán los productos seleccionados.</p>
+                        <field name="export_type" widget="radio"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_export" string="Generar Archivo" type="object" class="btn-primary"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_product_catalog_wizard" model="ir.actions.act_window">
+        <field name="name">Exportar Catálogo</field>
+        <field name="res_model">product.catalog.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="product.model_product_template"/>
+        <field name="binding_view_types">list</field> </record>
+</odoo>
