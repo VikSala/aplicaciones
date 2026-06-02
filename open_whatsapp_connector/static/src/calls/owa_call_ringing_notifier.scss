@@ -1,0 +1,283 @@
+/* WhatsApp incoming-call card. Mounted in main_components, fixed
+   top-right, stacks multiple concurrent calls vertically. */
+
+$owa-wa-green: #25D366;
+$owa-wa-green-dark: #128C7E;
+$owa-reject-red: #ef4444;
+$owa-card-bg: #ffffff;
+$owa-card-border: #e5e7eb;
+$owa-text-primary: #111827;
+$owa-text-secondary: #6b7280;
+
+.o_owa_call_stack {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 1080;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+}
+
+.o_owa_call_card {
+    pointer-events: auto;
+    width: 360px;
+    max-width: calc(100vw - 32px);
+    background: $owa-card-bg;
+    border: 1px solid $owa-card-border;
+    border-left: 4px solid $owa-wa-green;
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(16, 24, 40, 0.16),
+                0 4px 12px rgba(16, 24, 40, 0.08);
+    padding: 16px 16px 14px;
+    position: relative;
+    animation: owa-call-slide-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: $owa-text-primary;
+
+    &.o_owa_call_card_video {
+        border-left-color: $owa-wa-green-dark;
+    }
+}
+
+.o_owa_call_close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    border: 0;
+    background: transparent;
+    color: $owa-text-secondary;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    transition: background 120ms;
+
+    &:hover {
+        background: #f3f4f6;
+        color: $owa-text-primary;
+    }
+}
+
+.o_owa_call_header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+    padding-right: 16px;
+}
+
+/* ---------- avatar with pulse ring ---------- */
+
+.o_owa_call_avatar_wrap {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+}
+
+.o_owa_call_avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid $owa-wa-green;
+    background: #f3f4f6;
+    display: block;
+    position: relative;
+    z-index: 2;
+}
+
+.o_owa_call_avatar_initial {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, $owa-wa-green 0%, $owa-wa-green-dark 100%);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: -0.02em;
+}
+
+.o_owa_call_pulse {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid rgba(37, 211, 102, 0.55);
+    z-index: 1;
+    animation: owa-call-pulse 1.5s ease-out infinite;
+    pointer-events: none;
+}
+
+.o_owa_call_pulse_2 {
+    animation-delay: 0.6s;
+}
+
+@keyframes owa-call-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+    80% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+@keyframes owa-call-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.o_owa_call_kind_badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    z-index: 3;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: $owa-wa-green;
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    line-height: 1;
+}
+
+/* ---------- meta column ---------- */
+
+.o_owa_call_meta {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.o_owa_call_label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $owa-wa-green-dark;
+    margin-bottom: 4px;
+}
+
+.o_owa_call_dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: $owa-wa-green;
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.6);
+    animation: owa-dot-pulse 1.4s ease-out infinite;
+}
+
+@keyframes owa-dot-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.6); }
+    70%  { box-shadow: 0 0 0 10px rgba(37, 211, 102, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+}
+
+.o_owa_call_name {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: $owa-text-primary;
+    letter-spacing: -0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.o_owa_call_sub {
+    margin-top: 3px;
+    font-size: 12.5px;
+    color: $owa-text-secondary;
+    line-height: 1.3;
+}
+
+.o_owa_call_sep {
+    margin: 0 6px;
+    color: #cbd5e1;
+}
+
+/* ---------- action buttons ---------- */
+
+.o_owa_call_actions {
+    display: flex;
+    gap: 8px;
+}
+
+.o_owa_call_btn {
+    flex: 1 1 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 9px 14px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: transform 80ms ease, background 120ms ease, box-shadow 120ms ease;
+
+    i {
+        font-size: 12px;
+    }
+
+    &:hover {
+        transform: translateY(-1px);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+}
+
+.o_owa_call_btn_reject {
+    background: $owa-reject-red;
+    color: #ffffff;
+    border-color: $owa-reject-red;
+    box-shadow: 0 1px 2px rgba(239, 68, 68, 0.25);
+
+    &:hover {
+        background: #dc2626;
+        border-color: #dc2626;
+        color: #ffffff;
+    }
+
+    .o_owa_rotate {
+        transform: rotate(135deg);
+    }
+}
+
+.o_owa_call_btn_open {
+    background: #f3f4f6;
+    color: $owa-text-primary;
+    border-color: $owa-card-border;
+
+    &:hover {
+        background: #e5e7eb;
+        color: $owa-text-primary;
+    }
+}

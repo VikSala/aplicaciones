@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!--
+        Starter quick-reply templates paired with the pre-built notification
+        rules created by the post_init_hook (see __init__.py). These give every
+        ready-to-activate rule a friendly default message so a non-technical
+        admin only has to pick an account and flip the rule Active.
+
+        Variables resolved at send time by owa.notification.rule:
+          {{partner_name}} {{record_name}} {{amount_total}} {{currency}} {{date}}
+        Templates only reference {{amount_total}}/{{currency}} for models that
+        actually expose those fields (sale/purchase/invoice/payment).
+    -->
+
+    <record id="quick_reply_quotation_sent" model="owa.quick.reply">
+        <field name="name">Quotation Sent</field>
+        <field name="template_type">text</field>
+        <field name="body">Hello {{partner_name}},
+
+Your quotation *{{record_name}}* is ready.
+
+Amount: {{amount_total}} {{currency}}
+
+Reply here if you have any questions — we're happy to help!</field>
+        <field name="phone_field">partner_id.phone</field>
+    </record>
+
+    <record id="quick_reply_po_confirmed" model="owa.quick.reply">
+        <field name="name">Purchase Order Confirmed</field>
+        <field name="template_type">text</field>
+        <field name="body">Hello {{partner_name}},
+
+We've confirmed purchase order *{{record_name}}*.
+
+Amount: {{amount_total}} {{currency}}
+
+Thank you — we'll keep you updated on delivery.</field>
+        <field name="phone_field">partner_id.phone</field>
+    </record>
+
+    <record id="quick_reply_repair_done" model="owa.quick.reply">
+        <field name="name">Repair Completed</field>
+        <field name="template_type">text</field>
+        <field name="body">Hello {{partner_name}},
+
+Good news! Your repair *{{record_name}}* is complete and ready.
+
+Thank you for choosing us.</field>
+        <field name="phone_field">partner_id.phone</field>
+    </record>
+
+    <record id="quick_reply_crm_won" model="owa.quick.reply">
+        <field name="name">Opportunity Won</field>
+        <field name="template_type">text</field>
+        <field name="body">Hello {{partner_name}},
+
+Thank you for choosing us! We're excited to get started on *{{record_name}}*. Our team will be in touch with the next steps.</field>
+        <field name="phone_field">partner_id.phone</field>
+    </record>
+
+    <record id="quick_reply_task_done" model="owa.quick.reply">
+        <field name="name">Task Completed</field>
+        <field name="template_type">text</field>
+        <field name="body">Hello {{partner_name}},
+
+The task *{{record_name}}* has been completed. Please let us know if everything looks good!</field>
+        <field name="phone_field">partner_id.phone</field>
+    </record>
+
+    <record id="quick_reply_ticket_solved" model="owa.quick.reply">
+        <field name="name">Support Ticket Solved</field>
+        <field name="template_type">text</field>
+        <field name="body">Hello {{partner_name}},
+
+Your support request *{{record_name}}* has been resolved. If you still need help, just reply here and we'll reopen it.</field>
+        <field name="phone_field">partner_id.phone</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Phase 26F: ready-to-use Sale-flow WhatsApp templates.
+         Activated via the "Activate sales templates" button on owa.account. -->
+
+    <record id="quick_reply_so_quote_sent" model="owa.quick.reply">
+        <field name="name">Quote Sent</field>
+        <field name="body">Hi {{partner_name}}, your quote {{record_name}} for {{currency}} {{amount}} is ready. View it here: {{record_url}}</field>
+    </record>
+
+    <record id="quick_reply_so_quote_expiring_soon" model="owa.quick.reply">
+        <field name="name">Quote Expiring Soon (7 days)</field>
+        <field name="body">Hi {{partner_name}}, just a friendly reminder — your quote {{record_name}} expires in 7 days. Let us know if you have questions.</field>
+    </record>
+
+    <record id="quick_reply_so_quote_expiring_today" model="owa.quick.reply">
+        <field name="name">Quote Expiring Today</field>
+        <field name="body">Hi {{partner_name}}, your quote {{record_name}} expires today. Reply CONFIRM to lock the price.</field>
+    </record>
+
+    <record id="quick_reply_so_order_confirmed" model="owa.quick.reply">
+        <field name="name">Order Confirmed</field>
+        <field name="body">Thanks {{partner_name}}! Your order {{record_name}} is confirmed and being prepared. We'll WhatsApp you when it ships.</field>
+    </record>
+
+    <record id="quick_reply_so_order_preparing" model="owa.quick.reply">
+        <field name="name">Order Being Prepared</field>
+        <field name="body">Hi {{partner_name}}, your order {{record_name}} is being prepared in our warehouse.</field>
+    </record>
+
+    <record id="quick_reply_so_order_shipped" model="owa.quick.reply">
+        <field name="name">Order Shipped</field>
+        <field name="body">Hi {{partner_name}}, your order {{record_name}} has shipped! Track it here: {{tracking_url}}</field>
+    </record>
+
+    <record id="quick_reply_so_order_delivered" model="owa.quick.reply">
+        <field name="name">Order Delivered</field>
+        <field name="body">Hi {{partner_name}}, your order {{record_name}} has been delivered. We hope you love it — reply with any questions.</field>
+    </record>
+
+    <record id="quick_reply_inv_sent" model="owa.quick.reply">
+        <field name="name">Invoice Sent</field>
+        <field name="body">Hi {{partner_name}}, invoice {{record_name}} ({{currency}} {{amount}}) is ready. Pay here: {{record_url}}</field>
+    </record>
+
+    <record id="quick_reply_inv_overdue_7" model="owa.quick.reply">
+        <field name="name">Payment Reminder (7 days overdue)</field>
+        <field name="body">Hi {{partner_name}}, friendly reminder that invoice {{record_name}} for {{currency}} {{amount}} is now overdue. Pay here: {{record_url}}</field>
+    </record>
+
+    <record id="quick_reply_inv_paid" model="owa.quick.reply">
+        <field name="name">Payment Received</field>
+        <field name="body">Thanks {{partner_name}}! We've received your payment of {{currency}} {{amount}} for invoice {{record_name}}.</field>
+    </record>
+
+    <record id="quick_reply_inv_refund" model="owa.quick.reply">
+        <field name="name">Refund Processed</field>
+        <field name="body">Hi {{partner_name}}, your refund of {{currency}} {{amount}} has been processed. It should reflect in your account within 3–5 business days.</field>
+    </record>
+
+    <record id="quick_reply_returning_customer" model="owa.quick.reply">
+        <field name="name">Returning Customer Welcome</field>
+        <field name="body">Welcome back {{partner_name}}! Great to see you again — let us know if there's anything we can help with.</field>
+    </record>
+</odoo>

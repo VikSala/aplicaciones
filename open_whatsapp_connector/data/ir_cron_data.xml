@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Send queued messages every minute -->
+    <record id="ir_cron_send_owa_queue" model="ir.cron">
+        <field name="name">Open WhatsApp Connector: Send Queued Messages</field>
+        <field name="model_id" ref="model_owa_message"/>
+        <field name="state">code</field>
+        <field name="code">model._send_cron()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">minutes</field>
+
+        <field name="active">True</field>
+    </record>
+
+    <!-- Sync session statuses every 5 minutes -->
+    <record id="ir_cron_sync_session_status" model="ir.cron">
+        <field name="name">Open WhatsApp Connector: Sync Session Status</field>
+        <field name="model_id" ref="model_owa_account"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_sync_session_status()</field>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+
+        <field name="active">True</field>
+    </record>
+
+    <!-- Clean old messages daily -->
+    <record id="ir_cron_gc_messages" model="ir.cron">
+        <field name="name">Open WhatsApp Connector: Clean Old Messages</field>
+        <field name="model_id" ref="model_owa_message"/>
+        <field name="state">code</field>
+        <field name="code">model._gc_owa_messages()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+
+        <field name="active">True</field>
+    </record>
+
+    <!-- Update campaign state every 5 minutes -->
+    <record id="ir_cron_update_campaign_state" model="ir.cron">
+        <field name="name">WhatsApp: Update Campaign State</field>
+        <field name="model_id" ref="model_owa_campaign"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_update_campaign_state()</field>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+
+        <field name="active">True</field>
+    </record>
+
+    <!-- Expire inactive chatbot sessions every 10 minutes -->
+    <record id="ir_cron_expire_chatbot_sessions" model="ir.cron">
+        <field name="name">WhatsApp: Expire Chatbot Sessions</field>
+        <field name="model_id" ref="model_owa_chatbot_session"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_expire_sessions()</field>
+        <field name="interval_number">10</field>
+        <field name="interval_type">minutes</field>
+
+        <field name="active">True</field>
+    </record>
+
+    <!-- Phase 2: garbage-collect old inbound dedupe rows weekly -->
+    <record id="ir_cron_gc_inbound_dedupe" model="ir.cron">
+        <field name="name">WhatsApp: GC Inbound Dedupe</field>
+        <field name="model_id" ref="model_owa_inbound_dedupe"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_gc()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">weeks</field>
+        <field name="active">True</field>
+    </record>
+
+    <!-- Phase 7: expire pending pair requests every 10 minutes -->
+    <record id="ir_cron_expire_pending_pair" model="ir.cron">
+        <field name="name">WhatsApp: Expire Pending Pair Requests</field>
+        <field name="model_id" ref="model_owa_pending_pair"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_expire()</field>
+        <field name="interval_number">10</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+
+    <!-- Phase 8: heartbeat — ping sidecar per account every 5 min -->
+    <record id="ir_cron_heartbeat" model="ir.cron">
+        <field name="name">WhatsApp: Account Heartbeat</field>
+        <field name="model_id" ref="model_owa_account"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_heartbeat()</field>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+
+    <!-- Phase 22A: SLA breach checker — every 5 min -->
+    <record id="ir_cron_sla_check" model="ir.cron">
+        <field name="name">WhatsApp: Check Triage SLA</field>
+        <field name="model_id" ref="model_discuss_channel"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_check_sla()</field>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+
+    <!-- Phase 25B: Standing-order dispatcher — every 15 min -->
+    <record id="ir_cron_standing_order_dispatch" model="ir.cron">
+        <field name="name">WhatsApp: Dispatch Standing Orders</field>
+        <field name="model_id" ref="model_owa_standing_order"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_dispatch()</field>
+        <field name="interval_number">15</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+
+    <!-- Phase 25C: Status broadcast expirer — hourly -->
+    <record id="ir_cron_status_broadcast_expire" model="ir.cron">
+        <field name="name">WhatsApp: Expire Status Broadcasts</field>
+        <field name="model_id" ref="model_owa_status_broadcast"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_expire()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="active">True</field>
+    </record>
+
+    <!-- Phase 26J: Avatar refresh — daily at 03:00 -->
+    <record id="ir_cron_avatar_refresh" model="ir.cron">
+        <field name="name">WhatsApp: Refresh Partner Avatars</field>
+        <field name="model_id" ref="model_owa_account"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_refresh_avatars()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+    </record>
+</odoo>

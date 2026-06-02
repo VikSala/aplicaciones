@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="owa_allowlist_entry_action" model="ir.actions.act_window">
+        <field name="name">DM Allowlist</field>
+        <field name="res_model">owa.allowlist.entry</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No allowlist entries yet</p>
+            <p>
+                When a WhatsApp account's DM policy is set to "allowlist" or
+                "pairing", only contacts with an entry here can DM it.
+            </p>
+        </field>
+    </record>
+
+    <record id="owa_allowlist_entry_list" model="ir.ui.view">
+        <field name="name">owa.allowlist.entry.list</field>
+        <field name="model">owa.allowlist.entry</field>
+        <field name="arch" type="xml">
+            <list string="DM Allowlist">
+                <field name="account_id"/>
+                <field name="phone"/>
+                <field name="phone_formatted"/>
+                <field name="partner_id"/>
+                <field name="note"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="owa_allowlist_entry_form" model="ir.ui.view">
+        <field name="name">owa.allowlist.entry.form</field>
+        <field name="model">owa.allowlist.entry</field>
+        <field name="arch" type="xml">
+            <form string="Allowlist Entry">
+                <sheet>
+                    <group>
+                        <field name="account_id"/>
+                        <field name="phone"/>
+                        <field name="phone_formatted" readonly="1"/>
+                        <field name="partner_id"/>
+                        <field name="note"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

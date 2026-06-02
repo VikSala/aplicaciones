@@ -1,0 +1,480 @@
+// WhatsApp Operations Dashboard — light, professional
+// Pattern reference: Linear / Stripe / Vercel light theme — neutral surface,
+// 1px hairline borders, subtle dotted grid texture, indigo + WhatsApp-green
+// accents, compact tiles, mono-numerals on cards.
+
+.owa_dashboard {
+    --owa-bg:           #fafafa;
+    --owa-surface:      #ffffff;
+    --owa-surface-alt:  #f7f8fa;
+    --owa-border:       #e5e7eb;
+    --owa-border-soft:  #eef0f3;
+    --owa-text:         #111827;
+    --owa-text-2:       #374151;
+    --owa-text-mute:    #6b7280;
+    --owa-text-faint:   #9ca3af;
+
+    --owa-green:        #25d366;
+    --owa-green-bg:     #ecfdf3;
+    --owa-green-text:   #027a48;
+
+    --owa-indigo:       #4f46e5;
+    --owa-indigo-bg:    #eef2ff;
+    --owa-indigo-text:  #3730a3;
+
+    --owa-amber:        #d97706;
+    --owa-amber-bg:     #fffaeb;
+
+    --owa-red:          #d92d20;
+    --owa-red-bg:       #fef3f2;
+
+    --owa-cyan:         #0891b2;
+    --owa-cyan-bg:      #ecfeff;
+
+    --owa-violet:       #7c3aed;
+    --owa-violet-bg:    #f5f3ff;
+
+    --owa-shadow-sm:    0 1px 2px rgba(16, 24, 40, 0.04);
+    --owa-shadow-md:    0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.04);
+
+    --owa-radius:       8px;
+    --owa-radius-sm:    6px;
+
+    --owa-sans:         'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                        Roboto, Helvetica, Arial, sans-serif;
+    --owa-num:          'Inter', 'SF Pro Text', system-ui, sans-serif;
+
+    color: var(--owa-text);
+    background-color: var(--owa-bg);
+    background-image: radial-gradient(circle, var(--owa-border) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: 0 0;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    font-family: var(--owa-sans);
+    font-feature-settings: "cv02","cv03","cv04","cv11","ss01","tnum";
+    -webkit-font-smoothing: antialiased;
+    padding: 0;
+
+    // ── Header bar ───────────────────────────────────────────────────────
+    .owa_filter_bar {
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        padding: 18px 28px 16px;
+        background: var(--owa-surface);
+        border-bottom: 1px solid var(--owa-border);
+        margin-bottom: 24px;
+        position: relative;
+
+        // Tiny eyebrow
+        &::before {
+            content: "OPERATIONS";
+            position: absolute;
+            top: 6px;
+            left: 28px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            color: var(--owa-text-faint);
+        }
+
+        label {
+            margin: 0;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--owa-text-mute);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        input, select {
+            background: var(--owa-surface);
+            border: 1px solid var(--owa-border);
+            border-radius: var(--owa-radius-sm);
+            padding: 6px 10px;
+            font-family: var(--owa-sans);
+            font-size: 13px;
+            color: var(--owa-text);
+            min-width: 150px;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+            &:focus {
+                outline: none;
+                border-color: var(--owa-indigo);
+                box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+            }
+        }
+
+        .btn:first-of-type {
+            margin-left: auto;
+        }
+
+        .btn {
+            background: var(--owa-text);
+            border: 1px solid var(--owa-text);
+            color: #ffffff;
+            font-family: var(--owa-sans);
+            font-weight: 500;
+            font-size: 13px;
+            padding: 7px 14px;
+            border-radius: var(--owa-radius-sm);
+            box-shadow: var(--owa-shadow-sm);
+            transition: background 0.15s ease, transform 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+
+            i { margin: 0; font-size: 12px; }
+
+            &:hover {
+                background: #000;
+                color: #fff;
+                transform: translateY(-1px);
+                box-shadow: var(--owa-shadow-md);
+            }
+        }
+
+        // Sidecar state pill — WhatsApp green when all sidecars are up,
+        // red when one or more is stopped. Higher specificity than the base
+        // .btn rule so the override sticks.
+        .btn.owa_btn_sidecar_running {
+            background: #25d366;
+            border-color: #25d366;
+            color: #ffffff;
+            opacity: 1;
+            cursor: default;
+            &:hover {
+                background: #25d366;
+                border-color: #25d366;
+                color: #ffffff;
+                transform: none;
+            }
+            &[disabled] { opacity: 1; }
+        }
+        .btn.owa_btn_sidecar_stopped {
+            background: #d92d20;
+            border-color: #d92d20;
+            color: #ffffff;
+            &:hover {
+                background: #b42318;
+                border-color: #b42318;
+                color: #ffffff;
+            }
+        }
+        // Amber: sidecar process up, but a session is still pairing/connecting.
+        .btn.owa_btn_sidecar_pairing {
+            background: #f79009;
+            border-color: #f79009;
+            color: #ffffff;
+            &:hover {
+                background: #dc6803;
+                border-color: #dc6803;
+                color: #ffffff;
+            }
+        }
+    }
+
+    // ── KPI grid: compact 6-up primary row ───────────────────────────────
+    .owa_kpi_grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 10px;
+        padding: 0 28px;
+        margin-bottom: 18px;
+
+        @media (max-width: 1280px) {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+        @media (max-width: 760px) {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    .owa_kpi_tile {
+        background: var(--owa-surface);
+        border: 1px solid var(--owa-border);
+        border-radius: var(--owa-radius);
+        padding: 14px 14px 12px;
+        cursor: pointer;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease,
+                    transform 0.15s ease;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-height: 84px;
+        box-shadow: var(--owa-shadow-sm);
+
+        &:hover {
+            border-color: #d0d5dd;
+            box-shadow: var(--owa-shadow-md);
+            transform: translateY(-1px);
+        }
+
+        // Top: small icon dot + label
+        .kpi_label {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--owa-text-mute);
+            letter-spacing: 0.02em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            line-height: 1.3;
+
+            &::before {
+                content: "";
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: var(--owa-text-faint);
+                flex-shrink: 0;
+            }
+        }
+
+        // Big numeric value
+        .kpi_value {
+            font-family: var(--owa-num);
+            font-size: 26px;
+            font-weight: 600;
+            color: var(--owa-text);
+            line-height: 1.05;
+            letter-spacing: -0.02em;
+            font-feature-settings: "tnum","lnum";
+        }
+
+        // Sub-caption
+        .kpi_sub {
+            font-size: 11px;
+            color: var(--owa-text-faint);
+            margin-top: -2px;
+        }
+
+        // ── Severity tints — only the dot before the label is colored ──
+        &.success .kpi_label::before { background: var(--owa-green); }
+        &.danger  .kpi_label::before { background: var(--owa-red); }
+        &.warning .kpi_label::before { background: var(--owa-amber); }
+        &.info    .kpi_label::before { background: var(--owa-cyan); }
+
+        // ── Attention state — translucent red wash for tiles that need
+        //    immediate user action (e.g. WhatsApp account offline). Pairs
+        //    with the `.danger` severity class to color the dot too.
+        &.attention {
+            background: rgba(239, 68, 68, 0.07);
+            border-color: rgba(239, 68, 68, 0.35);
+            box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.08), var(--owa-shadow-sm);
+
+            &:hover {
+                background: rgba(239, 68, 68, 0.10);
+                border-color: rgba(239, 68, 68, 0.55);
+            }
+
+            .kpi_value { color: #b42318; }
+            .kpi_sub   { color: #b42318; font-weight: 500; }
+
+            .kpi_warn_icon {
+                color: #b42318;
+                margin-left: 4px;
+                animation: owa-attention-pulse 1.6s ease-in-out infinite;
+            }
+        }
+
+        &.muted {
+            cursor: default;
+            background: var(--owa-surface-alt);
+            box-shadow: none;
+            &:hover {
+                transform: none;
+                box-shadow: none;
+                border-color: var(--owa-border);
+            }
+            .kpi_value { font-size: 22px; color: var(--owa-text-2); }
+        }
+    }
+
+    @keyframes owa-attention-pulse {
+        0%, 100% { opacity: 1; }
+        50%      { opacity: 0.45; }
+    }
+
+    // ── Two-column rows for charts and tables ────────────────────────────
+    .owa_two_col {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+        gap: 12px;
+        padding: 0 28px;
+        margin-bottom: 12px;
+    }
+
+    .owa_card {
+        background: var(--owa-surface);
+        border: 1px solid var(--owa-border);
+        border-radius: var(--owa-radius);
+        padding: 18px 20px 18px;
+        box-shadow: var(--owa-shadow-sm);
+        position: relative;
+
+        .owa_card_title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--owa-text);
+            margin: 0 0 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            letter-spacing: -0.005em;
+
+            > span:first-child {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+
+                &::before {
+                    content: "";
+                    width: 4px;
+                    height: 14px;
+                    background: var(--owa-text);
+                    border-radius: 2px;
+                    display: inline-block;
+                }
+            }
+        }
+
+        .owa_chart_canvas {
+            position: relative;
+            height: 240px;
+        }
+    }
+
+    // Tighter padding on the bottom row of cards so it doesn't feel airy
+    .owa_two_col:last-child .owa_card {
+        padding: 16px 18px 14px;
+    }
+
+    // ── Tables ───────────────────────────────────────────────────────────
+    .owa_table {
+        width: 100%;
+        font-family: var(--owa-sans);
+        font-size: 13px;
+        border-collapse: collapse;
+
+        th {
+            text-align: left;
+            font-weight: 500;
+            color: var(--owa-text-mute);
+            text-transform: uppercase;
+            font-size: 10.5px;
+            letter-spacing: 0.06em;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--owa-border);
+            background: var(--owa-surface);
+        }
+        td {
+            padding: 9px 10px;
+            border-bottom: 1px solid var(--owa-border-soft);
+            color: var(--owa-text-2);
+            font-feature-settings: "tnum";
+            vertical-align: middle;
+        }
+        tr {
+            transition: background 0.1s ease;
+            &:last-child td { border-bottom: none; }
+        }
+        tr:hover td {
+            background: var(--owa-surface-alt);
+            cursor: pointer;
+        }
+
+        .badge_state {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 2px 8px 2px 7px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: capitalize;
+            letter-spacing: 0;
+            line-height: 1.5;
+            background: #f2f4f7;
+            color: var(--owa-text-2);
+            border: 1px solid var(--owa-border);
+
+            &::before {
+                content: "";
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: var(--owa-text-faint);
+                flex-shrink: 0;
+            }
+
+            &.connected {
+                background: var(--owa-green-bg);
+                color: var(--owa-green-text);
+                border-color: #abefc6;
+                &::before {
+                    background: var(--owa-green);
+                    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.5);
+                    animation: owa_pulse 2.2s ease-out infinite;
+                }
+            }
+            &.disconnected {
+                background: var(--owa-red-bg);
+                color: var(--owa-red);
+                border-color: #fecdca;
+                &::before { background: var(--owa-red); }
+            }
+            &.qr_pending {
+                background: var(--owa-amber-bg);
+                color: var(--owa-amber);
+                border-color: #fedf89;
+                &::before { background: var(--owa-amber); }
+            }
+            &.connecting {
+                background: var(--owa-cyan-bg);
+                color: var(--owa-cyan);
+                border-color: #a5f0fc;
+                &::before { background: var(--owa-cyan); }
+            }
+            &.logged_out {
+                background: #f2f4f7;
+                color: var(--owa-text-mute);
+                &::before { background: var(--owa-text-faint); }
+            }
+        }
+    }
+
+    // ── Loader ───────────────────────────────────────────────────────────
+    .owa_loader {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 100px 20px;
+        color: var(--owa-text-mute);
+        font-size: 13px;
+        gap: 10px;
+
+        .fa-spinner {
+            font-size: 18px;
+            color: var(--owa-indigo);
+        }
+    }
+
+    .owa_empty {
+        padding: 32px 20px;
+        text-align: center;
+        color: var(--owa-text-faint);
+        font-size: 12.5px;
+    }
+}
+
+@keyframes owa_pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.45); }
+    70%  { box-shadow: 0 0 0 6px rgba(37, 211, 102, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+}

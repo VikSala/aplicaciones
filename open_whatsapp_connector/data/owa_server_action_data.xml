@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- Send WhatsApp from Contacts list -->
+    <record id="action_send_whatsapp_partner" model="ir.actions.server">
+        <field name="name">Send WhatsApp</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="binding_model_id" ref="base.model_res_partner"/>
+        <field name="binding_view_types">list,form</field>
+        <field name="state">code</field>
+        <field name="code">
+action = env['owa.composer']._action_open_composer(records)
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- Send Event -->
+  <record id="view_owa_send_event_wizard_form" model="ir.ui.view">
+    <field name="name">owa.send.event.wizard.form</field>
+    <field name="model">owa.send.event.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Send WhatsApp Event">
+        <sheet>
+          <group>
+            <field name="channel_id"/>
+            <field name="wa_account_id" readonly="1"/>
+            <field name="name"/>
+            <field name="start_at"/>
+            <field name="description"/>
+          </group>
+          <group string="Location (optional)">
+            <field name="location_name"/>
+            <field name="latitude"/>
+            <field name="longitude"/>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_send" type="object" string="Send Event"
+                  class="btn-primary"/>
+          <button special="cancel" string="Cancel"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_owa_send_event_wizard" model="ir.actions.act_window">
+    <field name="name">Send WhatsApp Event</field>
+    <field name="res_model">owa.send.event.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+    <!-- Surface in the WhatsApp channel action menu (the wizard pre-fills
+         channel_id from active_id). Without this binding there was no UI path
+         to launch it. (#stickers) -->
+    <field name="binding_model_id" ref="mail.model_discuss_channel"/>
+    <field name="binding_view_types">form</field>  </record>
+
+  <!-- Send Location (model name kept as live-location for ext-id continuity) -->
+  <record id="view_owa_send_live_location_wizard_form" model="ir.ui.view">
+    <field name="name">owa.send.location.wizard.form</field>
+    <field name="model">owa.send.live.location.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Send Location">
+        <sheet>
+          <group>
+            <field name="channel_id"/>
+            <field name="wa_account_id" readonly="1"/>
+            <field name="latitude"/>
+            <field name="longitude"/>
+            <field name="location_name" placeholder="e.g. Acme Headquarters"/>
+            <field name="address" placeholder="Street, city"/>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_send" type="object" string="Send"
+                  class="btn-primary"/>
+          <button special="cancel" string="Cancel"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_owa_send_live_location_wizard" model="ir.actions.act_window">
+    <field name="name">Send Location</field>
+    <field name="res_model">owa.send.live.location.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+    <field name="binding_model_id" ref="mail.model_discuss_channel"/>
+    <field name="binding_view_types">form</field>  </record>
+
+  <!-- Send Sticker -->
+  <record id="view_owa_send_sticker_wizard_form" model="ir.ui.view">
+    <field name="name">owa.send.sticker.wizard.form</field>
+    <field name="model">owa.send.sticker.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Send Sticker">
+        <sheet>
+          <group>
+            <field name="channel_id"/>
+            <field name="wa_account_id" readonly="1"/>
+            <field name="sticker_data" filename="sticker_name"/>
+            <field name="sticker_name" invisible="1"/>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_send" type="object" string="Send"
+                  class="btn-primary"/>
+          <button special="cancel" string="Cancel"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_owa_send_sticker_wizard" model="ir.actions.act_window">
+    <field name="name">Send Sticker</field>
+    <field name="res_model">owa.send.sticker.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+    <field name="binding_model_id" ref="mail.model_discuss_channel"/>
+    <field name="binding_view_types">form</field>  </record>
+
+  <!-- Send Poll -->
+  <record id="view_owa_send_poll_wizard_form" model="ir.ui.view">
+    <field name="name">owa.send.poll.wizard.form</field>
+    <field name="model">owa.send.poll.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Send Poll">
+        <sheet>
+          <group>
+            <field name="channel_id"/>
+            <field name="wa_account_id" readonly="1"/>
+            <field name="question" placeholder="e.g. Which slot works for you?"/>
+            <field name="options_text"
+                   placeholder="One option per line&#10;Monday 9 AM&#10;Tuesday 2 PM"/>
+            <field name="selectable_count"/>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_send" type="object" string="Send"
+                  class="btn-primary"/>
+          <button special="cancel" string="Cancel"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_owa_send_poll_wizard" model="ir.actions.act_window">
+    <field name="name">Send Poll</field>
+    <field name="res_model">owa.send.poll.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+    <field name="binding_model_id" ref="mail.model_discuss_channel"/>
+    <field name="binding_view_types">form</field>
+  </record>
+
+  <!-- Send Contact (vCard) -->
+  <record id="view_owa_send_contact_wizard_form" model="ir.ui.view">
+    <field name="name">owa.send.contact.wizard.form</field>
+    <field name="model">owa.send.contact.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Send Contact Card">
+        <sheet>
+          <group>
+            <field name="channel_id"/>
+            <field name="wa_account_id" readonly="1"/>
+            <field name="partner_id"/>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_send" type="object" string="Send"
+                  class="btn-primary"/>
+          <button special="cancel" string="Cancel"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_owa_send_contact_wizard" model="ir.actions.act_window">
+    <field name="name">Send Contact Card</field>
+    <field name="res_model">owa.send.contact.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+    <field name="binding_model_id" ref="mail.model_discuss_channel"/>
+    <field name="binding_view_types">form</field>
+  </record>
+</odoo>

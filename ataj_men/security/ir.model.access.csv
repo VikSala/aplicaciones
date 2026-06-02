@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ataj_shortcut_user,ataj.shortcut user,model_ataj_shortcut,base.group_user,1,0,0,0
+access_ataj_shortcut_admin,ataj.shortcut admin,model_ataj_shortcut,base.group_system,1,1,1,1

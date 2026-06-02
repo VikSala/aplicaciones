@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="discuss_channel_view_form_inherit_owa" model="ir.ui.view">
+        <field name="name">discuss.channel.form.inherit.owa</field>
+        <field name="model">discuss.channel</field>
+        <field name="inherit_id" ref="mail.discuss_channel_view_form"/>
+        <field name="arch" type="xml">
+            <field name="channel_type" position="after">
+                <field name="whatsapp_number" invisible="channel_type != 'whatsapp'"/>
+                <field name="whatsapp_partner_id" invisible="channel_type != 'whatsapp'"/>
+                <field name="owa_account_id" invisible="channel_type != 'whatsapp'"/>
+                <field name="is_whatsapp_group" invisible="1"/>
+                <field name="helpdesk_ticket_id_int" invisible="1"/>
+                <label for="member_label" string="My display label"
+                       invisible="not is_whatsapp_group"/>
+                <div class="o_row" invisible="not is_whatsapp_group">
+                    <field name="member_label" nolabel="1"
+                           placeholder="e.g. Acme Support"/>
+                    <button name="action_push_member_label" type="object"
+                            string="Push to WhatsApp" class="btn-primary"/>
+                </div>
+                <field name="require_mention" invisible="not is_whatsapp_group"
+                       help="When on, the bot and auto-replies only respond in this group when explicitly @-mentioned."/>
+                <field name="wa_label_ids" widget="many2many_tags"
+                       options="{'color_field': 'color'}"
+                       invisible="channel_type != 'whatsapp'"
+                       string="Conversation Labels"/>
+            </field>
+            <!-- Phase 27A: smart-button to jump to the linked helpdesk ticket.
+                 Visible only on WhatsApp channels that have a ticket linked. -->
+            <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
+                <button name="action_open_helpdesk_ticket" type="object"
+                        class="oe_stat_button" icon="fa-life-ring"
+                        invisible="channel_type != 'whatsapp' or not helpdesk_ticket_id_int">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Helpdesk</span>
+                        <span class="o_stat_text">Ticket</span>
+                    </div>
+                </button>
+            </xpath>
+        </field>
+    </record>
+</odoo>

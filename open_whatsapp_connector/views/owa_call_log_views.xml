@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================== List ============================== -->
+    <record id="owa_call_log_view_list" model="ir.ui.view">
+        <field name="name">owa.call.log.list</field>
+        <field name="model">owa.call.log</field>
+        <field name="arch" type="xml">
+            <list string="WhatsApp Calls" default_order="started_at desc"
+                  decoration-danger="state == 'missed'"
+                  decoration-warning="state in ('rejected', 'timeout')"
+                  decoration-success="state == 'accepted'"
+                  decoration-muted="state == 'ringing'">
+                <field name="started_at"/>
+                <field name="display_name" string="Call"/>
+                <field name="partner_id"/>
+                <field name="from_phone"/>
+                <field name="wa_account_id"/>
+                <field name="is_video" widget="boolean_toggle"/>
+                <field name="is_group" widget="boolean_toggle" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-danger="state == 'missed'"
+                       decoration-warning="state in ('rejected','timeout')"
+                       decoration-success="state == 'accepted'"
+                       decoration-info="state == 'ringing'"/>
+                <field name="duration_seconds" string="Duration (s)"/>
+                <field name="auto_replied" optional="hide"/>
+                <field name="ended_at" optional="hide"/>
+                <field name="company_id" optional="hide" groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ============================== Form ============================== -->
+    <record id="owa_call_log_view_form" model="ir.ui.view">
+        <field name="name">owa.call.log.form</field>
+        <field name="model">owa.call.log</field>
+        <field name="arch" type="xml">
+            <form string="WhatsApp Call">
+                <header>
+                    <button name="action_reject_call" type="object"
+                            string="Reject Call" class="oe_highlight"
+                            invisible="state != 'ringing'"
+                            confirm="Stop the WhatsApp ring on the caller's phone?"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="ringing,missed,rejected,accepted,timeout"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_partner" type="object"
+                                class="oe_stat_button" icon="fa-user"
+                                invisible="not partner_id">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Open</span>
+                                <span class="o_stat_value">Contact</span>
+                            </div>
+                        </button>
+                        <button name="action_open_channel" type="object"
+                                class="oe_stat_button" icon="fa-comments"
+                                invisible="not channel_id">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Open</span>
+                                <span class="o_stat_value">Thread</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="display_name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Call">
+                            <field name="wa_account_id" readonly="1"/>
+                            <field name="partner_id"/>
+                            <field name="from_phone" readonly="1"/>
+                            <field name="from_jid" readonly="1"/>
+                            <field name="is_video" readonly="1"/>
+                            <field name="is_group" readonly="1"/>
+                        </group>
+                        <group string="Timing">
+                            <field name="started_at" readonly="1"/>
+                            <field name="ended_at" readonly="1"/>
+                            <field name="duration_seconds" readonly="1"/>
+                            <field name="auto_replied" readonly="1"/>
+                            <field name="call_id" readonly="1" groups="base.group_no_one"/>
+                            <field name="channel_id" readonly="1" invisible="not channel_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Notes" name="notes">
+                            <field name="notes" placeholder="Internal notes about this call..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================== Search ============================== -->
+    <record id="owa_call_log_view_search" model="ir.ui.view">
+        <field name="name">owa.call.log.search</field>
+        <field name="model">owa.call.log</field>
+        <field name="arch" type="xml">
+            <search string="WhatsApp Calls">
+                <field name="partner_id"/>
+                <field name="wa_account_id"/>
+                <field name="from_phone"/>
+                <!-- Referenced by the dashboard drill-through context
+                     (search_default_last_24h). Without it the 24h scope was
+                     silently ignored. (#calls) -->
+                <filter name="last_24h" string="Last 24 Hours"
+                        domain="[('started_at', '&gt;=', (datetime.datetime.now() - datetime.timedelta(hours=24)).strftime('%Y-%m-%d %H:%M:%S'))]"/>
+                <filter name="missed" string="Missed" domain="[('state', '=', 'missed')]"/>
+                <filter name="accepted" string="Accepted" domain="[('state', '=', 'accepted')]"/>
+                <group>
+                    <filter name="group_account" string="Account" context="{'group_by': 'wa_account_id'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================== Action ============================== -->
+    <record id="action_owa_call_log" model="ir.actions.act_window">
+        <field name="name">WhatsApp Calls</field>
+        <field name="res_model">owa.call.log</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No incoming WhatsApp calls yet</p>
+            <p>
+                Voice and video calls received on connected accounts are logged
+                here automatically. The bundled sidecar cannot answer calls or
+                carry audio — this is an audit log of who called when.
+            </p>
+        </field>
+    </record>
+
+    <!-- ============================== Menu ============================== -->
+    <menuitem id="menu_owa_call_log"
+              name="Calls"
+              parent="menu_owa_root"
+              action="action_owa_call_log"
+              sequence="15"/>
+
+    <!-- Phase 21: partner smart buttons + Calls tab.
+         Defined here (same file as action_owa_call_log) so the format
+         reference resolves regardless of manifest load order. -->
+    <record id="res_partner_view_form_owa_calls" model="ir.ui.view">
+        <field name="name">res.partner.form.owa.calls</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button class="oe_stat_button" type="action" icon="fa-phone"
+                        name="%(open_whatsapp_connector.action_owa_call_log)d"
+                        context="{'search_default_partner_id': id, 'default_partner_id': id}"
+                        invisible="owa_call_count == 0">
+                    <field name="owa_call_count" widget="statinfo" string="WhatsApp Calls"/>
+                </button>
+                <button class="oe_stat_button" icon="fa-volume-control-phone" type="object"
+                        name="action_open_wa_voice_call"
+                        invisible="not owa_wa_call_link">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Voice</span>
+                        <span class="o_stat_text">Call</span>
+                    </div>
+                </button>
+                <button class="oe_stat_button" icon="fa-video-camera" type="object"
+                        name="action_open_wa_video_call"
+                        invisible="not owa_wa_video_link">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Video</span>
+                        <span class="o_stat_text">Call</span>
+                    </div>
+                </button>
+            </xpath>
+            <xpath expr="//page[@name='internal_notes']" position="before">
+                <page string="WhatsApp Calls" name="owa_calls"
+                      invisible="owa_call_count == 0">
+                    <field name="owa_call_log_ids" readonly="1">
+                        <list default_order="started_at desc"
+                              decoration-danger="state == 'missed'"
+                              decoration-warning="state in ('rejected','timeout')"
+                              decoration-success="state == 'accepted'">
+                            <field name="started_at"/>
+                            <field name="wa_account_id"/>
+                            <field name="is_video" widget="boolean_toggle"/>
+                            <field name="state" widget="badge"/>
+                            <field name="duration_seconds" string="Duration (s)"/>
+                            <field name="auto_replied"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

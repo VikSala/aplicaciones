@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Account Form View -->
+    <record id="owa_account_view_form" model="ir.ui.view">
+        <field name="name">owa.account.form</field>
+        <field name="model">owa.account</field>
+        <field name="arch" type="xml">
+            <form string="Open WhatsApp Connector Account">
+                <header>
+                    <button name="button_connect" type="object" string="Connect"
+                            class="btn-primary"
+                            invisible="session_state in ('connected', 'qr_pending', 'connecting') or connection_type != 'qr'"/>
+                    <button name="button_refresh_status" type="object" string="Refresh Status"
+                            invisible="session_state == 'disconnected' or connection_type != 'qr'"/>
+                    <button name="button_disconnect" type="object" string="Disconnect"
+                            class="btn-warning"
+                            invisible="session_state != 'connected' or connection_type != 'qr'"/>
+                    <button name="button_logout" type="object" string="Logout"
+                            class="btn-danger"
+                            invisible="session_state not in ('connected', 'disconnected') or connection_type != 'qr'"
+                            confirm="This will delete the WhatsApp session. You will need to scan a new QR code. Continue?"/>
+                    <button name="button_test_connection" type="object" string="Test Connection"
+                            invisible="session_state == 'connected' or connection_type != 'qr'"/>
+                    <button name="button_start_sidecar" type="object" string="Start Sidecar"
+                            class="btn-success" invisible="sidecar_running or connection_type != 'qr'"/>
+                    <button name="button_stop_sidecar" type="object" string="Stop Sidecar"
+                            class="btn-danger" invisible="not sidecar_running or connection_type != 'qr'"
+                            confirm="This will stop the sidecar service for all accounts. Continue?"/>
+                    <button name="action_run_diagnostics" type="object"
+                            string="Run Diagnostics" icon="fa-stethoscope"
+                            invisible="connection_type != 'qr'"/>
+                    <button name="action_verify_connection" type="object"
+                            string="Verify Connection" class="btn-primary"
+                            invisible="connection_type != 'cloud'"/>
+                    <button name="action_sync_templates" type="object"
+                            string="Sync Templates"
+                            invisible="connection_type != 'cloud'"/>
+                    <field name="sidecar_running" invisible="1"/>
+                    <field name="health_status" widget="badge"
+                           decoration-success="health_status == 'healthy'"
+                           decoration-warning="health_status == 'degraded'"
+                           decoration-danger="health_status == 'down'"
+                           decoration-info="health_status == 'unknown'"/>
+                    <field name="session_state" widget="statusbar"
+                           statusbar_visible="disconnected,qr_pending,connecting,connected"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="%(open_whatsapp_connector.owa_message_action)d"
+                                type="action" class="oe_stat_button" icon="fa-comments">
+                            <field name="message_count" widget="statinfo" string="Messages"/>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Connected"
+                            bg_color="text-bg-success"
+                            invisible="session_state != 'connected'"/>
+                    <widget name="web_ribbon" title="Disconnected"
+                            bg_color="text-bg-danger"
+                            invisible="session_state not in ('disconnected', 'logged_out')"/>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="e.g. My WhatsApp"/>
+                        </h1>
+                        <field name="connection_type" widget="radio" options="{'horizontal': True}"/>
+                    </div>
+
+                    <!-- Quick Start Guide (shown only for new/disconnected accounts) -->
+                    <div class="alert alert-info" role="alert"
+                         invisible="session_state in ('connected', 'qr_pending', 'connecting') or connection_type != 'qr'">
+                        <h4 class="alert-heading mb-3"><i class="fa fa-info-circle"/> Quick Start Guide</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Step 1:</strong> Give this account a name (e.g. "Sales WhatsApp")</p>
+                                <p><strong>Step 2:</strong> Make sure the Sidecar service is running.
+                                    Click <b>"Start Sidecar"</b> above if it's not running, or
+                                    click <b>"Test Connection"</b> to check.</p>
+                                <p><strong>Step 3:</strong> Pick a <b>Pairing Method</b> below
+                                    (Scan QR Code or Link with Code).</p>
+                            </div>
+                            <div class="col-md-6" invisible="pairing_method != 'qr'">
+                                <p><strong>Step 4:</strong> Click the <b>"Connect"</b> button above.
+                                    A QR code will appear below.</p>
+                                <p><strong>Step 5:</strong> Open WhatsApp on your phone:</p>
+                                <ul class="mb-2">
+                                    <li><b>Android:</b> Menu (3 dots) > Linked Devices > Link a Device</li>
+                                    <li><b>iPhone:</b> Settings > Linked Devices > Link a Device</li>
+                                </ul>
+                                <p><strong>Step 6:</strong> Scan the QR code with your phone camera.
+                                    The status will change to <b>"Connected"</b> automatically.</p>
+                            </div>
+                            <div class="col-md-6" invisible="pairing_method != 'code'">
+                                <p><strong>Step 4:</strong> Enter your WhatsApp phone number in
+                                    <b>Pairing Phone</b> (digits only, country code first) on the
+                                    <b>WhatsApp Profile &amp; Pairing</b> tab below.</p>
+                                <p><strong>Step 5:</strong> Click <b>"Request WhatsApp Pairing Code"</b>.
+                                    An 8-character code will appear in <b>Pairing Code</b>.</p>
+                                <p><strong>Step 6:</strong> Open WhatsApp on your phone:</p>
+                                <ul class="mb-2">
+                                    <li><b>Android:</b> Menu (3 dots) > Linked Devices > Link with phone number</li>
+                                    <li><b>iPhone:</b> Settings > Linked Devices > Link with phone number</li>
+                                </ul>
+                                <p><strong>Step 7:</strong> Enter the 8-character code shown in Odoo.
+                                    The status will change to <b>"Connected"</b> automatically.</p>
+                            </div>
+                        </div>
+                        <hr/>
+                        <p class="mb-0 text-muted">
+                            <i class="fa fa-lightbulb-o"/> <b>Tip:</b> The fields below are pre-filled with defaults.
+                            You usually don't need to change anything — just enter a name and pick a Pairing Method.
+                        </p>
+                    </div>
+
+                    <!-- Connected info -->
+                    <div class="alert alert-success" role="alert"
+                         invisible="session_state != 'connected' or connection_type != 'qr'">
+                        <i class="fa fa-check-circle"/> <strong>Connected!</strong>
+                        This account is connected to WhatsApp and ready to send/receive messages.
+                        You can now send messages from Discuss, use the Chatter button (Shift+W) on any record,
+                        or set up Notification Rules for automatic messages.
+                    </div>
+
+                    <group>
+                        <group string="Connection Settings" name="connection"
+                               invisible="connection_type != 'qr'">
+                            <field name="sidecar_url" help="URL where the sidecar service is running. Default works for most setups."/>
+                            <field name="sidecar_api_key" password="True"
+                                   help="Optional security key. Leave empty if not configured in the sidecar."/>
+                            <field name="callback_url" widget="CopyClipboardChar"
+                                   help="Auto-generated. The sidecar uses this URL to send incoming messages to Odoo."/>
+                            <field name="webhook_secret" widget="CopyClipboardChar"
+                                   groups="open_whatsapp_connector.group_owa_admin"
+                                   help="Auto-generated secret to verify incoming webhooks. Do not change."/>
+                        </group>
+                        <group string="Official Cloud API" name="cloud_connection"
+                               invisible="connection_type != 'cloud'">
+                            <field name="cloud_phone_number_id"
+                                   help="Meta Phone Number ID of the sending WhatsApp Business number."/>
+                            <field name="cloud_waba_id"
+                                   help="WhatsApp Business Account ID — matches the inbound webhook entry.id."/>
+                            <field name="cloud_app_id"
+                                   help="Meta App ID — used for media upload sessions."/>
+                            <field name="cloud_app_secret" password="True"
+                                   groups="open_whatsapp_connector.group_owa_admin"
+                                   help="Meta App Secret — verifies the inbound webhook signature."/>
+                            <field name="cloud_access_token" password="True"
+                                   groups="open_whatsapp_connector.group_owa_admin"
+                                   help="Graph API bearer token. Use a system-user permanent token in production."/>
+                            <field name="cloud_api_version"
+                                   help="Meta Graph API version, e.g. v23.0."/>
+                            <field name="cloud_verify_token" readonly="1" widget="CopyClipboardChar"
+                                   help="Enter this in the Meta console webhook setup (GET verification)."/>
+                            <field name="cloud_callback_url" readonly="1" widget="CopyClipboardChar"
+                                   help="Register this URL in the Meta console as the webhook callback URL."/>
+                        </group>
+                        <group string="Account Settings">
+                            <field name="pairing_method" widget="radio" options="{'horizontal': True}"
+                                   invisible="connection_type != 'qr'"/>
+                            <field name="phone_number"
+                                   invisible="connection_type != 'qr'"
+                                   help="Automatically filled after connecting. This is the WhatsApp number linked to this account."/>
+                            <field name="allowed_company_ids" widget="many2many_tags"
+                                   help="Which companies can use this WhatsApp account. Leave default for single-company setups."/>
+                            <field name="notify_user_ids" widget="many2many_tags"
+                                   help="These users will see incoming WhatsApp messages in their Discuss inbox."/>
+                            <field name="debug_logging"
+                                   invisible="connection_type != 'qr'"
+                                   help="Enable to log all API calls to the sidecar. Useful for troubleshooting."/>
+                        </group>
+                    </group>
+
+                    <!-- Phase 4: messaging & privacy toggles -->
+                    <group string="Messaging &amp; Privacy">
+                        <group>
+                            <field name="stealth_mode"/>
+                            <field name="send_read_receipts"
+                                   invisible="stealth_mode"
+                                   help="Blue ticks. Forced off while Stealth mode is on."/>
+                            <field name="reply_to_mode"/>
+                        </group>
+                        <group>
+                            <field name="self_chat_mode"/>
+                        </group>
+                    </group>
+
+                    <!-- Phase 21: missed-call auto-reply -->
+                    <group string="Incoming calls" col="2">
+                        <field name="auto_reply_on_missed_call"/>
+                        <field name="missed_call_reply_template"
+                               placeholder="Sorry I missed your call! Please send a message and I'll respond shortly."
+                               invisible="not auto_reply_on_missed_call"/>
+                    </group>
+
+                    <!-- Phase 5/6: DM access control + group support -->
+                    <group>
+                        <group string="DM Access Control">
+                            <field name="dm_policy" widget="radio"/>
+                            <field name="allowlist_entry_ids"
+                                   invisible="dm_policy != 'allowlist'"/>
+                        </group>
+                        <group string="Group Support &amp; Mentions">
+                            <field name="group_policy" widget="radio"/>
+                            <field name="group_allow_jids"
+                                   invisible="group_policy != 'allowlist'"
+                                   placeholder="120363025246125678@g.us (one JID per line)"/>
+                            <field name="group_intro_message"
+                                   placeholder="Welcome! This group is monitored from Odoo."/>
+                        </group>
+                    </group>
+
+                    <!-- Phase 26A: outbound throttling (anti-ban) -->
+                    <group string="Outbound Throttling (anti-ban)">
+                        <group>
+                            <field name="throttle_preset"/>
+                            <field name="throttle_backoff_until" readonly="1"
+                                   invisible="not throttle_backoff_until"/>
+                        </group>
+                        <group>
+                            <field name="messages_per_minute"/>
+                            <field name="messages_per_hour"/>
+                            <field name="messages_per_day"/>
+                        </group>
+                    </group>
+
+                    <!-- QR Code Section -->
+                    <group invisible="connection_type != 'qr' or pairing_method != 'qr' or session_state not in ('qr_pending', 'connecting')">
+                        <div class="text-center p-4" style="background: #f8f9fa; border-radius: 8px;">
+                            <h3><i class="fa fa-qrcode"/> Scan QR Code</h3>
+                            <p class="text-muted mb-3">
+                                Open WhatsApp on your phone > Linked Devices > Link a Device > Point camera here
+                            </p>
+                            <field name="qr_code_base64" widget="wa_qr_code" class="img-fluid"/>
+                            <p class="text-muted mt-3">
+                                <i class="fa fa-clock-o"/> QR code expires in ~20 seconds.
+                                Click <b>"Connect"</b> again if it expires.
+                            </p>
+                        </div>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Account List View -->
+    <record id="owa_account_view_list" model="ir.ui.view">
+        <field name="name">owa.account.list</field>
+        <field name="model">owa.account</field>
+        <field name="arch" type="xml">
+            <list string="WhatsApp Accounts">
+                <field name="name"/>
+                <field name="phone_number"/>
+                <field name="session_state" widget="badge"
+                       decoration-success="session_state == 'connected'"
+                       decoration-warning="session_state in ('qr_pending', 'connecting')"
+                       decoration-danger="session_state in ('disconnected', 'logged_out')"/>
+                <field name="sidecar_url"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Account Kanban View -->
+    <record id="owa_account_view_kanban" model="ir.ui.view">
+        <field name="name">owa.account.kanban</field>
+        <field name="model">owa.account</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name"/>
+                <field name="phone_number"/>
+                <field name="session_state"/>
+                <field name="sidecar_running"/>
+                <field name="connection_type"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong t-out="record.name.value"/>
+                            <field name="session_state" widget="badge"
+                                   decoration-success="session_state == 'connected'"
+                                   decoration-warning="session_state in ('qr_pending', 'connecting')"
+                                   decoration-danger="session_state in ('disconnected', 'logged_out')"/>
+                        </div>
+                        <div class="text-muted mt-1" t-if="record.phone_number.value">
+                            <i class="fa fa-phone"/> <t t-out="record.phone_number.value"/>
+                        </div>
+                        <div class="text-muted mt-1">
+                            <i class="fa fa-cloud" t-if="record.connection_type.raw_value == 'cloud'"/>
+                            <i class="fa fa-qrcode" t-if="record.connection_type.raw_value == 'qr'"/>
+                            <t t-out="record.connection_type.value"/>
+                        </div>
+                        <div class="mt-2" t-if="record.connection_type.raw_value == 'qr'">
+                            <span t-if="record.sidecar_running.raw_value"
+                                  class="badge text-bg-success">
+                                <i class="fa fa-server"/> Sidecar Running
+                            </span>
+                            <span t-if="!record.sidecar_running.raw_value"
+                                  class="badge text-bg-danger">
+                                <i class="fa fa-server"/> Sidecar Stopped
+                            </span>
+                        </div>
+                        <div class="mt-2 d-flex gap-1 flex-wrap">
+                            <!-- QR transport controls -->
+                            <button name="button_connect" type="object"
+                                    class="btn btn-sm btn-primary"
+                                    invisible="connection_type != 'qr' or session_state in ('connected', 'qr_pending', 'connecting')">
+                                <i class="fa fa-plug"/> Connect
+                            </button>
+                            <button name="button_disconnect" type="object"
+                                    class="btn btn-sm btn-warning"
+                                    invisible="connection_type != 'qr' or session_state != 'connected'">
+                                <i class="fa fa-power-off"/> Disconnect
+                            </button>
+                            <button name="button_refresh_status" type="object"
+                                    class="btn btn-sm btn-secondary"
+                                    invisible="connection_type != 'qr' or session_state in ('disconnected', 'logged_out')">
+                                <i class="fa fa-refresh"/> Refresh
+                            </button>
+                            <button name="button_start_sidecar" type="object"
+                                    class="btn btn-sm btn-success"
+                                    invisible="connection_type != 'qr' or sidecar_running">
+                                <i class="fa fa-play"/> Start Sidecar
+                            </button>
+                            <!-- Cloud transport control -->
+                            <button name="action_verify_connection" type="object"
+                                    class="btn btn-sm btn-primary"
+                                    invisible="connection_type != 'cloud'">
+                                <i class="fa fa-plug"/> Verify Connection
+                            </button>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="owa_account_action" model="ir.actions.act_window">
+        <field name="name">WhatsApp Accounts</field>
+        <field name="res_model">owa.account</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first WhatsApp account
+            </p>
+            <p>
+                Connect to WhatsApp by scanning a QR code — no Meta Business API needed.
+            </p>
+        </field>
+    </record>
+</odoo>

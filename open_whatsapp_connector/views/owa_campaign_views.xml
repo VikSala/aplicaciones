@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Campaign Form View -->
+    <record id="owa_campaign_form" model="ir.ui.view">
+        <field name="name">owa.campaign.form</field>
+        <field name="model">owa.campaign</field>
+        <field name="arch" type="xml">
+            <form string="WhatsApp Campaign">
+                <header>
+                    <button name="action_launch" string="Launch Campaign"
+                            type="object" class="btn-primary"
+                            invisible="state != 'draft'"
+                            confirm="This will send messages to all contacts in the list. Continue?"/>
+                    <button name="action_cancel" string="Cancel"
+                            type="object"
+                            invisible="state not in ('draft', 'sending')"/>
+                    <button name="action_reset_to_draft" string="Reset to Draft"
+                            type="object"
+                            invisible="state != 'cancelled'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,sending,sent"/>
+                    <widget name="owa_campaign_bus_listener" invisible="state != 'sending'"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. Holiday Promotion"/></h1>
+                    </div>
+                    <group>
+                        <group string="Configuration">
+                            <field name="wa_account_id"/>
+                            <field name="contact_list_id"/>
+                            <field name="scheduled_date"/>
+                            <field name="user_id"/>
+                            <field name="team_id"/>
+                        </group>
+                        <group string="Message">
+                            <field name="quick_reply_id"/>
+                            <field name="body" invisible="quick_reply_id"
+                                   placeholder="Type your message here..."/>
+                            <field name="attachment_ids" widget="many2many_binary"/>
+                        </group>
+                    </group>
+                    <group string="Statistics" invisible="state == 'draft'">
+                        <group>
+                            <field name="total_count"/>
+                            <field name="sent_count"/>
+                        </group>
+                        <group>
+                            <field name="delivered_count"/>
+                            <field name="read_count"/>
+                            <field name="failed_count"/>
+                        </group>
+                    </group>
+                    <notebook invisible="state == 'draft'">
+                        <page string="Messages" name="messages">
+                            <field name="message_ids"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Campaign List View -->
+    <record id="owa_campaign_list" model="ir.ui.view">
+        <field name="name">owa.campaign.list</field>
+        <field name="model">owa.campaign</field>
+        <field name="arch" type="xml">
+            <list string="WhatsApp Campaigns" decoration-info="state == 'draft'"
+                  decoration-success="state == 'sent'" decoration-warning="state == 'sending'"
+                  decoration-danger="state == 'cancelled'">
+                <field name="name"/>
+                <field name="wa_account_id"/>
+                <field name="contact_list_id"/>
+                <field name="user_id" optional="show"/>
+                <field name="team_id" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-success="state == 'sent'"
+                       decoration-warning="state == 'sending'"
+                       decoration-danger="state == 'cancelled'"/>
+                <field name="total_count"/>
+                <field name="sent_count"/>
+                <field name="failed_count"/>
+                <field name="scheduled_date"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Campaign Search View -->
+    <record id="owa_campaign_search" model="ir.ui.view">
+        <field name="name">owa.campaign.search</field>
+        <field name="model">owa.campaign</field>
+        <field name="arch" type="xml">
+            <search string="WhatsApp Campaigns">
+                <field name="name"/>
+                <field name="wa_account_id"/>
+                <field name="user_id"/>
+                <field name="team_id"/>
+                <filter name="my_campaigns" string="My Campaigns"
+                        domain="[('user_id', '=', uid)]"/>
+                <filter name="my_team" string="My Team"
+                        domain="[('team_id.member_ids', 'in', [uid])]"/>
+                <separator/>
+                <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="sent" string="Sent" domain="[('state', '=', 'sent')]"/>
+                <group>
+                    <filter name="group_user" string="Responsible"
+                            context="{'group_by': 'user_id'}"/>
+                    <filter name="group_team" string="Sales Team"
+                            context="{'group_by': 'team_id'}"/>
+                    <filter name="group_account" string="WhatsApp Account"
+                            context="{'group_by': 'wa_account_id'}"/>
+                    <filter name="group_state" string="Status"
+                            context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Campaign Action -->
+    <record id="owa_campaign_action" model="ir.actions.act_window">
+        <field name="name">Campaigns</field>
+        <field name="res_model">owa.campaign</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first WhatsApp campaign
+            </p>
+            <p>
+                Campaigns let you send bulk WhatsApp messages to a contact list.
+                Create a contact list, compose your message, and launch!
+            </p>
+        </field>
+    </record>
+
+    <!-- Contact List Form View -->
+    <record id="owa_contact_list_form" model="ir.ui.view">
+        <field name="name">owa.contact.list.form</field>
+        <field name="model">owa.contact.list</field>
+        <field name="arch" type="xml">
+            <form string="Contact List">
+                <sheet>
+                    <div class="oe_button_box" name="button_box"/>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. VIP Customers"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="member_count"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="user_id"/>
+                            <field name="team_id"/>
+                        </group>
+                    </group>
+                    <button name="action_import_partners" string="Import from Contacts"
+                            type="object" class="btn-secondary mb-3"
+                            icon="fa-download"/>
+                    <field name="member_ids">
+                        <list editable="bottom">
+                            <field name="partner_id"/>
+                            <field name="name"/>
+                            <field name="phone"/>
+                            <field name="phone_formatted"/>
+                            <field name="active"/>
+                        </list>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Contact List List View -->
+    <record id="owa_contact_list_list" model="ir.ui.view">
+        <field name="name">owa.contact.list.list</field>
+        <field name="model">owa.contact.list</field>
+        <field name="arch" type="xml">
+            <list string="Contact Lists">
+                <field name="name"/>
+                <field name="member_count"/>
+                <field name="user_id" optional="show"/>
+                <field name="team_id" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Contact List Search View -->
+    <record id="owa_contact_list_search" model="ir.ui.view">
+        <field name="name">owa.contact.list.search</field>
+        <field name="model">owa.contact.list</field>
+        <field name="arch" type="xml">
+            <search string="Contact Lists">
+                <field name="name"/>
+                <field name="user_id"/>
+                <field name="team_id"/>
+                <filter name="my_lists" string="My Lists"
+                        domain="[('user_id', '=', uid)]"/>
+                <filter name="my_team" string="My Team"
+                        domain="[('team_id.member_ids', 'in', [uid])]"/>
+                <group>
+                    <filter name="group_user" string="Responsible"
+                            context="{'group_by': 'user_id'}"/>
+                    <filter name="group_team" string="Sales Team"
+                            context="{'group_by': 'team_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Contact List Action -->
+    <record id="owa_contact_list_action" model="ir.actions.act_window">
+        <field name="name">Contact Lists</field>
+        <field name="res_model">owa.contact.list</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first contact list
+            </p>
+            <p>
+                Organize your contacts into lists for targeted WhatsApp campaigns.
+            </p>
+        </field>
+    </record>
+
+</odoo>

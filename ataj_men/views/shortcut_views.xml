@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Vista formulario ── -->
+    <record id="view_ataj_shortcut_form" model="ir.ui.view">
+        <field name="name">ataj.shortcut.form</field>
+        <field name="model">ataj.shortcut</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group string="Datos del atajo">
+                        <field name="name" placeholder="Ej: Mi Google"/>
+                        <field name="url"  placeholder="https://google.com"/>
+                        <field name="image" widget="image" class="oe_avatar"/>
+                        <field name="sequence"/>
+                        <field name="current_user_is_admin" invisible="1"/>
+                    </group>
+                    <group string="Visibilidad">
+                        <field name="visibility" widget="radio"/>
+                        <field name="job_ids"
+                               widget="many2many_tags"
+                               invisible="visibility != 'job'"
+                               required="visibility == 'job'"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Vista lista ── -->
+    <record id="view_ataj_shortcut_list" model="ir.ui.view">
+        <field name="name">ataj.shortcut.list</field>
+        <field name="model">ataj.shortcut</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="url"/>
+                <field name="visibility" string="Visibilidad"/>
+                <field name="job_ids"    string="Puestos" widget="many2many_tags" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Acción ── -->
+    <record id="action_ataj_config" model="ir.actions.act_window">
+        <field name="name">Configurar Atajos</field>
+        <field name="res_model">ataj.shortcut</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ── Menú de configuración ── -->
+    <menuitem id="menu_ataj_config_root"
+              name="Atajos de Apps"
+              parent="base.menu_administration"
+              action="action_ataj_config"
+              sequence="100"/>
+
+</odoo>

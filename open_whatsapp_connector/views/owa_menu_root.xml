@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Parent menus declared here (NO action references) so they exist in
+         the registry before any other view file embeds a <menuitem> with
+         parent="menu_owa_*". The child menus that DO carry actions stay in
+         owa_menus.xml, which loads last (after all action records). -->
+
+    <menuitem id="menu_owa_root"
+              name="WhatsApp"
+              web_icon="open_whatsapp_connector,static/description/icon.png"
+              sequence="250"/>
+
+    <menuitem id="menu_owa_chats"
+              name="Chats"
+              parent="menu_owa_root"
+              sequence="15"/>
+
+    <menuitem id="menu_owa_marketing"
+              name="Marketing"
+              parent="menu_owa_root"
+              sequence="20"/>
+
+    <menuitem id="menu_owa_config"
+              name="Configuration"
+              parent="menu_owa_root"
+              sequence="100"/>
+</odoo>

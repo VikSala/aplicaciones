@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <t t-name="open_whatsapp_connector.ThreadIcon" t-inherit="mail.ThreadIcon" t-inherit-mode="extension">
+        <xpath expr="//*[hasclass('o-mail-ThreadIcon')]" position="inside">
+            <t t-if="props.thread.channel_type === 'whatsapp' and props.thread.owa_account_id">
+                <t name="whatsapp">
+                    <t name="whatsapp_static">
+                        <div class="fa fa-whatsapp text-success position-relative" title="WhatsApp">
+                            <span t-if="props.thread.owaOnline"
+                                  class="owa-online-dot"
+                                  t-att-title="props.thread.owaTyping ? 'Typing…' : 'Online'"/>
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </xpath>
+    </t>
+</templates>

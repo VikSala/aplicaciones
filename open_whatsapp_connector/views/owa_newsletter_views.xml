@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="owa_newsletter_view_list" model="ir.ui.view">
+    <field name="name">owa.newsletter.list</field>
+    <field name="model">owa.newsletter</field>
+    <field name="arch" type="xml">
+      <list string="WhatsApp Newsletters" sample="1" create="false" duplicate="false">
+        <header>
+          <button name="action_open_create_wizard" type="object"
+                  string="Create" class="btn-primary"/>
+          <button name="action_open_subscribe_wizard" type="object"
+                  string="Subscribe to existing"/>
+        </header>
+        <field name="name"/>
+        <field name="wa_account_id"/>
+        <field name="role" widget="badge"
+               decoration-success="role == 'owner'"
+               decoration-info="role == 'admin'"
+               decoration-muted="role == 'unknown'"/>
+        <field name="subscriber_count"/>
+        <field name="muted" widget="boolean_toggle"/>
+        <field name="newsletter_jid" optional="hide"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="owa_newsletter_view_form" model="ir.ui.view">
+    <field name="name">owa.newsletter.form</field>
+    <field name="model">owa.newsletter</field>
+    <field name="arch" type="xml">
+      <form string="WhatsApp Newsletter">
+        <header>
+          <button name="action_push_metadata" type="object" string="Push name/desc"/>
+          <button name="action_push_picture" type="object" string="Push picture"/>
+          <button name="action_follow" type="object" string="Follow"
+                  invisible="role == 'subscriber' or role == 'owner' or role == 'admin'"/>
+          <button name="action_unfollow" type="object" string="Unfollow"
+                  invisible="role != 'subscriber'"/>
+          <button name="action_mute" type="object" string="Mute"
+                  invisible="muted"/>
+          <button name="action_unmute" type="object" string="Unmute"
+                  invisible="not muted"/>
+          <field name="role" widget="statusbar"/>
+        </header>
+        <sheet>
+          <field name="image_1920" widget="image" class="oe_avatar"/>
+          <div class="oe_title">
+            <label for="name" string="Name"/>
+            <h1><field name="name"/></h1>
+          </div>
+          <group>
+            <group>
+              <field name="wa_account_id" readonly="1"/>
+              <field name="newsletter_jid" readonly="1"/>
+              <field name="subscriber_count" readonly="1"/>
+            </group>
+            <group>
+              <field name="muted"/>
+            </group>
+          </group>
+          <group string="Description">
+            <field name="description" nolabel="1"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="owa_newsletter_action" model="ir.actions.act_window">
+    <field name="name">WhatsApp Newsletters</field>
+    <field name="res_model">owa.newsletter</field>
+    <field name="view_mode">list,form</field>
+    <field name="help" type="html">
+      <p class="o_view_nocontent_smiling_face">No WhatsApp newsletters yet</p>
+      <p>Click <b>Create</b> to start one or <b>Subscribe to existing</b> to follow.</p>
+    </field>
+  </record>
+</odoo>

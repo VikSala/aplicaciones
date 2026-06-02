@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- Default Message Template: Sale Order Confirmed -->
+    <record id="quick_reply_sale_order_confirmed" model="owa.quick.reply">
+        <field name="name">Sale Order Confirmed</field>
+        <field name="template_type">text</field>
+        <field name="body">Hello {{partner_name}},
+
+Your order *{{record_name}}* has been confirmed!
+
+Order Amount: {{amount_total}} {{currency}}
+
+Thank you for your purchase. We will notify you once your order is shipped.</field>
+        <field name="phone_field">partner_id.phone</field>
+    </record>
+
+    <!-- Default Message Template: Invoice Posted -->
+    <record id="quick_reply_invoice_posted" model="owa.quick.reply">
+        <field name="name">Invoice Posted</field>
+        <field name="template_type">text</field>
+        <field name="body">Hello {{partner_name}},
+
+Your invoice *{{record_name}}* has been issued.
+
+Amount Due: {{amount_total}} {{currency}}
+Due Date: {{date}}
+
+Please let us know if you have any questions.</field>
+        <field name="phone_field">partner_id.phone</field>
+    </record>
+
+    <!-- Default Message Template: Delivery Done -->
+    <record id="quick_reply_delivery_done" model="owa.quick.reply">
+        <field name="name">Delivery Completed</field>
+        <field name="template_type">text</field>
+        <field name="body">Hello {{partner_name}},
+
+Great news! Your delivery *{{record_name}}* has been completed.
+
+We hope everything is in order. Thank you for choosing us!</field>
+        <field name="phone_field">partner_id.phone</field>
+    </record>
+
+    <!-- Default Message Template: Payment Received -->
+    <record id="quick_reply_payment_received" model="owa.quick.reply">
+        <field name="name">Payment Received</field>
+        <field name="template_type">text</field>
+        <field name="body">Hello {{partner_name}},
+
+We have received your payment *{{record_name}}*.
+
+Amount: {{amount_total}} {{currency}}
+
+Thank you for your prompt payment!</field>
+        <field name="phone_field">partner_id.phone</field>
+    </record>
+
+</odoo>

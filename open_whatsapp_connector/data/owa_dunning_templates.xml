@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Phase 24B: subscription dunning over WA. Pre-built quick-reply templates
+         and inactive notification rules — admins activate per account. -->
+
+    <record id="quick_reply_dun_renewal_7d" model="owa.quick.reply">
+        <field name="name">Renewal due in 7 days</field>
+        <field name="body">Hi {{partner_name}}, your subscription renews in 7 days. The amount is {{currency}} {{amount}}. Reply CANCEL anytime to stop.</field>
+    </record>
+
+    <record id="quick_reply_dun_renewal_today" model="owa.quick.reply">
+        <field name="name">Subscription expires today</field>
+        <field name="body">Hi {{partner_name}}, your subscription expires today. Renew to keep access uninterrupted: {{record_url}}</field>
+    </record>
+
+    <record id="quick_reply_dun_invoice_overdue" model="owa.quick.reply">
+        <field name="name">Invoice overdue</field>
+        <field name="body">Hi {{partner_name}}, invoice {{record_name}} for {{currency}} {{amount}} is now {{days_overdue}} days overdue. Pay: {{record_url}}</field>
+    </record>
+</odoo>

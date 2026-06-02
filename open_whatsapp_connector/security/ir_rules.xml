@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Account: restricted by company -->
+    <record id="owa_account_company_rule" model="ir.rule">
+        <field name="name">Open WhatsApp Connector Account: Company</field>
+        <field name="model_id" ref="model_owa_account"/>
+        <field name="domain_force">[('allowed_company_ids', 'in', company_ids)]</field>
+    </record>
+
+    <!-- Messages: users see only their own, admins see all -->
+    <record id="owa_message_user_rule" model="ir.rule">
+        <field name="name">Open WhatsApp Connector Message: User</field>
+        <field name="model_id" ref="model_owa_message"/>
+        <field name="domain_force">[('create_uid', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <record id="owa_message_admin_rule" model="ir.rule">
+        <field name="name">Open WhatsApp Connector Message: Admin</field>
+        <field name="model_id" ref="model_owa_message"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('open_whatsapp_connector.group_owa_admin'))]"/>
+    </record>
+
+    <!-- Phase 13: company isolation by tying every account-linked record to the
+         account's allowed_company_ids. Records without wa_account_id (e.g.
+         standalone quick replies / contact lists) are global. -->
+
+    <record id="owa_message_company_rule" model="ir.rule">
+        <field name="name">WhatsApp Message: Company (via account)</field>
+        <field name="model_id" ref="model_owa_message"/>
+        <field name="domain_force">['|', ('wa_account_id', '=', False), ('wa_account_id.allowed_company_ids', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <record id="owa_campaign_company_rule" model="ir.rule">
+        <field name="name">WhatsApp Campaign: Company (via account)</field>
+        <field name="model_id" ref="model_owa_campaign"/>
+        <field name="domain_force">['|', ('wa_account_id', '=', False), ('wa_account_id.allowed_company_ids', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <record id="owa_notification_rule_company_rule" model="ir.rule">
+        <field name="name">WhatsApp Notification Rule: Company (via account)</field>
+        <field name="model_id" ref="model_owa_notification_rule"/>
+        <field name="domain_force">['|', ('wa_account_id', '=', False), ('wa_account_id.allowed_company_ids', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <record id="owa_auto_reply_company_rule" model="ir.rule">
+        <field name="name">WhatsApp Auto-Reply: Company (via account)</field>
+        <field name="model_id" ref="model_owa_auto_reply"/>
+        <field name="domain_force">['|', ('wa_account_id', '=', False), ('wa_account_id.allowed_company_ids', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <record id="owa_chatbot_company_rule" model="ir.rule">
+        <field name="name">WhatsApp Chatbot: Company (via account)</field>
+        <field name="model_id" ref="model_owa_chatbot"/>
+        <field name="domain_force">['|', ('wa_account_id', '=', False), ('wa_account_id.allowed_company_ids', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <record id="owa_chatbot_session_company_rule" model="ir.rule">
+        <field name="name">WhatsApp Chatbot Session: Company (via chatbot)</field>
+        <field name="model_id" ref="model_owa_chatbot_session"/>
+        <field name="domain_force">['|', ('chatbot_id.wa_account_id', '=', False), ('chatbot_id.wa_account_id.allowed_company_ids', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <record id="owa_allowlist_entry_company_rule" model="ir.rule">
+        <field name="name">WhatsApp Allowlist: Company (via account)</field>
+        <field name="model_id" ref="model_owa_allowlist_entry"/>
+        <field name="domain_force">['|', ('account_id', '=', False), ('account_id.allowed_company_ids', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <record id="owa_pending_pair_company_rule" model="ir.rule">
+        <field name="name">WhatsApp Pending Pair: Company (via account)</field>
+        <field name="model_id" ref="model_owa_pending_pair"/>
+        <field name="domain_force">['|', ('account_id', '=', False), ('account_id.allowed_company_ids', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <record id="owa_inbound_dedupe_company_rule" model="ir.rule">
+        <field name="name">WhatsApp Inbound Dedupe: Company (via account)</field>
+        <field name="model_id" ref="model_owa_inbound_dedupe"/>
+        <field name="domain_force">['|', ('account_id', '=', False), ('account_id.allowed_company_ids', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <record id="owa_quick_reply_company_rule" model="ir.rule">
+        <field name="name">WhatsApp Quick Reply: Company (via account, when set)</field>
+        <field name="model_id" ref="model_owa_quick_reply"/>
+        <field name="domain_force">['|', ('wa_account_id', '=', False), ('wa_account_id.allowed_company_ids', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <!-- Phase 21: incoming call log -->
+    <record id="owa_call_log_company_rule" model="ir.rule">
+        <field name="name">WhatsApp Call Log: Company (via account)</field>
+        <field name="model_id" ref="model_owa_call_log"/>
+        <field name="domain_force">['|', ('wa_account_id', '=', False), ('wa_account_id.allowed_company_ids', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <!-- Phase 22C / 27B: inbound rules — scope by company on BOTH the
+         account-linked case (via account.allowed_company_ids) AND the
+         account-less case (via rule.company_id). Without the company_id
+         fallback an account-less rule in Company A would otherwise be
+         visible (and fireable) from Company B. -->
+    <record id="owa_inbound_rule_company_rule" model="ir.rule">
+        <field name="name">WhatsApp Inbound Rule: Company (via account or company_id)</field>
+        <field name="model_id" ref="model_owa_inbound_rule"/>
+        <field name="domain_force">['|', '&amp;', ('wa_account_id', '=', False), ('company_id', 'in', company_ids), ('wa_account_id.allowed_company_ids', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <!-- Phase 25A: broadcast groups -->
+    <record id="owa_broadcast_group_company_rule" model="ir.rule">
+        <field name="name">WhatsApp Broadcast Group: Company (via account)</field>
+        <field name="model_id" ref="model_owa_broadcast_group"/>
+        <field name="domain_force">['|', ('wa_account_id', '=', False), ('wa_account_id.allowed_company_ids', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <!-- Phase 25B: standing orders -->
+    <record id="owa_standing_order_company_rule" model="ir.rule">
+        <field name="name">WhatsApp Standing Order: Company (via account)</field>
+        <field name="model_id" ref="model_owa_standing_order"/>
+        <field name="domain_force">['|', ('wa_account_id', '=', False), ('wa_account_id.allowed_company_ids', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <!-- Phase 25C: status broadcasts -->
+    <record id="owa_status_broadcast_company_rule" model="ir.rule">
+        <field name="name">WhatsApp Status Broadcast: Company (via account)</field>
+        <field name="model_id" ref="model_owa_status_broadcast"/>
+        <field name="domain_force">['|', ('wa_account_id', '=', False), ('wa_account_id.allowed_company_ids', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <!-- Phase 25D: group sessions -->
+    <record id="owa_group_session_company_rule" model="ir.rule">
+        <field name="name">WhatsApp Group Session: Company (via account)</field>
+        <field name="model_id" ref="model_owa_group_session"/>
+        <field name="domain_force">['|', ('wa_account_id', '=', False), ('wa_account_id.allowed_company_ids', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <!-- Phase 25G: health issues -->
+    <record id="owa_health_issue_company_rule" model="ir.rule">
+        <field name="name">WhatsApp Health Issue: Company (via account)</field>
+        <field name="model_id" ref="model_owa_health_issue"/>
+        <field name="domain_force">['|', ('wa_account_id', '=', False), ('wa_account_id.allowed_company_ids', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <!-- Phase 23B: CSAT scores -->
+    <record id="owa_satisfaction_score_company_rule" model="ir.rule">
+        <field name="name">WhatsApp CSAT: Company (via account)</field>
+        <field name="model_id" ref="model_owa_satisfaction_score"/>
+        <field name="domain_force">['|', ('wa_account_id', '=', False), ('wa_account_id.allowed_company_ids', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <!-- ================================================================
+         Per-user / per-team visibility for marketing records.
+         SHIPPED INACTIVE. The "Campaign & Contact Visibility" setting
+         (res.config.settings.owa_marketing_visibility) flips these on
+         when an admin selects "Restricted to owner + their Sales Team".
+         When inactive (default), only the global company rules apply, so
+         everyone in the company sees all (today's shared behaviour).
+
+         Each model gets a pair:
+           - user rule  (base.group_user): own OR member/leader of the team
+           - admin rule (group_owa_admin): unrestricted (1=1)
+         Group-scoped rules OR together, so an admin (who implies
+         base.group_user) sees (own|team) OR all = all.
+         ================================================================ -->
+
+    <!-- Campaign -->
+    <record id="owa_campaign_user_rule" model="ir.rule">
+        <field name="name">WhatsApp Campaign: own + team</field>
+        <field name="model_id" ref="model_owa_campaign"/>
+        <field name="active" eval="False"/>
+        <field name="domain_force">['|', ('user_id', '=', user.id), '|', ('team_id.member_ids', 'in', [user.id]), ('team_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+    <record id="owa_campaign_admin_all_rule" model="ir.rule">
+        <field name="name">WhatsApp Campaign: admin all</field>
+        <field name="model_id" ref="model_owa_campaign"/>
+        <field name="active" eval="False"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('open_whatsapp_connector.group_owa_admin'))]"/>
+    </record>
+
+    <!-- Contact List (no account/company -> user/team is the only isolation) -->
+    <record id="owa_contact_list_user_rule" model="ir.rule">
+        <field name="name">WhatsApp Contact List: own + team</field>
+        <field name="model_id" ref="model_owa_contact_list"/>
+        <field name="active" eval="False"/>
+        <field name="domain_force">['|', ('user_id', '=', user.id), '|', ('team_id.member_ids', 'in', [user.id]), ('team_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+    <record id="owa_contact_list_admin_all_rule" model="ir.rule">
+        <field name="name">WhatsApp Contact List: admin all</field>
+        <field name="model_id" ref="model_owa_contact_list"/>
+        <field name="active" eval="False"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('open_whatsapp_connector.group_owa_admin'))]"/>
+    </record>
+
+    <!-- Contact List Member (scoped through parent list) -->
+    <record id="owa_contact_list_member_user_rule" model="ir.rule">
+        <field name="name">WhatsApp Contact List Member: own + team (via list)</field>
+        <field name="model_id" ref="model_owa_contact_list_member"/>
+        <field name="active" eval="False"/>
+        <field name="domain_force">['|', ('list_id.user_id', '=', user.id), '|', ('list_id.team_id.member_ids', 'in', [user.id]), ('list_id.team_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+    <record id="owa_contact_list_member_admin_all_rule" model="ir.rule">
+        <field name="name">WhatsApp Contact List Member: admin all</field>
+        <field name="model_id" ref="model_owa_contact_list_member"/>
+        <field name="active" eval="False"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('open_whatsapp_connector.group_owa_admin'))]"/>
+    </record>
+
+    <!-- Broadcast Group -->
+    <record id="owa_broadcast_group_user_rule" model="ir.rule">
+        <field name="name">WhatsApp Broadcast Group: own + team</field>
+        <field name="model_id" ref="model_owa_broadcast_group"/>
+        <field name="active" eval="False"/>
+        <field name="domain_force">['|', ('user_id', '=', user.id), '|', ('team_id.member_ids', 'in', [user.id]), ('team_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+    <record id="owa_broadcast_group_admin_all_rule" model="ir.rule">
+        <field name="name">WhatsApp Broadcast Group: admin all</field>
+        <field name="model_id" ref="model_owa_broadcast_group"/>
+        <field name="active" eval="False"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('open_whatsapp_connector.group_owa_admin'))]"/>
+    </record>
+
+    <!-- Standing Order -->
+    <record id="owa_standing_order_user_rule" model="ir.rule">
+        <field name="name">WhatsApp Standing Order: own + team</field>
+        <field name="model_id" ref="model_owa_standing_order"/>
+        <field name="active" eval="False"/>
+        <field name="domain_force">['|', ('user_id', '=', user.id), '|', ('team_id.member_ids', 'in', [user.id]), ('team_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+    <record id="owa_standing_order_admin_all_rule" model="ir.rule">
+        <field name="name">WhatsApp Standing Order: admin all</field>
+        <field name="model_id" ref="model_owa_standing_order"/>
+        <field name="active" eval="False"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('open_whatsapp_connector.group_owa_admin'))]"/>
+    </record>
+
+    <!-- Status Broadcast -->
+    <record id="owa_status_broadcast_user_rule" model="ir.rule">
+        <field name="name">WhatsApp Status Broadcast: own + team</field>
+        <field name="model_id" ref="model_owa_status_broadcast"/>
+        <field name="active" eval="False"/>
+        <field name="domain_force">['|', ('user_id', '=', user.id), '|', ('team_id.member_ids', 'in', [user.id]), ('team_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+    <record id="owa_status_broadcast_admin_all_rule" model="ir.rule">
+        <field name="name">WhatsApp Status Broadcast: admin all</field>
+        <field name="model_id" ref="model_owa_status_broadcast"/>
+        <field name="active" eval="False"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('open_whatsapp_connector.group_owa_admin'))]"/>
+    </record>
+</odoo>

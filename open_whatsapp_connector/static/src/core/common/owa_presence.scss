@@ -1,0 +1,14 @@
+// Phase B3 — online dot overlaid on the WhatsApp icon. Rendered when the
+// remote contact's last presence.update was 'available'. Positioned via
+// the parent .fa-whatsapp's position: relative.
+.owa-online-dot {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    width: 8px;
+    height: 8px;
+    background: #25d366;
+    border: 1.5px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
+}

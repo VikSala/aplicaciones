@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Composer Form View -->
+    <record id="owa_composer_view_form" model="ir.ui.view">
+        <field name="name">owa.composer.form</field>
+        <field name="model">owa.composer</field>
+        <field name="arch" type="xml">
+            <form string="Send WhatsApp Message">
+                <group>
+                    <field name="res_model" invisible="1"/>
+                    <field name="res_ids" invisible="1"/>
+                    <field name="batch_mode" invisible="1"/>
+                    <field name="wa_account_id"/>
+                    <!-- Standalone-compose fields: shown when opened without a
+                         specific record (top-menu Compose). Hidden when the
+                         composer was launched from a partner / lead / etc. -->
+                    <field name="partner_id" invisible="res_ids"
+                           options="{'no_create': True}"
+                           domain="[('phone', '!=', False)]"/>
+                    <field name="phone_input" invisible="res_ids"
+                           placeholder="e.g. +919999999999"/>
+                    <field name="phone" readonly="not res_ids"/>
+                    <field name="quick_reply_id"/>
+                    <!-- Attach a rendered report PDF (e.g. invoice / sale order).
+                         Only when launched from a single record. -->
+                    <field name="report_id"
+                           invisible="not res_ids or batch_mode"
+                           options="{'no_create': True, 'no_open': True}"/>
+                </group>
+                <group string="Message">
+                    <field name="body" nolabel="1" placeholder="Type your message here..."/>
+                </group>
+                <group string="Attachments">
+                    <field name="attachment_ids" nolabel="1" widget="many2many_binary"/>
+                </group>
+                <group>
+                    <field name="scheduled_date"/>
+                </group>
+                <footer>
+                    <button name="action_send" type="object" string="Send" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action to open composer -->
+    <record id="owa_composer_action" model="ir.actions.act_window">
+        <field name="name">Send WhatsApp</field>
+        <field name="res_model">owa.composer</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Phase H — top-menu Compose action: opens the composer with no
+         active_model/active_ids context, so the partner/phone fields show
+         and the user can pick a recipient from scratch. -->
+    <record id="action_owa_composer_window" model="ir.actions.act_window">
+        <field name="name">Compose WhatsApp Message</field>
+        <field name="res_model">owa.composer</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

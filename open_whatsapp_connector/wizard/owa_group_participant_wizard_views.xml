@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_owa_group_participant_wizard_form" model="ir.ui.view">
+    <field name="name">owa.group.participant.wizard.form</field>
+    <field name="model">owa.group.participant.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Manage WhatsApp Group Participants">
+        <sheet>
+          <group>
+            <group>
+              <field name="channel_id" readonly="1"/>
+              <field name="wa_account_id" readonly="1"/>
+              <field name="group_jid" readonly="1"/>
+              <field name="action_kind"/>
+            </group>
+          </group>
+          <group string="Targets">
+            <field name="partner_ids" widget="many2many_tags"
+                   options="{'no_create': True}"/>
+            <field name="raw_phones" placeholder="e.g. 919999999999, 14155552671"/>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_apply" type="object" string="Apply"
+                  class="btn-primary"/>
+          <button special="cancel" string="Cancel" class="btn-secondary"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_owa_group_participant_wizard" model="ir.actions.act_window">
+    <field name="name">Manage WhatsApp Group Participants</field>
+    <field name="res_model">owa.group.participant.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+    <!-- Pull channel id from context if present; never reference bare
+         active_id which is undefined when invoked menu-less. The Group
+         form's smart button passes default_channel_id explicitly. -->
+    <field name="context">{}</field>
+  </record>
+</odoo>

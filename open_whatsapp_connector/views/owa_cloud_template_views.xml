@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="owa_cloud_template_view_list" model="ir.ui.view">
+        <field name="name">owa.cloud.template.list</field>
+        <field name="model">owa.cloud.template</field>
+        <field name="arch" type="xml">
+            <list string="WhatsApp Templates">
+                <field name="name"/>
+                <field name="lang_code"/>
+                <field name="category"/>
+                <field name="wa_account_id"/>
+                <field name="quality"/>
+                <field name="status" widget="badge"
+                       decoration-success="status == 'approved'"
+                       decoration-danger="status == 'rejected'"
+                       decoration-warning="status == 'pending'"
+                       decoration-muted="status == 'draft'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="owa_cloud_template_view_form" model="ir.ui.view">
+        <field name="name">owa.cloud.template.form</field>
+        <field name="model">owa.cloud.template</field>
+        <field name="arch" type="xml">
+            <form string="WhatsApp Template">
+                <header>
+                    <button name="action_submit" type="object"
+                            string="Submit to Meta" class="btn-primary"
+                            invisible="status not in ('draft', 'rejected')"/>
+                    <button name="action_sync" type="object"
+                            string="Sync Status"
+                            invisible="not wa_template_uid"/>
+                    <field name="status" widget="statusbar"
+                           statusbar_visible="draft,pending,approved"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name"
+                                   placeholder="e.g. order_update"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="lang_code"/>
+                            <field name="category"/>
+                            <field name="wa_account_id"/>
+                        </group>
+                        <group>
+                            <field name="wa_template_uid" readonly="1"/>
+                            <field name="quality" readonly="1"/>
+                            <field name="error_msg" readonly="1"
+                                   invisible="not error_msg"/>
+                        </group>
+                    </group>
+                    <group string="Content">
+                        <field name="header_type"/>
+                        <field name="header_text"
+                               invisible="header_type != 'text'"/>
+                        <field name="body_text"/>
+                        <field name="footer_text"/>
+                    </group>
+                    <notebook>
+                        <page string="Variables" name="variables">
+                            <field name="variable_ids">
+                                <list editable="bottom">
+                                    <field name="component"/>
+                                    <field name="index"/>
+                                    <field name="sample"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Buttons" name="buttons">
+                            <field name="button_ids">
+                                <list editable="bottom">
+                                    <field name="button_type"/>
+                                    <field name="text"/>
+                                    <field name="url"
+                                           invisible="button_type != 'url'"/>
+                                    <field name="phone_number"
+                                           invisible="button_type != 'phone_number'"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="owa_cloud_template_action" model="ir.actions.act_window">
+        <field name="name">WhatsApp Templates</field>
+        <field name="res_model">owa.cloud.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Author a WhatsApp Cloud API template
+            </p>
+            <p>
+                Templates are required to message a contact outside the 24-hour
+                customer-service window. Submit them to Meta for approval, then
+                send approved templates from automations or the composer.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_owa_cloud_templates"
+              name="Cloud Templates"
+              parent="open_whatsapp_connector.menu_owa_config"
+              action="owa_cloud_template_action"
+              sequence="31"/>
+</odoo>

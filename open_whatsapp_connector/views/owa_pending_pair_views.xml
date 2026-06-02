@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="owa_pending_pair_action" model="ir.actions.act_window">
+        <field name="name">Pending Approvals</field>
+        <field name="res_model">owa.pending.pair</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('state', '=', 'pending')]</field>
+        <field name="context">{'search_default_state_pending': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No pending pair requests</p>
+            <p>
+                When a WhatsApp account's DM policy is set to "pairing",
+                inbound messages from unknown numbers land here for admin
+                approval before they can reach the discuss thread.
+            </p>
+        </field>
+    </record>
+
+    <record id="owa_pending_pair_list" model="ir.ui.view">
+        <field name="name">owa.pending.pair.list</field>
+        <field name="model">owa.pending.pair</field>
+        <field name="arch" type="xml">
+            <list string="Pending Pair Requests"
+                  decoration-warning="state == 'pending'"
+                  decoration-success="state == 'approved'"
+                  decoration-danger="state == 'rejected'"
+                  decoration-muted="state == 'expired'">
+                <field name="account_id"/>
+                <field name="phone"/>
+                <field name="sender_name"/>
+                <field name="body_preview"/>
+                <field name="state" widget="badge"/>
+                <field name="create_date"/>
+                <field name="expires_at"/>
+                <button name="action_approve" type="object" string="Approve"
+                        class="btn btn-sm btn-success"
+                        invisible="state != 'pending'"/>
+                <button name="action_reject" type="object" string="Reject"
+                        class="btn btn-sm btn-danger"
+                        invisible="state != 'pending'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="owa_pending_pair_form" model="ir.ui.view">
+        <field name="name">owa.pending.pair.form</field>
+        <field name="model">owa.pending.pair</field>
+        <field name="arch" type="xml">
+            <form string="Pending Pair">
+                <header>
+                    <button name="action_approve" type="object" string="Approve"
+                            class="btn-primary" invisible="state != 'pending'"/>
+                    <button name="action_reject" type="object" string="Reject"
+                            invisible="state != 'pending'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="pending,approved,rejected"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="account_id"/>
+                            <field name="phone"/>
+                            <field name="sender_name"/>
+                        </group>
+                        <group>
+                            <field name="msg_uid"/>
+                            <field name="create_date"/>
+                            <field name="expires_at"/>
+                            <field name="blacklist_on_reject"/>
+                        </group>
+                    </group>
+                    <group string="Message preview">
+                        <field name="body_preview" nolabel="1" readonly="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="owa_pending_pair_search" model="ir.ui.view">
+        <field name="name">owa.pending.pair.search</field>
+        <field name="model">owa.pending.pair</field>
+        <field name="arch" type="xml">
+            <search string="Pending Pair Requests">
+                <field name="phone"/>
+                <field name="account_id"/>
+                <filter string="Pending" name="state_pending" domain="[('state', '=', 'pending')]"/>
+                <filter string="Approved" name="state_approved" domain="[('state', '=', 'approved')]"/>
+                <filter string="Rejected" name="state_rejected" domain="[('state', '=', 'rejected')]"/>
+                <filter string="Expired" name="state_expired" domain="[('state', '=', 'expired')]"/>
+                <separator/>
+                <filter string="By Account" name="group_account" context="{'group_by': 'account_id'}"/>
+                <filter string="By State" name="group_state" context="{'group_by': 'state'}"/>
+            </search>
+        </field>
+    </record>
+
+</odoo>

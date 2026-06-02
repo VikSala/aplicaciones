@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="open_whatsapp_connector.OwaCallRingingNotifier">
+        <div class="o_owa_call_stack" t-if="callList().length">
+            <t t-foreach="callList()" t-as="call" t-key="call.call_log_id">
+                <div class="o_owa_call_card" t-att-class="{ 'o_owa_call_card_video': call.is_video }">
+                    <button class="o_owa_call_close"
+                            title="Dismiss"
+                            t-on-click="() => this.onDismiss(call.call_log_id)">
+                        <i class="fa fa-times"/>
+                    </button>
+
+                    <div class="o_owa_call_header">
+                        <div class="o_owa_call_avatar_wrap">
+                            <span class="o_owa_call_pulse"/>
+                            <span class="o_owa_call_pulse o_owa_call_pulse_2"/>
+                            <t t-if="avatarUrl(call)">
+                                <img class="o_owa_call_avatar"
+                                     t-att-src="avatarUrl(call)"
+                                     alt=""/>
+                            </t>
+                            <t t-else="">
+                                <div class="o_owa_call_avatar o_owa_call_avatar_initial">
+                                    <t t-esc="initialOf(call.partner_name, call.from_phone)"/>
+                                </div>
+                            </t>
+                            <span class="o_owa_call_kind_badge">
+                                <i t-att-class="call.is_video ? 'fa fa-video-camera' : 'fa fa-phone'"/>
+                            </span>
+                        </div>
+
+                        <div class="o_owa_call_meta">
+                            <div class="o_owa_call_label">
+                                <span class="o_owa_call_dot"/>
+                                Incoming WhatsApp call
+                            </div>
+                            <div class="o_owa_call_name" t-esc="displayName(call)"/>
+                            <div class="o_owa_call_sub">
+                                <t t-esc="kindLabel(call)"/>
+                                <t t-if="call.account_name">
+                                    <span class="o_owa_call_sep">·</span>
+                                    <t t-esc="call.account_name"/>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="o_owa_call_actions">
+                        <button class="btn o_owa_call_btn o_owa_call_btn_reject"
+                                t-on-click="() => this.onReject(call.call_log_id)"
+                                title="Stop the WhatsApp ring on the caller's phone">
+                            <i class="fa fa-phone o_owa_rotate"/>
+                            Reject
+                        </button>
+                        <button class="btn o_owa_call_btn o_owa_call_btn_open"
+                                t-on-click="() => this.onOpen(call.call_log_id)">
+                            <i class="fa fa-external-link"/>
+                            Open
+                        </button>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+
+</templates>

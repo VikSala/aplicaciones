@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Form View -->
+    <record id="owa_auto_reply_form" model="ir.ui.view">
+        <field name="name">owa.auto.reply.form</field>
+        <field name="model">owa.auto.reply</field>
+        <field name="arch" type="xml">
+            <form string="Auto-Reply Rule">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger"
+                            invisible="active"/>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. Business Hours Auto-Reply"/></h1>
+                    </div>
+                    <group>
+                        <group string="Trigger">
+                            <field name="trigger_type"/>
+                            <field name="keyword" invisible="trigger_type not in ('keyword',)"
+                                   placeholder="hello, hi, help"/>
+                            <field name="match_type" invisible="trigger_type != 'keyword'"/>
+                            <field name="wa_account_id"/>
+                        </group>
+                        <group string="Response">
+                            <field name="response_body" placeholder="Thank you for your message! We'll get back to you shortly."/>
+                        </group>
+                    </group>
+                    <group invisible="trigger_type != 'away'" string="Business Hours">
+                        <group>
+                            <field name="schedule_start" widget="float_time"/>
+                            <field name="schedule_end" widget="float_time"/>
+                            <field name="schedule_days" placeholder="0,1,2,3,4"/>
+                            <field name="timezone"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Options">
+                            <field name="cooldown_minutes"/>
+                            <field name="reply_to_mode_override"/>
+                            <field name="sequence"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- List View -->
+    <record id="owa_auto_reply_list" model="ir.ui.view">
+        <field name="name">owa.auto.reply.list</field>
+        <field name="model">owa.auto.reply</field>
+        <field name="arch" type="xml">
+            <list string="Auto-Reply Rules">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="trigger_type"/>
+                <field name="keyword"/>
+                <field name="wa_account_id"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="owa_auto_reply_action" model="ir.actions.act_window">
+        <field name="name">Auto-Reply Rules</field>
+        <field name="res_model">owa.auto.reply</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first auto-reply rule
+            </p>
+            <p>
+                Auto-reply rules send automatic responses to incoming WhatsApp messages
+                based on keywords, business hours, or other triggers.
+            </p>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,140 @@
+DOCUMENTACIÓN TÉCNICA - FILTRADO DE PROMPTS HACIA n8n
+Versión del addon: 2.10.15
+
+Objetivo
+--------
+Este documento indica en qué archivos y líneas se filtra lo que se envía a la IA de n8n.
+La idea principal del addon es resolver localmente en Odoo todo lo que sea sencillo o administrativo
+antes de llamar a n8n, y enviar al webhook solamente un prompt compacto cuando realmente hace falta IA.
+
+Archivos implicados
+-------------------
+1) odoo_ai_chat/controllers/main.py
+   Es el archivo principal. Aquí se decide si una petición se responde desde Odoo o si se manda a n8n.
+
+2) odoo_ai_chat/static/src/js/ai_chat.js
+   Es el widget del navegador. No construye el prompt final de n8n; solo manda el mensaje al backend,
+   gestiona estado local del alta de producto y evita algunas llamadas innecesarias, como carrito.
+
+Líneas principales del backend
+------------------------------
+
+Archivo: odoo_ai_chat/controllers/main.py
+
+- Líneas 398-400:
+  Ruta principal /ai/chat/start. Es la entrada recomendada del chat.
+  Esta ruta filtra primero todos los casos locales y solo crea una ejecución de n8n si no hay respuesta local.
+
+- Líneas 431-469:
+  Filtros locales antes de n8n dentro de /ai/chat/start.
+  En este bloque se prueban, en orden:
+  usuario actual, mensajes ligeros, administración, alta de portal, carrito y respuestas locales de producto.
+  Si cualquiera devuelve respuesta, NO se llama a n8n.
+
+- Líneas 479-491:
+  Construcción del payload que se enviará a n8n.
+  Aquí se llama a _build_ai_product_context_if_needed() y _build_prompt().
+  También se decide si se incluye o no odooProductContext.
+
+- Líneas 196-212:
+  Función _call_n8n_in_background().
+  Es el punto donde finalmente se hace requests.post() al webhook de n8n usando el payload ya filtrado.
+
+- Líneas 560-562:
+  Ruta antigua /ai/chat. Se mantiene por compatibilidad.
+  Hace el mismo tipo de filtrado que /ai/chat/start, pero de forma síncrona.
+
+- Líneas 588-627:
+  Filtros locales equivalentes dentro de la ruta antigua /ai/chat.
+  Si una de estas funciones responde localmente, tampoco se manda nada a n8n.
+
+- Líneas 636-655:
+  Construcción del payload enviado a n8n en la ruta antigua /ai/chat.
+  Incluye el prompt ya enriquecido y el contexto de producto solo cuando procede.
+
+- Líneas 947-967:
+  Función _looks_like_lightweight_local_message().
+  Detecta saludos y frases simples como "hola", "buenas", "gracias" o "en qué me puedes ayudar".
+
+- Líneas 969-1003:
+  Función _try_handle_lightweight_local_turn().
+  Responde localmente los mensajes simples y devuelve skipAI=True.
+  Esto evita consumir tokens de n8n en consultas básicas.
+
+- Líneas 1164-1195:
+  Función _try_handle_admin_management_turn().
+  Intercepta acciones administrativas de Odoo, como crear/modificar productos o clientes.
+  Estas acciones se ejecutan desde el backend de Odoo para que n8n no invente acciones.
+
+- Líneas 3559-3580:
+  Función _try_handle_customer_portal_turn().
+  Intercepta y gestiona localmente la creación de usuarios portal/clientes.
+
+- Líneas 4036-4075:
+  Función _try_build_local_product_reply().
+  Responde localmente consultas de producto, precio, stock o referencia cuando Odoo puede resolverlas.
+  Esto evita mandar al modelo información de inventario cuando no hace falta.
+
+- Líneas 4191-4283:
+  Función _try_handle_cart_turn().
+  Gestiona intención de carrito desde Odoo antes de n8n.
+  Si el usuario quiere añadir un producto al carrito, el addon lo resuelve con website_sale.
+
+- Líneas 4290-4320:
+  Ruta /ai/cart/intent.
+  El frontend la llama antes de /ai/chat/start para detectar carrito y evitar una ejecución de IA.
+
+- Líneas 3956-3973:
+  Función _should_include_product_context_for_ai().
+  Es el filtro principal de contexto de inventario.
+  Devuelve False si el mensaje no parece de producto, si es carrito, si es administración o si es alta de portal.
+
+- Líneas 3975-3981:
+  Función _build_ai_product_context_if_needed().
+  Si _should_include_product_context_for_ai() devuelve False, no se incluye inventario en el prompt.
+  Si devuelve True, construye una muestra limitada.
+
+- Líneas 3983-4030:
+  Función _build_product_context().
+  Construye el contexto de productos desde Inventario -> Productos con límite bajo.
+  Actualmente se llama con limit=8 para no mandar cientos de líneas al modelo.
+
+- Líneas 707-719:
+  Función _build_attachment_context_for_n8n().
+  Envía a n8n solo metadatos de adjuntos, no el binario completo de la imagen.
+  Esto evita inflar el prompt o el payload con base64 pesado.
+
+- Líneas 4725-4753:
+  Función _build_prompt().
+  Construye el prompt final que recibe n8n.
+  Solo añade el bloque "Inventario Odoo relevante" si _should_include_product_context_for_ai() devuelve True.
+  Aquí también están las instrucciones finales para que la IA responda breve, en español y sin inventar datos.
+
+Líneas principales del frontend
+-------------------------------
+
+Archivo: odoo_ai_chat/static/src/js/ai_chat.js
+
+- Líneas 859-870:
+  Antes de llamar a /ai/chat/start, el widget consulta /ai/cart/intent.
+  Si Odoo detecta una acción de carrito, la resuelve localmente y no continúa hacia n8n.
+
+- Líneas 879-910:
+  Envío final al backend /ai/chat/start.
+  El frontend no crea el prompt de n8n; manda mensaje, sessionId, página, estado del alta guiada y adjuntos.
+  El backend decide después si llama a n8n o responde localmente.
+
+Resumen rápido
+--------------
+- El prompt final de n8n se crea en: odoo_ai_chat/controllers/main.py, líneas 4725-4753.
+- La decisión de incluir inventario se toma en: odoo_ai_chat/controllers/main.py, líneas 3956-3981.
+- La ruta principal que evita llamadas innecesarias a n8n es: odoo_ai_chat/controllers/main.py, líneas 398-491.
+- La llamada real al webhook de n8n se hace en: odoo_ai_chat/controllers/main.py, líneas 196-212.
+- El frontend solo prepara y envía datos al backend; no monta el prompt final de IA.
+
+Nota de seguridad añadida
+-------------------------
+- Las operaciones administrativas desde la IA quedan bloqueadas para cualquier usuario cuyo login no sea exactamente "admin".
+- Usuarios públicos, portal e internos no admin solo pueden consultar productos por referencia/código, nombre o categoría, consultar stock/disponibilidad y añadir productos al carrito.
+- El payload enviado a n8n incluye odooAiPermissions con canManageProducts, canDeleteProducts, canManageCustomers y canCreatePortalUsers. canDeleteProducts es siempre false.
+- Aunque n8n reciba el prompt, debe respetar odooAiPermissions: si canManageProducts/canManageCustomers/canCreatePortalUsers es false, no debe ejecutar acciones de creación, modificación ni borrado. El borrado o archivado de productos está bloqueado para todos; si se solicita, debe responder que contacte con la empresa.

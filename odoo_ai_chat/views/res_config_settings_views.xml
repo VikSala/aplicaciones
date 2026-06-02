@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_odoo_ai_chat" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.odoo.ai.chat</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app string="Odoo AI Chat" name="odoo_ai_chat" data-string="Odoo AI Chat">
+                    <block title="Conexión con n8n">
+                        <setting string="URL del webhook de n8n" help="Usa la Production URL de n8n. Si pegas localhost o webhook-test, el addon lo convierte automáticamente a n8n_local y webhook para Docker.">
+                            <field name="odoo_ai_chat_webhook_url" placeholder="http://n8n_local:5678/webhook/odoo-ai-chat"/>
+                        </setting>
+                        <setting string="Páginas donde aparece el chatbot" help="Selecciona una o varias páginas del sitio web. Incluye páginas y subpáginas creadas en Odoo. El chatbot solo aparecerá en las páginas seleccionadas.">
+                            <field name="odoo_ai_chat_page_ids" widget="many2many_tags" placeholder="Selecciona páginas" context="{'odoo_ai_chat_page_selector': True}" options="{'no_create': True, 'no_create_edit': True}"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+</odoo>

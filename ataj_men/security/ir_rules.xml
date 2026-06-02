@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        No se necesitan ir.rules adicionales.
+        - El acceso de escritura está bloqueado para usuarios normales en ir.model.access.csv
+        - La lógica de qué atajos ve cada usuario se gestiona en el modelo Python
+          mediante get_shortcuts_for_user(), que filtra por visibilidad y puesto.
+        - Los administradores (group_system) tienen acceso completo por ir.model.access.
+    -->
+</odoo>

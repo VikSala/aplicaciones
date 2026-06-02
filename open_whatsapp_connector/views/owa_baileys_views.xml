@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- ───────────── Phase B2: WhatsApp group participant audit log ───────────── -->
+  <record id="view_owa_group_participant_event_list" model="ir.ui.view">
+    <field name="name">owa.group.participant.event.list</field>
+    <field name="model">owa.group.participant.event</field>
+    <field name="arch" type="xml">
+      <list default_order="create_date desc">
+        <field name="create_date" string="When"/>
+        <field name="wa_account_id"/>
+        <field name="channel_id"/>
+        <field name="action"/>
+        <field name="participants_jids"/>
+        <field name="author_jid"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_owa_group_participant_event_form" model="ir.ui.view">
+    <field name="name">owa.group.participant.event.form</field>
+    <field name="model">owa.group.participant.event</field>
+    <field name="arch" type="xml">
+      <form>
+        <sheet>
+          <group>
+            <group>
+              <field name="wa_account_id"/>
+              <field name="channel_id"/>
+              <field name="group_jid"/>
+              <field name="action"/>
+            </group>
+            <group>
+              <field name="create_date"/>
+              <field name="author_jid"/>
+              <field name="participants_jids"/>
+            </group>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_owa_group_participant_event" model="ir.actions.act_window">
+    <field name="name">WhatsApp Group Audit Log</field>
+    <field name="res_model">owa.group.participant.event</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <menuitem id="menu_owa_group_participant_event"
+            name="Group Audit Log"
+            parent="menu_owa_chats"
+            action="action_owa_group_participant_event"
+            sequence="40"/>
+
+  <!-- ───────────── Phase C3 / C2 / D: WhatsApp account form additions ─────── -->
+  <record id="view_owa_account_form_baileys" model="ir.ui.view">
+    <field name="name">owa.account.form.gateway</field>
+    <field name="model">owa.account</field>
+    <field name="inherit_id" ref="open_whatsapp_connector.owa_account_view_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//sheet" position="inside">
+        <notebook position="inside">
+          <page string="WhatsApp Profile &amp; Pairing"
+                invisible="connection_type != 'qr'">
+            <group>
+              <group string="Business Profile Picture">
+                <field name="image_1920" widget="image"/>
+                <button name="action_push_profile_picture" type="object"
+                        string="Upload to WhatsApp" class="btn-primary"
+                        help="Set this image as the WhatsApp profile picture for this account."/>
+                <button name="action_clear_profile_picture" type="object"
+                        string="Clear on WhatsApp" class="btn-secondary"/>
+              </group>
+              <group string="Pairing-Code Login"
+                     invisible="pairing_method != 'code'">
+                <field name="pairing_phone"
+                       placeholder="e.g. 919999999999 (digits only, country code first)"/>
+                <field name="pairing_code" readonly="1"/>
+                <button name="action_request_pairing_code" type="object"
+                        string="Request WhatsApp Pairing Code" class="btn-primary"/>
+              </group>
+            </group>
+            <group string="WhatsApp Blocklist Sync">
+              <button name="action_sync_whatsapp_blocklist" type="object"
+                      string="Sync from WhatsApp" class="btn-secondary"
+                      help="Pull the current blocklist from WhatsApp and add any missing entries to Odoo's blacklist."/>
+            </group>
+          </page>
+        </notebook>
+      </xpath>
+    </field>
+  </record>
+
+  <!-- ───────────── Phase C2 / C6: res.partner action buttons ─────── -->
+  <record id="view_partner_form_baileys" model="ir.ui.view">
+    <field name="name">res.partner.form.gateway</field>
+    <field name="model">res.partner</field>
+    <field name="inherit_id" ref="base.view_partner_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//sheet" position="before">
+        <header>
+          <button name="action_block_on_whatsapp" type="object"
+                  string="Block on WhatsApp" class="oe_highlight"
+                  invisible="not phone"
+                  groups="open_whatsapp_connector.group_owa_admin"/>
+          <button name="action_unblock_on_whatsapp" type="object"
+                  string="Unblock on WhatsApp"
+                  invisible="not phone"
+                  groups="open_whatsapp_connector.group_owa_admin"/>
+          <button name="action_create_wa_audio_call_link" type="object"
+                  string="WhatsApp Audio Call Link"
+                  invisible="not phone"/>
+          <button name="action_create_wa_video_call_link" type="object"
+                  string="WhatsApp Video Call Link"
+                  invisible="not phone"/>
+        </header>
+      </xpath>
+    </field>
+  </record>
+
+  <!-- The manage-participants wizard is reached via the "Manage Participants"
+       smart button on the Group form (which passes default_channel_id correctly).
+       Previous v19 history had a top-level menu that was deleted later — v18 was
+       never built with that menu, so no <delete> cleanup needed here. -->
+
+</odoo>

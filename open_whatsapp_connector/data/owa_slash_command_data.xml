@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="slash_help" model="owa.slash.command">
+            <field name="name">Help</field>
+            <field name="command">/help</field>
+            <field name="description">List available commands</field>
+            <field name="handler">help</field>
+            <field name="sequence">10</field>
+        </record>
+        <record id="slash_menu" model="owa.slash.command">
+            <field name="name">Menu</field>
+            <field name="command">/menu</field>
+            <field name="description">Re-open the chatbot menu</field>
+            <field name="handler">menu</field>
+            <field name="sequence">20</field>
+        </record>
+        <record id="slash_start" model="owa.slash.command">
+            <field name="name">Start</field>
+            <field name="command">/start</field>
+            <field name="description">Re-open the chatbot menu (alias of /menu)</field>
+            <field name="handler">menu</field>
+            <field name="sequence">21</field>
+        </record>
+        <record id="slash_stop" model="owa.slash.command">
+            <field name="name">Stop</field>
+            <field name="command">/stop</field>
+            <field name="description">Opt out of further messages</field>
+            <field name="handler">stop</field>
+            <field name="sequence">30</field>
+        </record>
+        <record id="slash_agent" model="owa.slash.command">
+            <field name="name">Agent</field>
+            <field name="command">/agent</field>
+            <field name="description">Talk to a human agent</field>
+            <field name="handler">agent</field>
+            <field name="sequence">40</field>
+        </record>
+    </data>
+</odoo>

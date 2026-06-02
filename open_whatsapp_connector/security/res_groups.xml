@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="group_owa_admin" model="res.groups">
+        <field name="name">Open WhatsApp Connector Administrator</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <!-- System administrators automatically get the WhatsApp admin group so
+         the <app groups="...group_owa_admin"> block in res.config.settings
+         renders for them in the Settings sidebar. -->
+    <record id="base.group_system" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('open_whatsapp_connector.group_owa_admin'))]"/>
+    </record>
+</odoo>

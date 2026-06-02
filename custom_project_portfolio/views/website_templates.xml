@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <template id="portfolio_template_grid" name="Portfolio">
+        <t t-call="website.layout">
+
+            <div class="container mt-5 mb-5">
+
+
+                <!-- Filtros de categoría -->
+                <t t-if="categories">
+                    <div class="d-flex flex-wrap justify-content-center gap-2 mb-5">
+
+                        <a href="/portfolio"
+                           t-att-class="'btn btn-sm fw-semibold ' + ('btn-dark' if not active_category_id else 'btn-outline-secondary')">
+                            Todos
+                        </a>
+
+                        <t t-foreach="categories" t-as="cat">
+                            <a t-att-href="'/portfolio?category_id=%s' % cat.id"
+                               t-att-class="'btn btn-sm fw-semibold ' + ('btn-dark' if active_category_id == cat.id else 'btn-outline-secondary')"
+                               t-att-style="'border-color:%s; ' % cat.color + ('background:%s; color:#fff;' % cat.color if active_category_id == cat.id else 'color:%s;' % cat.color)">
+                                <t t-out="cat.name"/>
+                            </a>
+                        </t>
+
+                    </div>
+                </t>
+
+                <!-- Grid de tarjetas -->
+                <div class="row" id="portfolio-grid">
+                    <t t-foreach="projects" t-as="project">
+
+                        <!-- Tarjeta -->
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100 shadow-sm portfolio-card"
+                                 style="cursor:pointer; transition: transform .15s, box-shadow .15s;"
+                                 data-bs-toggle="modal"
+                                 t-att-data-bs-target="'#portfolio_modal_%s' % project.id">
+
+                                <t t-if="project.portfolio_image_ids">
+                                    <img t-att-src="image_data_uri(project.portfolio_image_ids[0].image)"
+                                         class="card-img-top"
+                                         style="height:250px; object-fit:cover;"/>
+                                </t>
+
+                                <div class="card-body">
+                                    <t t-if="project.portfolio_category_id">
+                                        <span class="badge mb-2"
+                                              t-att-style="'background:%s;' % (project.portfolio_category_id.color or '#6c757d')">
+                                            <t t-out="project.portfolio_category_id.name"/>
+                                        </span>
+                                    </t>
+                                    <h5 class="card-title mb-0">
+                                        <t t-out="project.portfolio_title or project.name"/>
+                                    </h5>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- Modal -->
+                        <div class="modal fade"
+                             t-att-id="'portfolio_modal_%s' % project.id"
+                             tabindex="-1"
+                             aria-hidden="true">
+
+                            <div class="modal-dialog modal-xl modal-dialog-centered">
+                                <div class="modal-content">
+
+                                    <div class="modal-header border-0 pb-0 justify-content-center position-relative">
+                                        <div class="text-center w-100">
+                                            <t t-if="project.portfolio_category_id">
+                                                <span class="badge mb-1"
+                                                      t-att-style="'background:%s;' % (project.portfolio_category_id.color or '#6c757d')">
+                                                    <t t-out="project.portfolio_category_id.name"/>
+                                                </span>
+                                                <br/>
+                                            </t>
+                                            <h4 class="modal-title fw-semibold d-inline">
+                                                <t t-out="project.portfolio_title or project.name"/>
+                                            </h4>
+                                        </div>
+                                        <button type="button" class="btn-close position-absolute end-0 me-3" data-bs-dismiss="modal" aria-label="Cerrar"/>
+                                    </div>
+
+                                    <div class="modal-body pt-2 pb-0">
+
+                                        <t t-if="project.portfolio_description">
+                                            <div t-field="project.portfolio_description" class="mb-3 text-muted small text-center"/>
+                                        </t>
+
+                                        <t t-if="project.portfolio_image_ids">
+                                            <div class="position-relative">
+
+                                                <div t-att-id="'carousel_%s' % project.id"
+                                                     class="carousel slide"
+                                                     data-bs-ride="false"
+                                                     data-bs-wrap="true">
+
+                                                    <div class="carousel-inner rounded overflow-hidden"
+                                                         style="background:#111;">
+                                                        <t t-foreach="project.portfolio_image_ids" t-as="img">
+                                                            <div t-att-class="'carousel-item active' if img_index == 0 else 'carousel-item'">
+                                                                <img t-att-src="image_data_uri(img.image)"
+                                                                     class="d-block mx-auto"
+                                                                     style="max-height:55vh; max-width:100%; width:auto; object-fit:contain; padding:8px;"/>
+                                                                <t t-if="img.name">
+                                                                    <div class="carousel-caption d-none d-md-block pb-2">
+                                                                        <p class="mb-0 small bg-dark bg-opacity-50 rounded px-2 py-1 d-inline-block">
+                                                                            <t t-out="img.name"/>
+                                                                        </p>
+                                                                    </div>
+                                                                </t>
+                                                            </div>
+                                                        </t>
+                                                    </div>
+
+                                                    <t t-if="len(project.portfolio_image_ids) > 1">
+                                                        <span class="position-absolute top-0 end-0 m-2 badge bg-dark bg-opacity-75 text-white"
+                                                              t-att-id="'counter_%s' % project.id"
+                                                              style="z-index:10; font-size:0.8rem;">
+                                                            1 / <t t-out="len(project.portfolio_image_ids)"/>
+                                                        </span>
+
+                                                        <button class="carousel-control-prev" type="button"
+                                                                t-att-data-bs-target="'#carousel_%s' % project.id"
+                                                                data-bs-slide="prev">
+                                                            <span class="carousel-control-prev-icon" aria-hidden="true"/>
+                                                            <span class="visually-hidden">Anterior</span>
+                                                        </button>
+
+                                                        <button class="carousel-control-next" type="button"
+                                                                t-att-data-bs-target="'#carousel_%s' % project.id"
+                                                                data-bs-slide="next">
+                                                            <span class="carousel-control-next-icon" aria-hidden="true"/>
+                                                            <span class="visually-hidden">Siguiente</span>
+                                                        </button>
+                                                    </t>
+
+                                                    <span class="d-none portfolio-carousel-init"
+                                                          t-att-data-carousel-id="'carousel_%s' % project.id"
+                                                          t-att-data-total="len(project.portfolio_image_ids)"/>
+
+                                                </div>
+                                            </div>
+                                        </t>
+
+                                    </div>
+
+                                    <div class="modal-footer border-0 pt-3">
+                                        <a href="/contacto" class="btn btn-primary w-100 py-2">
+                                            &#128172; Solicitar presupuesto
+                                        </a>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                    </t>
+                </div>
+
+                <t t-if="not projects">
+                    <p class="text-center text-muted mt-5">No hay proyectos en esta categoría.</p>
+                </t>
+
+            </div>
+
+        </t>
+    </template>
+
+</odoo>

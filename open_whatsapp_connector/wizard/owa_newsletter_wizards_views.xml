@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_owa_newsletter_create_wizard_form" model="ir.ui.view">
+    <field name="name">owa.newsletter.create.wizard.form</field>
+    <field name="model">owa.newsletter.create.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Create WhatsApp Newsletter">
+        <sheet>
+          <group>
+            <field name="wa_account_id"/>
+            <field name="name"/>
+            <field name="description"/>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_create" type="object" string="Create"
+                  class="btn-primary"/>
+          <button special="cancel" string="Cancel" class="btn-secondary"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_owa_newsletter_create_wizard" model="ir.actions.act_window">
+    <field name="name">Create WhatsApp Newsletter</field>
+    <field name="res_model">owa.newsletter.create.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+  </record>
+
+  <record id="view_owa_newsletter_subscribe_wizard_form" model="ir.ui.view">
+    <field name="name">owa.newsletter.subscribe.wizard.form</field>
+    <field name="model">owa.newsletter.subscribe.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Subscribe to Newsletter">
+        <sheet>
+          <group>
+            <field name="wa_account_id"/>
+            <field name="newsletter_input"
+                   placeholder="120363xxx@newsletter or https://whatsapp.com/channel/CODE"/>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_subscribe" type="object" string="Subscribe"
+                  class="btn-primary"/>
+          <button special="cancel" string="Cancel" class="btn-secondary"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_owa_newsletter_subscribe_wizard" model="ir.actions.act_window">
+    <field name="name">Subscribe to WhatsApp Newsletter</field>
+    <field name="res_model">owa.newsletter.subscribe.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+  </record>
+</odoo>

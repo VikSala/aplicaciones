@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Phase 24C: recruitment auto-reply on hr.applicant stage transitions. -->
+
+    <record id="quick_reply_rec_received" model="owa.quick.reply">
+        <field name="name">Application received</field>
+        <field name="body">Hi {{partner_name}}, thanks for applying to {{record_name}}. We'll review your application and get back to you soon.</field>
+    </record>
+
+    <record id="quick_reply_rec_interview" model="owa.quick.reply">
+        <field name="name">Moving to interview</field>
+        <field name="body">Hi {{partner_name}}, we'd like to move you to the interview round for {{record_name}}. We'll be in touch shortly to schedule.</field>
+    </record>
+
+    <record id="quick_reply_rec_offer" model="owa.quick.reply">
+        <field name="name">Offer extended</field>
+        <field name="body">Hi {{partner_name}}, congratulations! We're extending an offer for {{record_name}}. Details follow shortly via email.</field>
+    </record>
+
+    <record id="quick_reply_rec_closed" model="owa.quick.reply">
+        <field name="name">Application closed (kind reject)</field>
+        <field name="body">Hi {{partner_name}}, thanks again for applying to {{record_name}}. After careful review we've decided to move forward with another candidate. Best of luck!</field>
+    </record>
+</odoo>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Form View -->
+    <record id="owa_blacklist_form" model="ir.ui.view">
+        <field name="name">owa.blacklist.form</field>
+        <field name="model">owa.blacklist</field>
+        <field name="arch" type="xml">
+            <form string="Blacklisted Number">
+                <sheet>
+                    <widget name="web_ribbon" title="Removed" bg_color="text-bg-success"
+                            invisible="active"/>
+                    <group>
+                        <group>
+                            <field name="phone"/>
+                            <field name="phone_formatted"/>
+                        </group>
+                        <group>
+                            <field name="reason"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- List View -->
+    <record id="owa_blacklist_list" model="ir.ui.view">
+        <field name="name">owa.blacklist.list</field>
+        <field name="model">owa.blacklist</field>
+        <field name="arch" type="xml">
+            <list string="Blacklisted Numbers">
+                <field name="phone"/>
+                <field name="phone_formatted"/>
+                <field name="reason"/>
+                <field name="create_date"/>
+                <button name="button_unblacklist" string="Remove" type="object"
+                        icon="fa-times" confirm="Remove this number from the blacklist?"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="owa_blacklist_search" model="ir.ui.view">
+        <field name="name">owa.blacklist.search</field>
+        <field name="model">owa.blacklist</field>
+        <field name="arch" type="xml">
+            <search string="Blacklist">
+                <field name="phone"/>
+                <field name="reason"/>
+                <filter name="active" string="Active" domain="[('active', '=', True)]"/>
+                <filter name="inactive" string="Removed" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="owa_blacklist_action" model="ir.actions.act_window">
+        <field name="name">Blacklist</field>
+        <field name="res_model">owa.blacklist</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No blacklisted numbers
+            </p>
+            <p>
+                Phone numbers can be blacklisted manually or automatically
+                when a contact replies with "STOP".
+            </p>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="owa_inbound_rule_view_list" model="ir.ui.view">
+        <field name="name">owa.inbound.rule.list</field>
+        <field name="model">owa.inbound.rule</field>
+        <field name="arch" type="xml">
+            <list string="Inbound Rules" default_order="priority asc, id"
+                  decoration-danger="error_count &gt; 0"
+                  decoration-muted="not active">
+                <field name="priority" widget="handle"/>
+                <field name="name"/>
+                <field name="match_type"/>
+                <field name="match_value" optional="show"/>
+                <field name="target_model"/>
+                <field name="wa_account_id"/>
+                <field name="company_id" optional="hide"
+                       groups="base.group_multi_company"/>
+                <field name="fired_count" sum="Fired"/>
+                <field name="error_count" sum="Errors" optional="show"/>
+                <field name="last_fired_at" optional="show"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="owa_inbound_rule_view_form" model="ir.ui.view">
+        <field name="name">owa.inbound.rule.form</field>
+        <field name="model">owa.inbound.rule</field>
+        <field name="arch" type="xml">
+            <form string="Inbound Rule">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived"
+                            bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Support keyword routing"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="active" invisible="1"/>
+                            <field name="priority"/>
+                            <field name="wa_account_id"
+                                   options="{'no_create': True}"/>
+                            <field name="company_id"
+                                   groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field name="match_type"/>
+                            <field name="match_value"
+                                   invisible="match_type == 'unknown_sender'"
+                                   required="match_type in ('regex','keyword','sender_pattern')"
+                                   placeholder="support, refund, ticket"/>
+                            <div class="text-muted"
+                                 invisible="match_type != 'regex'">
+                                Python regex, case-insensitive. Avoid nested quantifiers like (a+)+ — body is truncated to 4&#8201;KB to limit ReDoS.
+                            </div>
+                            <div class="text-muted"
+                                 invisible="match_type != 'sender_pattern'">
+                                Python regex matched against the caller's phone digits.
+                            </div>
+                            <field name="once_per_partner"/>
+                            <field name="fire_in_groups"/>
+                        </group>
+                    </group>
+                    <group string="Action">
+                        <group>
+                            <field name="target_model"/>
+                            <field name="target_user_id"
+                                   options="{'no_create': True}"/>
+                            <field name="target_team_id_int"
+                                   invisible="target_model not in ('crm.lead','helpdesk.ticket','sale.order')"
+                                   string="Team id"/>
+                            <field name="target_stage_id_int"
+                                   invisible="target_model not in ('crm.lead','helpdesk.ticket')"
+                                   string="Stage id"/>
+                            <field name="target_project_id_int"
+                                   invisible="target_model != 'project.task'"
+                                   string="Project id"/>
+                            <field name="target_job_id_int"
+                                   invisible="target_model != 'hr.applicant'"
+                                   string="Job id"/>
+                        </group>
+                        <group>
+                            <field name="target_default_vals_text"
+                                   placeholder="{'tag_ids': [(4, 5)], 'medium_id': 7}"/>
+                        </group>
+                    </group>
+                    <group string="Optional auto-reply">
+                        <field name="auto_reply_template" nolabel="1"
+                               placeholder="Hi {{partner_name}} — we've created ticket {{record_name}} and will respond shortly."/>
+                    </group>
+                    <group string="Observability" col="4">
+                        <field name="fired_count" readonly="1"/>
+                        <field name="last_fired_at" readonly="1"/>
+                        <field name="error_count" readonly="1"/>
+                        <field name="last_error" readonly="1" colspan="4"
+                               invisible="not last_error"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="owa_inbound_rule_view_search" model="ir.ui.view">
+        <field name="name">owa.inbound.rule.search</field>
+        <field name="model">owa.inbound.rule</field>
+        <field name="arch" type="xml">
+            <search string="Inbound Rules">
+                <field name="name"/>
+                <field name="match_value"/>
+                <field name="target_model"/>
+                <field name="wa_account_id"/>
+                <separator/>
+                <filter string="Active" name="active"
+                        domain="[('active', '=', True)]"/>
+                <filter string="Archived" name="inactive"
+                        domain="[('active', '=', False)]"/>
+                <separator/>
+                <filter string="With errors" name="has_errors"
+                        domain="[('error_count', '&gt;', 0)]"/>
+                <filter string="Never fired" name="never_fired"
+                        domain="[('fired_count', '=', 0)]"/>
+                <filter string="Fired this week" name="recent"
+                        domain="[('last_fired_at', '&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <filter string="Regex" name="m_regex" domain="[('match_type', '=', 'regex')]"/>
+                <filter string="Keyword" name="m_keyword" domain="[('match_type', '=', 'keyword')]"/>
+                <filter string="Sender pattern" name="m_sender" domain="[('match_type', '=', 'sender_pattern')]"/>
+                <filter string="Unknown sender" name="m_unknown" domain="[('match_type', '=', 'unknown_sender')]"/>
+                <group>
+                    <filter string="Target model" name="g_target"
+                            context="{'group_by': 'target_model'}"/>
+                    <filter string="Account" name="g_account"
+                            context="{'group_by': 'wa_account_id'}"/>
+                    <filter string="Match type" name="g_match"
+                            context="{'group_by': 'match_type'}"/>
+                    <filter string="Company" name="g_company"
+                            context="{'group_by': 'company_id'}"
+                            groups="base.group_multi_company"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_owa_inbound_rule" model="ir.actions.act_window">
+        <field name="name">Inbound Rules</field>
+        <field name="res_model">owa.inbound.rule</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="owa_inbound_rule_view_search"/>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+          <p class="o_view_nocontent_smiling_face">
+            Route inbound WhatsApp messages into CRM leads, helpdesk tickets, sale orders, project tasks or recruitment applicants — automatically.
+          </p>
+          <p>
+            Pick a match (keyword, regex, sender pattern, or "unknown sender"), pick a target model, optionally tag a team / stage / assignee, and an optional WhatsApp auto-reply that confirms the record was created. Rules are evaluated in priority order; the first match fires.
+          </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_owa_inbound_rules"
+              name="Inbound Rules"
+              parent="menu_owa_config"
+              action="action_owa_inbound_rule"
+              groups="open_whatsapp_connector.group_owa_admin"
+              sequence="45"/>
+</odoo>

@@ -1,0 +1,386 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Phase 22A: triage data fields on discuss.channel are exposed via
+         the model + ACLs. The Discuss UI layout in 19.0 is highly OWL-based;
+         deeper UI integration ships in a follow-up. Use the dev list/form
+         views via Settings → Technical → Discuss Channels for now. -->
+
+
+    <!-- ============================================================ -->
+    <!-- Phase 25A: Broadcast Groups                                  -->
+    <!-- ============================================================ -->
+    <record id="owa_broadcast_group_view_list" model="ir.ui.view">
+        <field name="name">owa.broadcast.group.list</field>
+        <field name="model">owa.broadcast.group</field>
+        <field name="arch" type="xml">
+            <list string="Broadcast Groups">
+                <field name="name"/>
+                <field name="wa_account_id"/>
+                <field name="user_id" optional="show"/>
+                <field name="team_id" optional="show"/>
+                <field name="partner_count"/>
+                <field name="last_sent_at"/>
+                <field name="last_sent_count"/>
+                <field name="is_active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <record id="owa_broadcast_group_view_form" model="ir.ui.view">
+        <field name="name">owa.broadcast.group.form</field>
+        <field name="model">owa.broadcast.group</field>
+        <field name="arch" type="xml">
+            <form string="Broadcast Group">
+                <header>
+                    <button name="action_send_broadcast" string="Send broadcast"
+                            type="object" class="btn-primary"
+                            invisible="not partner_count or not is_active"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="wa_account_id"/>
+                            <field name="is_active"/>
+                            <field name="user_id"/>
+                            <field name="team_id"/>
+                        </group>
+                        <group>
+                            <field name="partner_count"/>
+                            <field name="last_sent_at" readonly="1"/>
+                            <field name="last_sent_count" readonly="1"/>
+                        </group>
+                    </group>
+                    <field name="description" placeholder="Description / purpose..."/>
+                    <notebook>
+                        <page string="Recipients" name="recipients">
+                            <field name="partner_ids" widget="many2many_tags"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_owa_broadcast_group" model="ir.actions.act_window">
+        <field name="name">Broadcast Groups</field>
+        <field name="res_model">owa.broadcast.group</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="menu_owa_broadcast_groups"
+              name="Broadcast Groups"
+              parent="menu_owa_marketing"
+              action="action_owa_broadcast_group"
+              sequence="20"/>
+
+    <!-- ============================================================ -->
+    <!-- Phase 25B: Standing Orders                                   -->
+    <!-- ============================================================ -->
+    <record id="owa_standing_order_view_list" model="ir.ui.view">
+        <field name="name">owa.standing.order.list</field>
+        <field name="model">owa.standing.order</field>
+        <field name="arch" type="xml">
+            <list string="Standing Orders">
+                <field name="name"/>
+                <field name="wa_account_id"/>
+                <field name="schedule_kind"/>
+                <field name="quick_reply_id"/>
+                <field name="next_run_at"/>
+                <field name="last_run_at" optional="show"/>
+                <field name="runs_count" optional="show"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <record id="owa_standing_order_view_form" model="ir.ui.view">
+        <field name="name">owa.standing.order.form</field>
+        <field name="model">owa.standing.order</field>
+        <field name="arch" type="xml">
+            <form string="Standing Order">
+                <header>
+                    <button name="action_run_now" string="Run now"
+                            type="object" class="btn-secondary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="active"/>
+                            <field name="wa_account_id"/>
+                            <field name="quick_reply_id"/>
+                            <field name="user_id"/>
+                            <field name="team_id"/>
+                        </group>
+                        <group>
+                            <field name="schedule_kind"/>
+                            <field name="schedule_time"/>
+                            <field name="schedule_dow"
+                                   invisible="schedule_kind != 'weekly'"/>
+                            <field name="schedule_dom"
+                                   invisible="schedule_kind != 'monthly'"/>
+                            <field name="next_run_at" readonly="1"/>
+                            <field name="last_run_at" readonly="1"/>
+                            <field name="runs_count" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Recipient">
+                        <field name="recipient_kind"/>
+                        <field name="partner_id"
+                               invisible="recipient_kind != 'partner'"/>
+                        <field name="contact_list_id"
+                               invisible="recipient_kind != 'contact_list'"/>
+                        <field name="broadcast_group_id"
+                               invisible="recipient_kind != 'broadcast_group'"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_owa_standing_order" model="ir.actions.act_window">
+        <field name="name">Standing Orders</field>
+        <field name="res_model">owa.standing.order</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="menu_owa_standing_orders"
+              name="Standing Orders"
+              parent="menu_owa_marketing"
+              action="action_owa_standing_order"
+              sequence="30"/>
+
+    <!-- ============================================================ -->
+    <!-- Phase 25C: Status Broadcasts                                 -->
+    <!-- ============================================================ -->
+    <record id="owa_status_broadcast_view_list" model="ir.ui.view">
+        <field name="name">owa.status.broadcast.list</field>
+        <field name="model">owa.status.broadcast</field>
+        <field name="arch" type="xml">
+            <list string="Status Broadcasts">
+                <field name="create_date" string="Created"/>
+                <field name="wa_account_id"/>
+                <field name="media_type"/>
+                <field name="name" string="Preview"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'posted'"
+                       decoration-warning="state == 'queued'"
+                       decoration-muted="state == 'expired'"
+                       decoration-danger="state == 'error'"/>
+                <field name="posted_at" optional="show"/>
+                <field name="expires_at" optional="show"/>
+            </list>
+        </field>
+    </record>
+    <record id="owa_status_broadcast_view_form" model="ir.ui.view">
+        <field name="name">owa.status.broadcast.form</field>
+        <field name="model">owa.status.broadcast</field>
+        <field name="arch" type="xml">
+            <form string="Status Broadcast">
+                <header>
+                    <button name="action_post" string="Post"
+                            type="object" class="btn-primary"
+                            invisible="state in ('posted','expired')"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="wa_account_id"/>
+                            <field name="media_type"/>
+                            <field name="attachment_id"
+                                   invisible="media_type == 'text'"/>
+                            <field name="user_id"/>
+                            <field name="team_id"/>
+                        </group>
+                        <group>
+                            <field name="posted_at" readonly="1"/>
+                            <field name="expires_at" readonly="1"/>
+                            <field name="error_message" readonly="1"
+                                   invisible="not error_message"/>
+                        </group>
+                    </group>
+                    <field name="body_text" placeholder="Caption / text body..."/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_owa_status_broadcast" model="ir.actions.act_window">
+        <field name="name">Status Broadcasts</field>
+        <field name="res_model">owa.status.broadcast</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="menu_owa_status_broadcasts"
+              name="Status Broadcasts"
+              parent="menu_owa_marketing"
+              action="action_owa_status_broadcast"
+              sequence="40"/>
+
+    <!-- ============================================================ -->
+    <!-- Phase 25D: Group Sessions                                    -->
+    <!-- ============================================================ -->
+    <record id="owa_group_session_view_list" model="ir.ui.view">
+        <field name="name">owa.group.session.list</field>
+        <field name="model">owa.group.session</field>
+        <field name="arch" type="xml">
+            <list string="WhatsApp Group Sessions">
+                <field name="channel_id"/>
+                <field name="wa_account_id"/>
+                <field name="bot_state" widget="badge"/>
+                <field name="participant_count"/>
+                <field name="last_message_at"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Phase 25G: Health Issues                                     -->
+    <!-- ============================================================ -->
+    <record id="owa_health_issue_view_list" model="ir.ui.view">
+        <field name="name">owa.health.issue.list</field>
+        <field name="model">owa.health.issue</field>
+        <field name="arch" type="xml">
+            <list string="Account Health Issues" default_order="severity desc, raised_at desc"
+                  decoration-danger="severity == 'critical'"
+                  decoration-warning="severity == 'warning' or severity == 'error'">
+                <field name="raised_at"/>
+                <field name="wa_account_id"/>
+                <field name="code"/>
+                <field name="label"/>
+                <field name="severity" widget="badge"
+                       decoration-danger="severity in ('error','critical')"
+                       decoration-warning="severity == 'warning'"/>
+                <field name="resolved" widget="boolean_toggle"/>
+                <button name="action_resolve" type="object" string="Resolve"
+                        icon="fa-check"
+                        invisible="resolved"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_owa_health_issue" model="ir.actions.act_window">
+        <field name="name">Health Issues</field>
+        <field name="res_model">owa.health.issue</field>
+        <field name="view_mode">list</field>
+        <field name="domain">[('resolved', '=', False)]</field>
+    </record>
+    <menuitem id="menu_owa_health_issues"
+              name="Health Issues"
+              parent="menu_owa_config"
+              action="action_owa_health_issue"
+              sequence="60"/>
+
+    <!-- ============================================================ -->
+    <!-- Phase 23B: Satisfaction Scores                               -->
+    <!-- ============================================================ -->
+    <record id="owa_satisfaction_score_view_list" model="ir.ui.view">
+        <field name="name">owa.satisfaction.score.list</field>
+        <field name="model">owa.satisfaction.score</field>
+        <field name="arch" type="xml">
+            <list string="CSAT Scores"
+                  decoration-success="score &gt;= 4"
+                  decoration-warning="score == 3"
+                  decoration-danger="score &lt;= 2">
+                <field name="submitted_at"/>
+                <field name="partner_id"/>
+                <field name="wa_account_id"/>
+                <field name="score" widget="badge"/>
+                <field name="comment" optional="hide"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_owa_satisfaction_score" model="ir.actions.act_window">
+        <field name="name">CSAT Scores</field>
+        <field name="res_model">owa.satisfaction.score</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="menu_owa_csat"
+              name="CSAT"
+              parent="menu_owa_root"
+              action="action_owa_satisfaction_score"
+              sequence="35"/>
+
+    <!-- ============================================================ -->
+    <!-- Phase 26B: Conversation Labels                               -->
+    <!-- ============================================================ -->
+    <record id="owa_channel_label_view_list" model="ir.ui.view">
+        <field name="name">owa.channel.label.list</field>
+        <field name="model">owa.channel.label</field>
+        <field name="arch" type="xml">
+            <list string="Conversation Labels" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="color" widget="color_picker"/>
+                <field name="description"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_owa_channel_label" model="ir.actions.act_window">
+        <field name="name">Conversation Labels</field>
+        <field name="res_model">owa.channel.label</field>
+        <field name="view_mode">list</field>
+    </record>
+    <menuitem id="menu_owa_channel_labels"
+              name="Labels"
+              parent="menu_owa_config"
+              action="action_owa_channel_label"
+              sequence="65"/>
+
+    <!-- ============================================================ -->
+    <!-- Phase 26E: Auto-tag Rules                                    -->
+    <!-- ============================================================ -->
+    <record id="owa_tag_rule_view_list" model="ir.ui.view">
+        <field name="name">owa.tag.rule.list</field>
+        <field name="model">owa.tag.rule</field>
+        <field name="arch" type="xml">
+            <list string="Auto-tag Rules" default_order="priority asc, id">
+                <field name="priority" widget="handle"/>
+                <field name="name"/>
+                <field name="match_type"/>
+                <field name="match_value"/>
+                <field name="target_tag_ids" widget="many2many_tags"/>
+                <field name="fired_count"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <record id="owa_tag_rule_view_form" model="ir.ui.view">
+        <field name="name">owa.tag.rule.form</field>
+        <field name="model">owa.tag.rule</field>
+        <field name="arch" type="xml">
+            <form string="Auto-tag Rule">
+                <sheet>
+                    <div class="oe_title"><label for="name"/><h1><field name="name"/></h1></div>
+                    <group>
+                        <group>
+                            <field name="active"/>
+                            <field name="priority"/>
+                            <field name="one_shot_per_partner"/>
+                        </group>
+                        <group>
+                            <field name="match_type"/>
+                            <field name="match_value"/>
+                            <field name="fired_count" readonly="1"/>
+                        </group>
+                    </group>
+                    <field name="target_tag_ids" widget="many2many_tags"/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_owa_tag_rule" model="ir.actions.act_window">
+        <field name="name">Auto-tag Rules</field>
+        <field name="res_model">owa.tag.rule</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="menu_owa_tag_rules"
+              name="Auto-tag Rules"
+              parent="menu_owa_config"
+              action="action_owa_tag_rule"
+              sequence="70"/>
+</odoo>

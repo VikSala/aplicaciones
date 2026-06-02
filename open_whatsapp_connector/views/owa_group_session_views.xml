@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- LIST -->
+  <record id="owa_group_session_view_list" model="ir.ui.view">
+    <field name="name">owa.group.session.list</field>
+    <field name="model">owa.group.session</field>
+    <field name="arch" type="xml">
+      <list string="WhatsApp Groups" sample="1" create="false" duplicate="false">
+        <header>
+          <button name="action_open_create_wizard" type="object"
+                  string="Create Group" class="btn-primary"/>
+          <button name="action_open_join_wizard" type="object"
+                  string="Join via Invite" class="btn-secondary"/>
+          <button name="action_refresh_all" type="object"
+                  string="Refresh from WhatsApp"/>
+        </header>
+        <field name="group_subject" string="Group"/>
+        <field name="wa_account_id"/>
+        <field name="participant_count" string="Members"/>
+        <field name="group_announce_only" widget="boolean_toggle"
+               string="Announce-only"/>
+        <field name="bot_state" widget="badge"
+               decoration-success="bot_state == 'active'"
+               decoration-warning="bot_state == 'idle'"
+               decoration-muted="bot_state == 'disabled'"/>
+        <field name="last_message_at"/>
+        <field name="group_jid" optional="hide"/>
+        <field name="channel_id" optional="hide"/>
+      </list>
+    </field>
+  </record>
+
+  <!-- FORM -->
+  <record id="owa_group_session_view_form" model="ir.ui.view">
+    <field name="name">owa.group.session.form</field>
+    <field name="model">owa.group.session</field>
+    <field name="arch" type="xml">
+      <form string="WhatsApp Group">
+        <header>
+          <button name="action_refresh_metadata" type="object"
+                  string="Refresh"/>
+          <button name="action_set_subject" type="object"
+                  string="Push Subject"
+                  help="Apply the current Subject value to WhatsApp."/>
+          <button name="action_set_description" type="object"
+                  string="Push Description"
+                  help="Apply the current Description value to WhatsApp."/>
+          <button name="action_toggle_announce_only" type="object"
+                  string="Toggle Announce-only"/>
+          <button name="action_get_invite_link" type="object"
+                  string="Get Invite Link"/>
+          <button name="action_revoke_invite_link" type="object"
+                  string="Revoke Invite"
+                  confirm="Revoke and replace the current invite link?"/>
+          <button name="action_push_picture" type="object"
+                  string="Push Picture"
+                  help="Push the local Group Picture to WhatsApp."/>
+          <button name="action_chat_pin" type="object" string="Pin"/>
+          <button name="action_chat_unpin" type="object" string="Unpin"/>
+          <button name="action_chat_archive" type="object" string="Archive"/>
+          <button name="action_chat_unarchive" type="object" string="Unarchive"/>
+          <button name="action_chat_mute" type="object" string="Mute 8h"/>
+          <button name="action_chat_unmute" type="object" string="Unmute"/>
+          <button name="action_leave_group" type="object"
+                  string="Leave Group" class="btn-warning"
+                  confirm="Leave this WhatsApp group? The bot will be removed and the local channel archived."
+                  invisible="bot_state == 'disabled'"/>
+          <field name="bot_state" widget="statusbar"
+                 statusbar_visible="active,idle,disabled"/>
+        </header>
+        <sheet>
+          <div class="oe_button_box" name="button_box">
+            <button name="action_open_channel" type="object"
+                    class="oe_stat_button" icon="fa-comments"
+                    invisible="not channel_id">
+              <div class="o_stat_info">
+                <span class="o_stat_text">Open</span>
+                <span class="o_stat_text">Chat</span>
+              </div>
+            </button>
+            <button name="action_manage_participants" type="object"
+                    class="oe_stat_button" icon="fa-users"
+                    invisible="not channel_id">
+              <div class="o_stat_info">
+                <span class="o_stat_value">
+                  <field name="participant_count" readonly="1" nolabel="1"/>
+                </span>
+                <span class="o_stat_text">Members</span>
+              </div>
+            </button>
+          </div>
+          <field name="image_1920" widget="image" class="oe_avatar"
+                 options="{'preview_image': 'image_1920'}"/>
+          <div class="oe_title">
+            <label for="group_subject" string="Group Name"/>
+            <h1>
+              <field name="group_subject" placeholder="Group name on WhatsApp"/>
+            </h1>
+          </div>
+          <group>
+            <group>
+              <field name="wa_account_id" readonly="1"/>
+              <field name="group_jid" readonly="1"/>
+              <field name="channel_id" readonly="1"/>
+              <field name="group_announce_only" widget="boolean_toggle"/>
+            </group>
+            <group>
+              <field name="group_owner_jid" readonly="1"/>
+              <field name="group_creation_ts" readonly="1"/>
+              <field name="last_inbound_at" readonly="1"/>
+              <field name="last_outbound_at" readonly="1"/>
+            </group>
+          </group>
+          <group string="Description">
+            <field name="group_description" nolabel="1"
+                   placeholder="WhatsApp group description"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <!-- SEARCH -->
+  <record id="owa_group_session_view_search" model="ir.ui.view">
+    <field name="name">owa.group.session.search</field>
+    <field name="model">owa.group.session</field>
+    <field name="arch" type="xml">
+      <search string="WhatsApp Groups">
+        <field name="group_subject"/>
+        <field name="group_jid"/>
+        <field name="wa_account_id"/>
+        <filter name="filter_active" string="Active"
+                domain="[('bot_state', '=', 'active')]"/>
+        <filter name="filter_idle" string="Idle"
+                domain="[('bot_state', '=', 'idle')]"/>
+        <filter name="filter_disabled" string="Disabled (left)"
+                domain="[('bot_state', '=', 'disabled')]"/>
+        <separator/>
+        <filter name="filter_announce_only" string="Announce-only"
+                domain="[('group_announce_only', '=', True)]"/>
+        <filter name="filter_has_channel" string="Has Discuss channel"
+                domain="[('channel_id', '!=', False)]"/>
+        <filter name="group_by_account" string="Account"
+                context="{'group_by': 'wa_account_id'}"/>
+        <filter name="group_by_state" string="Bot state"
+                context="{'group_by': 'bot_state'}"/>
+      </search>
+    </field>
+  </record>
+
+  <!-- ACTION -->
+  <record id="owa_group_session_action" model="ir.actions.act_window">
+    <field name="name">WhatsApp Groups</field>
+    <field name="res_model">owa.group.session</field>
+    <field name="view_mode">list,form</field>
+    <field name="search_view_id" ref="owa_group_session_view_search"/>
+    <field name="context">{'search_default_filter_active': 1}</field>
+    <field name="help" type="html">
+      <p class="o_view_nocontent_smiling_face">No WhatsApp groups yet</p>
+      <p>
+        Click <b>Refresh from WhatsApp</b> to pull existing groups,
+        <b>Create Group</b> to start a new one, or <b>Join via Invite</b>
+        to accept a chat.whatsapp.com link.
+      </p>
+    </field>
+  </record>
+</odoo>

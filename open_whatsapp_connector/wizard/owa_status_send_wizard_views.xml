@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_owa_status_send_wizard_form" model="ir.ui.view">
+    <field name="name">owa.status.send.wizard.form</field>
+    <field name="model">owa.status.send.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Send WhatsApp Status">
+        <sheet>
+          <group>
+            <field name="wa_account_id"/>
+            <field name="media_type" widget="radio"/>
+          </group>
+          <group invisible="media_type != 'text'">
+            <field name="body_text" nolabel="1"
+                   placeholder="What's on your mind? (24-hour expiry)"/>
+          </group>
+          <group invisible="media_type == 'text'">
+            <field name="media_data" filename="media_filename"/>
+            <field name="media_filename" invisible="1"/>
+            <field name="body_text" string="Caption"
+                   placeholder="Optional caption"/>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_post" type="object" string="Post Status"
+                  class="btn-primary"/>
+          <button special="cancel" string="Cancel"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_owa_status_send_wizard" model="ir.actions.act_window">
+    <field name="name">Send WhatsApp Status</field>
+    <field name="res_model">owa.status.send.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+  </record>
+</odoo>

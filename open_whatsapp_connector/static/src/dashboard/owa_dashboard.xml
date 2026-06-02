@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="open_whatsapp_connector.OwaDashboard">
+        <div class="owa_dashboard">
+            <!-- ── Header / filter bar ─────────────────────────────────── -->
+            <div class="owa_filter_bar">
+                <label>From
+                    <input type="date" t-model="state.filters.dateFrom"/>
+                </label>
+                <label>To
+                    <input type="date" t-model="state.filters.dateTo"/>
+                </label>
+                <label>Account
+                    <select t-on-change="onAccountFilterChange">
+                        <option value="">All accounts</option>
+                        <t t-foreach="state.accounts" t-as="acc" t-key="acc.id">
+                            <option t-att-value="acc.id"
+                                    t-att-selected="state.filters.accountIds.includes(acc.id) ? 'selected' : null"
+                                    t-esc="acc.name"/>
+                        </t>
+                    </select>
+                </label>
+                <button t-att-class="sidecarBtnClass()" t-on-click="onStartSidecars"
+                        t-att-disabled="(state.startingSidecars or sidecarsFullyOnline()) ? 'disabled' : null">
+                    <i t-att-class="sidecarBtnIcon()"/>
+                    <t t-esc="sidecarBtnLabel()"/>
+                </button>
+                <button class="btn btn-primary" t-on-click="loadDashboardData">
+                    <i class="fa fa-refresh"/> Refresh
+                </button>
+            </div>
+
+            <t t-if="state.loading">
+                <div class="owa_loader">
+                    <i class="fa fa-spinner fa-spin"/>
+                    <span>Loading dashboard…</span>
+                </div>
+            </t>
+
+            <t t-else="">
+                <!-- ── Primary KPI grid: 6-up, F-pattern, most-critical first ── -->
+                <div class="owa_kpi_grid">
+                    <div class="owa_kpi_tile" t-on-click="() => this.openAction('all_messages')">
+                        <div class="kpi_label">Total messages</div>
+                        <div class="kpi_value" t-esc="state.data.counters.total_messages"/>
+                        <div class="kpi_sub">selected range</div>
+                    </div>
+                    <div class="owa_kpi_tile success" t-on-click="() => this.openAction('sent')">
+                        <div class="kpi_label">Sent</div>
+                        <div class="kpi_value" t-esc="state.data.counters.messages_sent"/>
+                        <div class="kpi_sub">delivered+</div>
+                    </div>
+                    <div class="owa_kpi_tile info" t-on-click="() => this.openAction('received')">
+                        <div class="kpi_label">Received</div>
+                        <div class="kpi_value" t-esc="state.data.counters.messages_received"/>
+                        <div class="kpi_sub">inbound</div>
+                    </div>
+                    <div class="owa_kpi_tile warning" t-on-click="() => this.openAction('queued')">
+                        <div class="kpi_label">Queued</div>
+                        <div class="kpi_value" t-esc="state.data.counters.messages_outgoing_now"/>
+                        <div class="kpi_sub">awaiting send</div>
+                    </div>
+                    <div class="owa_kpi_tile danger" t-on-click="() => this.openAction('failed_24h')">
+                        <div class="kpi_label">Failed · 24h</div>
+                        <div class="kpi_value" t-esc="state.data.counters.messages_failed_24h"/>
+                        <div class="kpi_sub">error / bounced</div>
+                    </div>
+                    <div class="owa_kpi_tile" t-att-class="connectedTileClass()"
+                         t-on-click="() => this.openAction('accounts')"
+                         t-att-title="hasConnectivityIssue() ? connectedTileSubtext() : ''">
+                        <div class="kpi_label">
+                            Connected
+                            <t t-if="hasConnectivityIssue()">
+                                <span class="kpi_warn_icon" title="One or more accounts are not connected">
+                                    <i class="fa fa-exclamation-triangle"/>
+                                </span>
+                            </t>
+                        </div>
+                        <div class="kpi_value">
+                            <t t-esc="state.data.counters.accounts_connected"/><span style="color: var(--owa-text-faint); font-weight: 500;"> / <t t-esc="state.data.counters.accounts_total"/></span>
+                        </div>
+                        <div class="kpi_sub" t-esc="connectedTileSubtext()"/>
+                    </div>
+                </div>
+
+                <!-- ── Secondary stats: ancillary counters in muted strip ─── -->
+                <div class="owa_kpi_grid">
+                    <div class="owa_kpi_tile info muted">
+                        <div class="kpi_label">Conversations</div>
+                        <div class="kpi_value" t-esc="state.data.counters.active_channels"/>
+                        <div class="kpi_sub">last 7d</div>
+                    </div>
+                    <div class="owa_kpi_tile warning muted" t-on-click="() => this.openAction('campaigns_running')">
+                        <div class="kpi_label">Campaigns</div>
+                        <div class="kpi_value" t-esc="state.data.counters.campaigns_running"/>
+                        <div class="kpi_sub">running</div>
+                    </div>
+                    <div class="owa_kpi_tile info muted">
+                        <div class="kpi_label">Auto-reply rules</div>
+                        <div class="kpi_value" t-esc="state.data.counters.auto_reply_rules_active"/>
+                        <div class="kpi_sub">active</div>
+                    </div>
+                    <div class="owa_kpi_tile info muted">
+                        <div class="kpi_label">Bot sessions</div>
+                        <div class="kpi_value" t-esc="state.data.counters.chatbot_sessions_active"/>
+                        <div class="kpi_sub">active</div>
+                    </div>
+                    <div class="owa_kpi_tile danger" t-on-click="() => this.openAction('missed_calls_24h')">
+                        <div class="kpi_label">Missed calls · 24h</div>
+                        <div class="kpi_value" t-esc="state.data.counters.missed_calls_24h"/>
+                        <div class="kpi_sub">voice + video</div>
+                    </div>
+                    <div class="owa_kpi_tile info muted" t-on-click="() => this.openAction('calls_total')">
+                        <div class="kpi_label">Calls received</div>
+                        <div class="kpi_value" t-esc="state.data.counters.calls_total"/>
+                        <div class="kpi_sub">selected range</div>
+                    </div>
+                </div>
+
+                <!-- ── Charts row 1 ────────────────────────────────────── -->
+                <div class="owa_two_col">
+                    <div class="owa_card">
+                        <div class="owa_card_title"><span>Status distribution</span></div>
+                        <div class="owa_chart_canvas">
+                            <canvas t-ref="statusChart"/>
+                        </div>
+                    </div>
+                    <div class="owa_card">
+                        <div class="owa_card_title"><span>Messages per day</span></div>
+                        <div class="owa_chart_canvas">
+                            <canvas t-ref="perDayChart"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Charts row 2 ────────────────────────────────────── -->
+                <div class="owa_two_col">
+                    <div class="owa_card">
+                        <div class="owa_card_title"><span>Top contacts</span></div>
+                        <t t-if="state.data.top_partners.length === 0">
+                            <div class="owa_empty">No contacts yet.</div>
+                        </t>
+                        <t t-else="">
+                            <div class="owa_chart_canvas">
+                                <canvas t-ref="topPartnersChart"/>
+                            </div>
+                        </t>
+                    </div>
+                    <div class="owa_card">
+                        <div class="owa_card_title"><span>Top failure reasons · 7d</span></div>
+                        <t t-if="state.data.top_failure_reasons.length === 0">
+                            <div class="owa_empty">No failures in the last 7 days.</div>
+                        </t>
+                        <t t-else="">
+                            <div class="owa_chart_canvas">
+                                <canvas t-ref="failureChart"/>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+
+                <!-- ── Tables row ──────────────────────────────────────── -->
+                <div class="owa_two_col">
+                    <div class="owa_card">
+                        <div class="owa_card_title"><span>Recent failures</span></div>
+                        <t t-if="state.data.recent_failures.length === 0">
+                            <div class="owa_empty">No recent failures.</div>
+                        </t>
+                        <t t-else="">
+                            <table class="owa_table">
+                                <thead>
+                                    <tr>
+                                        <th>When</th>
+                                        <th>Number</th>
+                                        <th>Account</th>
+                                        <th>Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="state.data.recent_failures" t-as="row" t-key="row.id"
+                                        t-on-click="() => this.openMessage(row.id)">
+                                        <td t-esc="row.create_date"/>
+                                        <td t-esc="row.mobile_number"/>
+                                        <td t-esc="row.account_name"/>
+                                        <td t-esc="row.failure_reason or row.failure_type"/>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </t>
+                    </div>
+                    <div class="owa_card">
+                        <div class="owa_card_title"><span>Account health</span></div>
+                        <t t-if="state.data.account_health.length === 0">
+                            <div class="owa_empty">No accounts configured.</div>
+                        </t>
+                        <t t-else="">
+                            <table class="owa_table">
+                                <thead>
+                                    <tr>
+                                        <th>Account</th>
+                                        <th>State</th>
+                                        <th>Queue</th>
+                                        <th>Sent · 24h</th>
+                                        <th>Last msg</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="state.data.account_health" t-as="row" t-key="row.id"
+                                        t-on-click="() => this.openAccount(row.id)">
+                                        <td t-esc="row.name"/>
+                                        <td>
+                                            <span t-att-class="'badge_state ' + row.session_state"
+                                                  t-esc="row.session_state"/>
+                                        </td>
+                                        <td t-esc="row.queue_depth"/>
+                                        <td t-esc="row.sent_24h"/>
+                                        <td t-esc="row.last_message_dt or '—'"/>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </t>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+
+</templates>

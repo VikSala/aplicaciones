@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Settings action scoped to this module so the Settings page lands on
+         our <app name="open_whatsapp_connector"> block. Matches the convention
+         used by every other Odoo addon's Settings menu. -->
+    <record id="action_owa_config_settings" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="context">{'module': 'open_whatsapp_connector', 'bin_size': False}</field>
+    </record>
+
+    <!-- Root Menu is defined in owa_menu_root.xml (loaded first so other
+         view files can reference it as `parent=`). -->
+
+    <!-- Dashboard (landing page) -->
+    <menuitem id="menu_owa_dashboard"
+              name="Dashboard"
+              parent="menu_owa_root"
+              action="action_owa_dashboard"
+              sequence="5"/>
+
+    <!-- Messages -->
+    <menuitem id="menu_owa_messages"
+              name="Messages"
+              parent="menu_owa_root"
+              action="owa_message_action"
+              sequence="10"/>
+
+    <!-- Phase H — Compose top-menu: standalone send-to-anyone wizard. -->
+    <menuitem id="menu_owa_compose"
+              name="Compose"
+              parent="menu_owa_root"
+              action="action_owa_composer_window"
+              sequence="12"/>
+
+    <!-- Phase H — Send Status top-menu: WhatsApp Stories. -->
+    <menuitem id="menu_owa_send_status"
+              name="Status"
+              parent="menu_owa_root"
+              action="action_owa_status_send_wizard"
+              sequence="13"/>
+
+    <!-- menu_owa_chats is defined in owa_menu_root.xml (early load). -->
+
+    <menuitem id="menu_owa_groups"
+              name="Groups"
+              parent="menu_owa_chats"
+              action="owa_group_session_action"
+              sequence="10"/>
+
+    <!-- Phase H — explicit create / join entries that go straight to the
+         wizard, since the list-view header buttons aren't discoverable. -->
+    <menuitem id="menu_owa_new_group"
+              name="New Group"
+              parent="menu_owa_chats"
+              action="action_owa_group_create_wizard"
+              sequence="11"/>
+
+    <menuitem id="menu_owa_join_group"
+              name="Join Group"
+              parent="menu_owa_chats"
+              action="action_owa_group_join_wizard"
+              sequence="12"/>
+
+    <menuitem id="menu_owa_communities"
+              name="Communities"
+              parent="menu_owa_chats"
+              action="owa_community_action"
+              sequence="20"/>
+
+    <menuitem id="menu_owa_new_community"
+              name="New Community"
+              parent="menu_owa_chats"
+              action="action_owa_community_create_wizard"
+              sequence="21"/>
+
+    <menuitem id="menu_owa_newsletters"
+              name="Newsletters"
+              parent="menu_owa_chats"
+              action="owa_newsletter_action"
+              sequence="30"/>
+
+    <menuitem id="menu_owa_new_newsletter"
+              name="New Newsletter"
+              parent="menu_owa_chats"
+              action="action_owa_newsletter_create_wizard"
+              sequence="31"/>
+
+    <menuitem id="menu_owa_subscribe_newsletter"
+              name="Subscribe to Newsletter"
+              parent="menu_owa_chats"
+              action="action_owa_newsletter_subscribe_wizard"
+              sequence="32"/>
+
+    <!-- menu_owa_marketing is defined in owa_menu_root.xml (early load). -->
+
+    <menuitem id="menu_owa_campaigns"
+              name="Campaigns"
+              parent="menu_owa_marketing"
+              action="owa_campaign_action"
+              sequence="10"/>
+
+    <!-- menu_owa_config is defined in owa_menu_root.xml (early load). -->
+
+    <menuitem id="menu_owa_accounts"
+              name="Accounts"
+              parent="menu_owa_config"
+              action="owa_account_action"
+              sequence="10"/>
+
+    <menuitem id="menu_owa_quick_replies"
+              name="Quick Replies"
+              parent="menu_owa_config"
+              action="owa_quick_reply_action"
+              sequence="20"/>
+
+    <menuitem id="menu_owa_notification_rules"
+              name="Notification Rules"
+              parent="menu_owa_config"
+              action="owa_notification_rule_action"
+              sequence="30"/>
+
+    <menuitem id="menu_owa_auto_replies"
+              name="Auto-Reply Rules"
+              parent="menu_owa_config"
+              action="owa_auto_reply_action"
+              sequence="40"/>
+
+    <menuitem id="menu_owa_blacklist"
+              name="Blacklist"
+              parent="menu_owa_config"
+              action="owa_blacklist_action"
+              sequence="50"/>
+
+    <menuitem id="menu_owa_allowlist"
+              name="DM Allowlist"
+              parent="menu_owa_config"
+              action="owa_allowlist_entry_action"
+              sequence="55"/>
+
+    <menuitem id="menu_owa_pending_pair"
+              name="Pending Approvals"
+              parent="menu_owa_config"
+              action="owa_pending_pair_action"
+              sequence="57"/>
+
+    <menuitem id="menu_owa_contact_lists"
+              name="Contact Lists"
+              parent="menu_owa_config"
+              action="owa_contact_list_action"
+              sequence="60"/>
+
+    <menuitem id="menu_owa_chatbots"
+              name="Chatbots"
+              parent="menu_owa_config"
+              action="owa_chatbot_action"
+              sequence="70"/>
+
+    <menuitem id="menu_owa_chatbot_sessions"
+              name="Chatbot Sessions"
+              parent="menu_owa_config"
+              action="owa_chatbot_session_action"
+              sequence="75"/>
+
+    <menuitem id="menu_owa_slash_commands"
+              name="Slash Commands"
+              parent="menu_owa_config"
+              action="owa_slash_command_action"
+              sequence="32"/>
+
+    <menuitem id="menu_owa_settings"
+              name="Settings"
+              parent="menu_owa_config"
+              action="action_owa_config_settings"
+              groups="base.group_system"
+              sequence="100"/>
+</odoo>

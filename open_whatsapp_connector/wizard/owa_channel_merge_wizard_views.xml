@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="owa_channel_merge_wizard_form" model="ir.ui.view">
+        <field name="name">owa.channel.merge.wizard.form</field>
+        <field name="model">owa.channel.merge.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Merge WhatsApp Conversations">
+                <group>
+                    <field name="source_channel_id" options="{'no_create': True}"/>
+                    <field name="target_channel_id" options="{'no_create': True}"/>
+                </group>
+                <p class="text-muted">
+                    All messages and call-log rows from the source channel are reattached to the target.
+                    The source channel is then archived/removed. This action cannot be undone.
+                </p>
+                <footer>
+                    <button name="action_merge" string="Merge" type="object"
+                            class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_owa_channel_merge_wizard" model="ir.actions.act_window">
+        <field name="name">Merge Channels</field>
+        <field name="res_model">owa.channel.merge.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

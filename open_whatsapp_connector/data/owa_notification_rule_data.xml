@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!--
+        Pre-configured notification rules for common business flows.
+        These are created INACTIVE (active=False) because they require
+        a WhatsApp account to be selected before they can work.
+
+        To activate:
+        1. Go to WhatsApp > Configuration > Notification Rules
+        2. Open the rule you want to enable
+        3. Select your WhatsApp Account
+        4. Set Active = True
+        5. Save
+
+        Note: Rules for sale.order, account.move, stock.picking are only
+        created if those modules are installed. The model_id and
+        trigger_field_id are resolved using function fields.
+    -->
+
+</odoo>

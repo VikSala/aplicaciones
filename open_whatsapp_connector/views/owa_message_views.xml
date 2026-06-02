@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Message Form View -->
+    <record id="owa_message_view_form" model="ir.ui.view">
+        <field name="name">owa.message.form</field>
+        <field name="model">owa.message</field>
+        <field name="arch" type="xml">
+            <form string="WhatsApp Message" create="false">
+                <header>
+                    <button name="button_resend" type="object" string="Resend"
+                            class="btn-primary"
+                            invisible="state not in ('error', 'cancel')"/>
+                    <button name="button_cancel" type="object" string="Cancel"
+                            invisible="state != 'outgoing'"/>
+                    <button name="action_open_forward_wizard" type="object"
+                            string="Forward"
+                            invisible="not msg_uid or state in ('error', 'cancel')"/>
+                    <button name="action_open_react_wizard" type="object"
+                            string="React"
+                            invisible="not msg_uid or state in ('error', 'cancel')"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="outgoing,sent,delivered,read"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="mobile_number"/>
+                            <field name="mobile_number_formatted"/>
+                            <field name="message_type"/>
+                            <field name="msg_uid"/>
+                        </group>
+                        <group>
+                            <field name="wa_account_id"/>
+                            <field name="quick_reply_id"/>
+                            <field name="parent_id"/>
+                            <field name="failure_type" invisible="state != 'error'"/>
+                            <field name="failure_reason" invisible="state != 'error'"/>
+                        </group>
+                    </group>
+                    <group string="Message Content">
+                        <field name="body" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Message List View -->
+    <record id="owa_message_view_list" model="ir.ui.view">
+        <field name="name">owa.message.list</field>
+        <field name="model">owa.message</field>
+        <field name="arch" type="xml">
+            <list string="WhatsApp Messages" create="false">
+                <field name="create_date" string="Date"/>
+                <field name="mobile_number"/>
+                <field name="message_type"/>
+                <field name="wa_account_id"/>
+                <field name="state" widget="badge"
+                       decoration-success="state in ('sent', 'delivered', 'read', 'received')"
+                       decoration-warning="state == 'outgoing'"
+                       decoration-danger="state == 'error'"
+                       decoration-muted="state == 'cancel'"/>
+                <field name="failure_reason" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Message Search View -->
+    <record id="owa_message_view_search" model="ir.ui.view">
+        <field name="name">owa.message.search</field>
+        <field name="model">owa.message</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="mobile_number"/>
+                <field name="msg_uid"/>
+                <filter string="Outbound" name="outbound" domain="[('message_type', '=', 'outbound')]"/>
+                <filter string="Inbound" name="inbound" domain="[('message_type', '=', 'inbound')]"/>
+                <filter string="In Queue" name="outgoing" domain="[('state', '=', 'outgoing')]"/>
+                <filter string="Sent" name="sent" domain="[('state', '=', 'sent')]"/>
+                <filter string="Delivered" name="delivered" domain="[('state', '=', 'delivered')]"/>
+                <filter string="Read" name="read" domain="[('state', '=', 'read')]"/>
+                <filter string="Failed" name="error" domain="[('state', '=', 'error')]"/>
+                <group>
+                    <filter string="Account" name="group_account" context="{'group_by': 'wa_account_id'}"/>
+                    <filter string="State" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Type" name="group_type" context="{'group_by': 'message_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="owa_message_action" model="ir.actions.act_window">
+        <field name="name">WhatsApp Messages</field>
+        <field name="res_model">owa.message</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_outbound': 1}</field>
+    </record>
+</odoo>

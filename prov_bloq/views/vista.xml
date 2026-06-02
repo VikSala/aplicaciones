@@ -1,0 +1,31 @@
+<odoo>
+    <record id="res_config_settings_view_form_purchase_inherit" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.prov.bloq</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="purchase.res_config_settings_view_form_purchase"/>
+        <field name="arch" type="xml">
+            <xpath expr="//app[@name='purchase']" position="inside">
+                <block title="Configuración de Proveedor Fijo" name="prov_bloq_setting">
+                    <setting>
+                        <field name="config_purchase_provider_id" widget="res_partner_many2one_target"/>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="purchase_order_form_inherit_readonly" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.readonly</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="before">
+                <field name="is_admin_user" invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="readonly">not is_admin_user or state in ['purchase', 'done', 'cancel']</attribute>
+                <attribute name="options">{'no_open': True, 'no_create': True, 'no_edit': True}</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

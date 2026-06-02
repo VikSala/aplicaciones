@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Form View -->
+    <record id="owa_notification_rule_form" model="ir.ui.view">
+        <field name="name">owa.notification.rule.form</field>
+        <field name="model">owa.notification.rule</field>
+        <field name="arch" type="xml">
+            <form string="Notification Rule">
+                <sheet>
+                    <div class="oe_button_box" name="button_box"/>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger"
+                            invisible="active"/>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. Sale Order Confirmed"/></h1>
+                    </div>
+                    <group>
+                        <group string="Trigger">
+                            <field name="model_id"/>
+                            <field name="model_name" invisible="1"/>
+                            <field name="trigger_field_id"/>
+                            <field name="trigger_field_name" invisible="1"/>
+                            <field name="trigger_value" placeholder="e.g. sale, posted, done"/>
+                        </group>
+                        <group string="Message">
+                            <field name="wa_account_id"/>
+                            <field name="quick_reply_id" domain="[('model_id', 'in', [model_id, False])]"/>
+                            <field name="custom_body" invisible="quick_reply_id"
+                                   placeholder="Hello {{partner_name}}, your {{record_name}} is confirmed!"/>
+                            <field name="phone_field"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="PDF Attachment">
+                            <field name="attach_pdf"/>
+                            <field name="report_id" invisible="not attach_pdf"/>
+                        </group>
+                        <group string="Options">
+                            <field name="notify_once"/>
+                            <field name="sequence"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- List View -->
+    <record id="owa_notification_rule_list" model="ir.ui.view">
+        <field name="name">owa.notification.rule.list</field>
+        <field name="model">owa.notification.rule</field>
+        <field name="arch" type="xml">
+            <list string="Notification Rules">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="model_id"/>
+                <field name="trigger_field_id"/>
+                <field name="trigger_value"/>
+                <field name="wa_account_id"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="owa_notification_rule_action" model="ir.actions.act_window">
+        <field name="name">Notification Rules</field>
+        <field name="res_model">owa.notification.rule</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'active_test': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first notification rule
+            </p>
+            <p>
+                Notification rules automatically send WhatsApp messages when records
+                reach specific states (e.g. when a Sale Order is confirmed).
+            </p>
+        </field>
+    </record>
+
+</odoo>

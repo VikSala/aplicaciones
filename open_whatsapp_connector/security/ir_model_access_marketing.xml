@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Toggle-able user-CRUD ACLs for the marketing models.
+
+        The base CSV (ir.model.access.csv) grants regular users READ-ONLY and
+        admins full CRUD. These extra ACLs grant regular users full CRUD so
+        they can create / manage their OWN records — but only when the
+        "Campaign & Contact Visibility" setting is set to "Restricted to
+        owner + their Sales Team". They ship INACTIVE; res.config.settings
+        .set_values() flips active=True/False to match the chosen mode.
+
+        The CSV has no `active` column, which is why these live here as XML.
+        Row-level scoping is enforced by the matching ir.rule records in
+        ir_rules.xml (own + team); these ACLs only open the operation gate.
+    -->
+
+    <record id="access_owa_campaign_user_manage" model="ir.model.access">
+        <field name="name">owa.campaign.user.manage</field>
+        <field name="model_id" ref="model_owa_campaign"/>
+        <field name="group_id" ref="base.group_user"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+        <field name="active" eval="False"/>
+    </record>
+
+    <record id="access_owa_contact_list_user_manage" model="ir.model.access">
+        <field name="name">owa.contact.list.user.manage</field>
+        <field name="model_id" ref="model_owa_contact_list"/>
+        <field name="group_id" ref="base.group_user"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+        <field name="active" eval="False"/>
+    </record>
+
+    <record id="access_owa_contact_list_member_user_manage" model="ir.model.access">
+        <field name="name">owa.contact.list.member.user.manage</field>
+        <field name="model_id" ref="model_owa_contact_list_member"/>
+        <field name="group_id" ref="base.group_user"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+        <field name="active" eval="False"/>
+    </record>
+
+    <record id="access_owa_broadcast_group_user_manage" model="ir.model.access">
+        <field name="name">owa.broadcast.group.user.manage</field>
+        <field name="model_id" ref="model_owa_broadcast_group"/>
+        <field name="group_id" ref="base.group_user"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+        <field name="active" eval="False"/>
+    </record>
+
+    <record id="access_owa_standing_order_user_manage" model="ir.model.access">
+        <field name="name">owa.standing.order.user.manage</field>
+        <field name="model_id" ref="model_owa_standing_order"/>
+        <field name="group_id" ref="base.group_user"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+        <field name="active" eval="False"/>
+    </record>
+
+    <record id="access_owa_status_broadcast_user_manage" model="ir.model.access">
+        <field name="name">owa.status.broadcast.user.manage</field>
+        <field name="model_id" ref="model_owa_status_broadcast"/>
+        <field name="group_id" ref="base.group_user"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+        <field name="active" eval="False"/>
+    </record>
+</odoo>

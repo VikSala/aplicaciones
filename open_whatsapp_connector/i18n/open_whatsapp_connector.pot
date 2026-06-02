@@ -1,0 +1,4116 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* open_whatsapp_connector
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0+e-20260213\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-04-29 00:41+0000\n"
+"PO-Revision-Date: 2026-04-29 00:41+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_campaign.py:0
+msgid "%d contacts imported."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/wizard/owa_composer.py:0
+msgid "%d message(s) %s."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_config_settings_view_form_inherit_owa
+msgid "+1234567890"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_slash_command__handler__agent
+msgid "/agent — escalate to a human"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_slash_command_form
+msgid "/help"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_slash_command__handler__help
+msgid "/help — list available commands"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_slash_command__handler__menu
+msgid "/menu — re-trigger the active chatbot"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_config_settings_view_form_inherit_owa
+msgid "/path/to/sidecar"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_slash_command__handler__stop
+msgid "/stop — opt out (add to blacklist)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_auto_reply_form
+msgid "0,1,2,3,4"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "<b>Android:</b> Menu (3 dots) &gt; Linked Devices &gt; Link a Device"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "<b>iPhone:</b> Settings &gt; Linked Devices &gt; Link a Device"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid ""
+"<i class=\"fa fa-check-circle\"/> <strong>Connected!</strong>\n"
+"                        This account is connected to WhatsApp and ready to send/receive messages.\n"
+"                        You can now send messages from Discuss, use the Chatter button (Shift+W) on any record,\n"
+"                        or set up Notification Rules for automatic messages."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid ""
+"<i class=\"fa fa-clock-o\"/> QR code expires in ~20 seconds.\n"
+"                                Click <b>\"Connect\"</b> again if it expires."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "<i class=\"fa fa-info-circle\"/> Quick Start Guide"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid ""
+"<i class=\"fa fa-lightbulb-o\"/> <b>Tip:</b> The fields below are pre-filled with defaults.\n"
+"                            You usually don't need to change anything — just enter a name and click Connect."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_kanban
+msgid "<i class=\"fa fa-play\"/> Start Sidecar"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_kanban
+msgid "<i class=\"fa fa-plug\"/> Connect"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_kanban
+msgid "<i class=\"fa fa-power-off\"/> Disconnect"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "<i class=\"fa fa-qrcode\"/> Scan QR Code"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_kanban
+msgid "<i class=\"fa fa-refresh\"/> Refresh"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_kanban
+msgid "<i class=\"fa fa-server\"/> Sidecar Running"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_kanban
+msgid "<i class=\"fa fa-server\"/> Sidecar Stopped"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid ""
+"<strong>Step 1:</strong> Give this account a name (e.g. \"Sales WhatsApp\")"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid ""
+"<strong>Step 2:</strong> Make sure the Sidecar service is running.\n"
+"                                    Click <b>\"Start Sidecar\"</b> button above if it's not running, or\n"
+"                                    click <b>\"Test Connection\"</b> to check."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid ""
+"<strong>Step 3:</strong> Click the <b>\"Connect\"</b> button above.\n"
+"                                    A QR code will appear below."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "<strong>Step 4:</strong> Open WhatsApp on your phone:"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid ""
+"<strong>Step 5:</strong> Scan the QR code with your phone camera.\n"
+"                                    The status will change to <b>\"Connected\"</b> automatically."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/discuss_channel.py:0
+msgid "A new WhatsApp channel is created for this document"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/discuss_channel.py:0
+msgid "A phone number is required for WhatsApp channels"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__sidecar_api_key
+msgid "API Key"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_res_config_settings__owa_sidecar_path
+msgid "Absolute path to the sidecar directory (containing package.json)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_config_settings_view_form_inherit_owa
+msgid "Absolute path to the sidecar directory on the server"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_allowlist_entry__account_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_inbound_dedupe__account_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__account_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply__wa_account_id
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_message_view_search
+msgid "Account"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_message__failure_type__account
+msgid "Account Error"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "Account Settings"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "Account health"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_account.py:0
+msgid "Account is disabled. Tick 'Enabled' before connecting."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_account.py:0
+msgid ""
+"Account name '%s' has leading/trailing whitespace or double spaces. Please "
+"use the cleaned form '%s'."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.ui.menu,name:open_whatsapp_connector.menu_owa_accounts
+msgid "Accounts"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__reaction_level__manual
+msgid "Ack + manual agent reactions"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__ack_reaction_emoji
+msgid "Ack emoji"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__ack_reaction_dm
+msgid "Ack on DMs"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__ack_reaction_group
+msgid "Ack on groups"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__reaction_level__ack
+msgid "Ack only (👀 on receipt)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__message_needaction
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__message_needaction
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__message_needaction
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__message_needaction
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__message_needaction
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__message_needaction
+msgid "Action Needed"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__active
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__active
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_blacklist__active
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__active
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list__active
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list_member__active
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__active
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply__active
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_slash_command__active
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_chatbot_session__state__active
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_blacklist_search
+msgid "Active"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "Active conversations"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "Active rules"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__activity_ids
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__activity_ids
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__activity_ids
+msgid "Activities"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__activity_exception_decoration
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__activity_exception_decoration
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__activity_exception_decoration
+msgid "Activity Exception Decoration"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__activity_state
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__activity_state
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__activity_state
+msgid "Activity State"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__activity_type_icon
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__activity_type_icon
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__activity_type_icon
+msgid "Activity Type Icon"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__blacklist_on_reject
+msgid "Add to blacklist on reject"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.js:0
+msgid "All WhatsApp Messages"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "All accounts"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__allowed_company_ids
+msgid "Allowed Companies"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__group_allow_jids
+msgid "Allowed group JIDs"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__group_policy__allowlist
+msgid "Allowlist (only listed group JIDs)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__dm_policy__allowlist
+msgid "Allowlist (only listed numbers can DM)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_allowlist_entry_form
+msgid "Allowlist Entry"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__allowlist_entry_ids
+msgid "Allowlist entries"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__ack_reaction_group__always
+msgid "Always"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/core/common/composer_patch.js:0
+msgid "Answer as %(whatsapp_account_name)s"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply__model_id
+msgid "Applies To"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_pending_pair_form
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_pending_pair_list
+msgid "Approve"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_pending_pair__state__approved
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_pending_pair_search
+msgid "Approved"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_pending_pair.py:0
+msgid "Approved via pending-pair %s"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_auto_reply_form
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_chatbot_form
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_notification_rule_form
+msgid "Archived"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_account.py:0
+msgid "At least one user to notify is required"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__attach_pdf
+msgid "Attach PDF Report"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__message_attachment_count
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__message_attachment_count
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__message_attachment_count
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__message_attachment_count
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__message_attachment_count
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__message_attachment_count
+msgid "Attachment Count"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__attachment_ids
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_composer__attachment_ids
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_composer_view_form
+msgid "Attachments"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_composer__attachment_ids
+msgid "Attachments to send with the message"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__auth_dir
+msgid "Auth directory override"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_auto_reply_log
+msgid "Auto-Reply Log"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_auto_reply_form
+msgid "Auto-Reply Rule"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.act_window,name:open_whatsapp_connector.owa_auto_reply_action
+#: model:ir.ui.menu,name:open_whatsapp_connector.menu_owa_auto_replies
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_auto_reply_list
+msgid "Auto-Reply Rules"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_res_config_settings__owa_auto_create_contacts
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_config_settings_view_form_inherit_owa
+msgid "Auto-create Contacts"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "Auto-generated secret to verify incoming webhooks. Do not change."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid ""
+"Auto-generated. The sidecar uses this URL to send incoming messages to Odoo."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/components/qr_code_widget/qr_code_widget.xml:0
+msgid "Auto-refreshing..."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.actions.act_window,help:open_whatsapp_connector.owa_auto_reply_action
+msgid ""
+"Auto-reply rules send automatic responses to incoming WhatsApp messages\n"
+"                based on keywords, business hours, or other triggers."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_res_config_settings__owa_sidecar_auto_start
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_config_settings_view_form_inherit_owa
+msgid "Auto-start Sidecar"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_res_config_settings__owa_auto_create_contacts
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_config_settings_view_form_inherit_owa
+msgid "Automatically create contact records for unknown WhatsApp numbers"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid ""
+"Automatically filled after connecting. This is the WhatsApp number linked to"
+" this account."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_res_config_settings__owa_sidecar_auto_start
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_config_settings_view_form_inherit_owa
+msgid "Automatically start sidecar when connecting an account"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__session_state__qr_pending
+msgid "Awaiting QR Scan"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_auto_reply__trigger_type__away
+msgid "Away / Out of Office"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_base
+msgid "Base"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_composer__batch_mode
+msgid "Batch Mode"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.act_window,name:open_whatsapp_connector.owa_blacklist_action
+#: model:ir.ui.menu,name:open_whatsapp_connector.menu_owa_blacklist
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_blacklist_search
+msgid "Blacklist"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_blacklist_form
+msgid "Blacklisted Number"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_blacklist_list
+msgid "Blacklisted Numbers"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_message__failure_type__blacklisted
+msgid "Blacklisted Phone Number"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_message__body
+msgid "Body"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_discuss_channel__require_mention
+msgid "Bot requires @mention"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "Bot sessions"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_message__state__bounced
+msgid "Bounced"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.actions.act_window,help:open_whatsapp_connector.owa_chatbot_action
+msgid ""
+"Build interactive chatbots with menus, routing to agents,\n"
+"                and CRM lead creation."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__schedule_days
+msgid "Business Days"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_auto_reply_form
+msgid "Business Hours"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__schedule_end
+msgid "Business Hours End"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__schedule_start
+msgid "Business Hours Start"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_button__button_id
+msgid "Button ID"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_quick_reply__template_type__button
+msgid "Button Message"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_button__text
+msgid "Button Text"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_quick_reply.py:0
+msgid "Button messages can have a maximum of 3 buttons."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_quick_reply_button.py:0
+msgid "Button text '%(text)s' exceeds 20 characters (%(length)d)."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply__button_ids
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_quick_reply_view_form
+msgid "Buttons"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_pending_pair_search
+msgid "By Account"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_pending_pair_search
+msgid "By State"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__callback_url
+msgid "Callback URL"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_message__campaign_id
+msgid "Campaign"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__name
+msgid "Campaign Name"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_campaign.py:0
+msgid "Campaign can only be launched from draft state."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_campaign.py:0
+msgid "Campaign launched: %d messages queued for sending."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.act_window,name:open_whatsapp_connector.owa_campaign_action
+#: model:ir.ui.menu,name:open_whatsapp_connector.menu_owa_campaigns
+msgid "Campaigns"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.actions.act_window,help:open_whatsapp_connector.owa_campaign_action
+msgid ""
+"Campaigns let you send bulk WhatsApp messages to a contact list.\n"
+"                Create a contact list, compose your message, and launch!"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_campaign_form
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_composer_view_form
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_message_view_form
+msgid "Cancel"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_campaign__state__cancelled
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_message__state__cancel
+msgid "Cancelled"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_blacklist.py:0
+msgid ""
+"Cannot blacklist a phone number that fails normalization. Please enter a "
+"valid number."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_campaign.py:0
+msgid "Cannot cancel a completed campaign."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_discuss_channel_member
+msgid "Channel Member"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_discuss_channel__channel_type
+msgid "Channel Type"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.js:0
+msgid "Channels"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_discuss_channel__channel_type
+msgid ""
+"Chat is private and unique between 2 persons. Group is private among invited"
+" persons. Channel can be freely joined (depending on its configuration)."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_session__chatbot_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_step__chatbot_id
+msgid "Chatbot"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_chatbot_menu_option
+msgid "Chatbot Menu Option"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__name
+msgid "Chatbot Name"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_chatbot_session
+msgid "Chatbot Session"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.act_window,name:open_whatsapp_connector.owa_chatbot_session_action
+#: model:ir.ui.menu,name:open_whatsapp_connector.menu_owa_chatbot_sessions
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_chatbot_session_list
+msgid "Chatbot Sessions"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_chatbot_step
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_chatbot_step_form
+msgid "Chatbot Step"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_chatbot__session_timeout_minutes
+msgid "Chatbot session expires after this many minutes of inactivity"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.act_window,name:open_whatsapp_connector.owa_chatbot_action
+#: model:ir.ui.menu,name:open_whatsapp_connector.menu_owa_chatbots
+msgid "Chatbots"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__chunk_mode
+msgid "Chunk mode"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__remove_ack_after_reply
+msgid "Clear ack after reply"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_auto_reply__schedule_days
+msgid "Comma-separated day numbers (0=Monday, 6=Sunday)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_auto_reply__keyword
+msgid "Comma-separated keywords to match (case-insensitive)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_slash_command__command
+msgid "Command"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_chatbot_session__state__completed
+msgid "Completed"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_discuss_channel__is_whatsapp_group
+msgid "Computed True for WhatsApp channels whose JID ends with @g.us."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_res_config_settings
+msgid "Config Settings"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.ui.menu,name:open_whatsapp_connector.menu_owa_config
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_campaign_form
+msgid "Configuration"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "Connect"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.actions.act_window,help:open_whatsapp_connector.owa_account_action
+msgid ""
+"Connect to WhatsApp by scanning a QR code — no Meta Business API needed."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__session_state__connected
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "Connected"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "Connected accounts"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__session_state__connecting
+msgid "Connecting"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_slash_command.py:0
+msgid "Connecting you to a human agent. Please hold on."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/components/qr_code_widget/qr_code_widget.xml:0
+msgid "Connecting..."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "Connection Settings"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_account.py:0
+msgid "Connection Successful"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_account.py:0
+msgid "Connection failed: %s"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_res_partner
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list_member__partner_id
+msgid "Contact"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__contact_list_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list_member__list_id
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_contact_list_form
+msgid "Contact List"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.act_window,name:open_whatsapp_connector.owa_contact_list_action
+#: model:ir.ui.menu,name:open_whatsapp_connector.menu_owa_contact_lists
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_contact_list_list
+msgid "Contact Lists"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_campaign.py:0
+msgid "Contact list is empty."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list__member_count
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list__member_ids
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_config_settings_view_form_inherit_owa
+msgid "Contacts"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__group_policy
+msgid ""
+"Controls whether group messages are processed. Default 'open' keeps existing"
+" behavior."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__dm_policy
+msgid ""
+"Controls who can send direct messages to this WhatsApp account. Default "
+"'open' keeps existing behavior; tighten to 'allowlist' or 'pairing' for "
+"restricted use."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/core/common/composer_patch.js:0
+msgid "Conversation closed."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__cooldown_minutes
+msgid "Cooldown (minutes)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_chatbot_step__step_type__create_lead
+msgid "Create CRM Lead"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_inbound_dedupe__create_date
+msgid "Create Date"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.actions.act_window,help:open_whatsapp_connector.owa_quick_reply_action
+msgid "Create text, button, or list templates with {{variable}} placeholders."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.actions.act_window,help:open_whatsapp_connector.owa_account_action
+msgid "Create your first WhatsApp account"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.actions.act_window,help:open_whatsapp_connector.owa_campaign_action
+msgid "Create your first WhatsApp campaign"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.actions.act_window,help:open_whatsapp_connector.owa_chatbot_action
+msgid "Create your first WhatsApp chatbot"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.actions.act_window,help:open_whatsapp_connector.owa_auto_reply_action
+msgid "Create your first auto-reply rule"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.actions.act_window,help:open_whatsapp_connector.owa_contact_list_action
+msgid "Create your first contact list"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.actions.act_window,help:open_whatsapp_connector.owa_quick_reply_action
+msgid "Create your first message template"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.actions.act_window,help:open_whatsapp_connector.owa_notification_rule_action
+msgid "Create your first notification rule"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_allowlist_entry__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply_log__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_blacklist__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_menu_option__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_session__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_step__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_composer__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list_member__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_inbound_dedupe__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_message__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_log__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_button__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_list_row__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_list_section__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_variable__create_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_slash_command__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__create_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_allowlist_entry__create_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__create_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_blacklist__create_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__create_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__create_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_menu_option__create_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_session__create_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_step__create_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_composer__create_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list__create_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list_member__create_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_message__create_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__create_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__create_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply__create_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_button__create_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_list_row__create_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_list_section__create_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_variable__create_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_slash_command__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_session__current_step_id
+msgid "Current Step"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__custom_body
+msgid "Custom Message"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.act_window,name:open_whatsapp_connector.owa_allowlist_entry_action
+#: model:ir.ui.menu,name:open_whatsapp_connector.menu_owa_allowlist
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_allowlist_entry_list
+msgid "DM Allowlist"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__dm_policy
+msgid "DM policy"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.ui.menu,name:open_whatsapp_connector.menu_owa_dashboard
+msgid "Dashboard"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_message_view_list
+msgid "Date"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__debug_logging
+msgid "Debug Logging"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_res_config_settings__owa_default_api_key
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_config_settings_view_form_inherit_owa
+msgid "Default API Key"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_config_settings_view_form_inherit_owa
+msgid "Default API key for authenticating with the sidecar"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_res_config_settings__owa_website_widget_message
+msgid "Default Message"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_res_config_settings__owa_default_sidecar_url
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_config_settings_view_form_inherit_owa
+msgid "Default Sidecar URL"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_config_settings_view_form_inherit_owa
+msgid "Default URL for new WhatsApp accounts"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_variable__default_value
+msgid "Default Value"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_res_config_settings__owa_default_account_id
+msgid "Default WhatsApp Account"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_quick_reply_variable__default_value
+msgid "Default value if field is empty or no record provided"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__health_status__degraded
+msgid "Degraded"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__delivered_count
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_message__state__delivered
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_message_view_search
+msgid "Delivered"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_list_row__description
+msgid "Description"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__dm_policy__disabled
+msgid "Disabled (drop all DMs)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__group_policy__disabled
+msgid "Disabled (drop all group messages)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "Disconnect"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__session_state__disconnected
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "Disconnected"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_discuss_channel
+msgid "Discussion Channel"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_discuss_channel__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_discuss_channel_member__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_mail_message__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_mail_thread__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_allowlist_entry__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply_log__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_blacklist__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_menu_option__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_session__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_step__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_composer__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list_member__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_dashboard__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_inbound_dedupe__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_message__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_log__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_button__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_list_row__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_list_section__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_variable__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_slash_command__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_res_partner__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_slash_command__name
+msgid "Display name"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_quick_reply__header_type__document
+msgid "Document"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_composer__res_ids
+msgid "Document IDs"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_composer__res_model
+msgid "Document Model"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_quick_reply_variable__field_path
+msgid "Dot-separated field path on the model, e.g. 'partner_id.name'"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_notification_rule__phone_field
+msgid ""
+"Dot-separated field path to recipient phone (e.g. 'partner_id.phone', "
+"'phone')"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__health_status__down
+msgid "Down"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_campaign__state__draft
+msgid "Draft"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_mail_thread
+msgid "Email Thread"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__ack_reaction_emoji
+msgid ""
+"Emoji sent immediately when an inbound message is received, before any agent"
+" or bot replies. Empty disables ack reactions."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_message.py:0
+msgid "Empty message"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid ""
+"Enable to log all API calls to the sidecar. Useful for troubleshooting."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__enabled
+msgid "Enabled"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_chatbot_step__step_type__end
+msgid "End Conversation"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_auto_reply__schedule_end
+msgid "End of business hours (24h format, e.g. 18.0 = 6:00 PM)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_auto_reply__match_type__exact
+msgid "Exact Match"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_chatbot_session__state__expired
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_pending_pair__state__expired
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_pending_pair_search
+msgid "Expired"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__expires_at
+msgid "Expires at"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__failed_count
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_message__state__error
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_message_view_search
+msgid "Failed"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "Failed 24h"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.js:0
+msgid "Failed Messages"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_account.py:0
+msgid "Failed to connect: %s"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.js:0
+msgid "Failed to load Chart.js. Charts disabled."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.js:0
+msgid "Failed to load account list."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.js:0
+msgid "Failed to load dashboard data."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_account.py:0
+msgid "Failed to start sidecar. Check the logs for details."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_message__failure_reason
+msgid "Failure Reason"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_message__failure_type
+msgid "Failure Type"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.js:0
+msgid "Failures"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__trigger_field_name
+msgid "Field Name"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_variable__field_path
+msgid "Field Path"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_quick_reply__phone_field
+msgid "Field path on the model to get the phone number"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_notification_rule__trigger_field_id
+msgid "Field to watch for changes (e.g. 'state', 'invoice_status')"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__first_step_id
+msgid "First Step"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__message_follower_ids
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__message_follower_ids
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__message_follower_ids
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__message_follower_ids
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__message_follower_ids
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__message_follower_ids
+msgid "Followers"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__message_partner_ids
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__message_partner_ids
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__message_partner_ids
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__message_partner_ids
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__message_partner_ids
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__message_partner_ids
+msgid "Followers (Partners)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_auto_reply__activity_type_icon
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_chatbot__activity_type_icon
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_notification_rule__activity_type_icon
+msgid "Font awesome icon e.g. fa-tasks"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_quick_reply_view_form
+msgid "Footer"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply__footer
+msgid "Footer Text"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_chatbot_step__next_step_id
+msgid "For 'message' type: auto-advance to this step"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_blacklist__phone_formatted
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list_member__phone_formatted
+msgid "Formatted Phone"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_allowlist_entry__phone_formatted
+msgid "Formatted phone"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "From"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.constraint,message:open_whatsapp_connector.constraint_discuss_channel_group_public_id_check
+msgid ""
+"Group authorization and group auto-subscription are only supported on "
+"channels and whatsapp."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__group_intro_message
+msgid "Group intro message"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_discuss_channel__group_intro_sent
+msgid "Group intro sent"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__group_policy
+msgid "Group policy"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_slash_command__handler
+msgid "Handler"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__has_message
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__has_message
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__has_message
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__has_message
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__has_message
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__has_message
+msgid "Has Message"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_quick_reply_view_form
+msgid "Header"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply__header_attachment_id
+msgid "Header Media"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply__header_text
+msgid "Header Text"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply__header_type
+msgid "Header Type"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__health_status
+msgid "Health"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__health_status__healthy
+msgid "Healthy"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_quick_reply_view_form
+msgid "Hello {{partner_name}}, your order {{order_name}} is ready!"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_notification_rule_form
+msgid "Hello {{partner_name}}, your {{record_name}} is confirmed!"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_chatbot_form
+msgid "Hello! How can I help you today?"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_config_settings_view_form_inherit_owa
+msgid "Hello! I'd like to know more about..."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_slash_command__description
+msgid "Help text"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__display_name
+msgid ""
+"Human-friendly name shown in lists and menus. Falls back to the technical "
+"'name' if unset."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_discuss_channel__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_discuss_channel_member__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_mail_message__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_mail_thread__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_allowlist_entry__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply_log__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_blacklist__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_menu_option__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_session__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_step__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_composer__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list_member__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_dashboard__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_inbound_dedupe__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_message__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_log__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_button__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_list_row__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_list_section__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_variable__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_slash_command__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_res_config_settings__id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_res_partner__id
+msgid "ID"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__activity_exception_icon
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__activity_exception_icon
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__activity_exception_icon
+msgid "Icon"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_auto_reply__activity_exception_icon
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_chatbot__activity_exception_icon
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_notification_rule__activity_exception_icon
+msgid "Icon to indicate an exception activity."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_message__failure_type__recoverable
+msgid "Identified Error"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__message_needaction
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_auto_reply__message_needaction
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_campaign__message_needaction
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_chatbot__message_needaction
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_notification_rule__message_needaction
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_pending_pair__message_needaction
+msgid "If checked, new messages require your attention."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__message_has_error
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_auto_reply__message_has_error
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_campaign__message_has_error
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_chatbot__message_has_error
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_notification_rule__message_has_error
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_pending_pair__message_has_error
+msgid "If checked, some messages have a delivery error."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_message__scheduled_date
+msgid ""
+"If set, message will be sent at this date/time. Leave empty for immediate "
+"sending."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_auto_reply__reply_to_mode_override
+msgid ""
+"If set, overrides the account's reply_to_mode for messages produced by this "
+"auto-reply."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_campaign__reply_to_mode_override
+msgid ""
+"If set, overrides the account's reply_to_mode for messages produced by this "
+"campaign."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_notification_rule__reply_to_mode_override
+msgid ""
+"If set, overrides the account's reply_to_mode for messages produced by this "
+"rule."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__send_read_receipts
+msgid ""
+"If unchecked, no blue ticks are sent — recipients see only two grey ticks "
+"when their messages are received. The sidecar honours this flag at message-"
+"receive time."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__enabled
+msgid ""
+"If unchecked, the sidecar listener is not started for this account on "
+"Connect — useful for keeping a configured account around without it "
+"consuming a sidecar slot."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_quick_reply__header_type__image
+msgid "Image"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_quick_reply__header_attachment_id
+msgid "Image, video, or document to show as the message header"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_campaign.py:0
+msgid "Import Complete"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_contact_list_form
+msgid "Import from Contacts"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_message__state__outgoing
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_message_view_search
+msgid "In Queue"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.js:0
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_message__message_type__inbound
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_message_view_search
+msgid "Inbound"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__msg_uid
+msgid "Inbound message UID"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/wizard/owa_composer.py:0
+msgid "Invalid document IDs"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__message_is_follower
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__message_is_follower
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__message_is_follower
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__message_is_follower
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__message_is_follower
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__message_is_follower
+msgid "Is Follower"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_discuss_channel__whatsapp_channel_active
+msgid "Is WhatsApp Channel Active"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_discuss_channel__is_whatsapp_group
+msgid "Is WhatsApp group"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_menu_option__keyword
+msgid "Keyword"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_auto_reply__trigger_type__keyword
+msgid "Keyword Match"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_chatbot_menu_option__keyword
+msgid "Keyword that also triggers this option (e.g. 'sales')"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__keyword
+msgid "Keywords"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__label
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_menu_option__label
+msgid "Label"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_session__last_activity
+msgid "Last Activity"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_allowlist_entry__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply_log__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_blacklist__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_menu_option__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_session__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_step__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_composer__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list_member__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_inbound_dedupe__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_message__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_log__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_button__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_list_row__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_list_section__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_variable__write_uid
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_slash_command__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_allowlist_entry__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply_log__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_blacklist__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_menu_option__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_session__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_step__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_composer__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list_member__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_inbound_dedupe__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_message__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_log__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_button__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_list_row__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_list_section__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_variable__write_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_slash_command__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_discuss_channel__last_wa_mail_message_id
+msgid "Last WA Partner Message"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "Last msg"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__last_seen_dt
+msgid "Last seen"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__last_seen_dt
+msgid ""
+"Last time the heartbeat cron successfully reached the sidecar for this "
+"account."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_campaign_form
+msgid "Launch Campaign"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_auto_reply__wa_account_id
+msgid "Leave empty to apply to all accounts"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_quick_reply__wa_account_id
+msgid "Leave empty to make available for all accounts"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_campaign__scheduled_date
+msgid "Leave empty to send immediately on launch"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__chunk_mode__length
+msgid "Length (split at character limit)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_allowlist_entry__partner_id
+msgid "Linked partner"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply__list_button_text
+msgid "List Button Text"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_quick_reply_view_form
+msgid "List Menu"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_quick_reply__template_type__list
+msgid "List Message"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list__name
+msgid "List Name"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_quick_reply_list_section_view_form
+msgid "List Section"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply__list_section_ids
+msgid "List Sections"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_quick_reply.py:0
+msgid "List messages can have a maximum of 10 rows total."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__is_listening
+msgid "Listening"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "Loading dashboard…"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__debug_logging
+msgid "Log sidecar API requests for debugging"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__session_state__logged_out
+msgid "Logged Out"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "Logout"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_message__mail_message_id
+msgid "Mail Message"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_blacklist.py:0
+msgid "Manually blacklisted"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.ui.menu,name:open_whatsapp_connector.menu_owa_marketing
+msgid "Marketing"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__match_type
+msgid "Match Type"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_quick_reply_button__text
+msgid "Max 20 characters"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_quick_reply_list_row__title
+msgid "Max 24 characters"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_quick_reply_list_row__description
+msgid "Max 72 characters"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_quick_reply_view_form
+msgid "Maximum 10 rows total across all sections."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_quick_reply_view_form
+msgid "Maximum 3 buttons. Each button text max 20 characters."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__media_max_mb
+msgid "Media size cap (MB)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_step__option_ids
+msgid "Menu Options"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_mail_message
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_step__message
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_composer__body
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_campaign_form
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_composer_view_form
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_notification_rule_form
+msgid "Message"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__body
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply__body
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_quick_reply_view_form
+msgid "Message Body"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_auto_reply__match_type__contains
+msgid "Message Contains Keyword"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_message_view_form
+msgid "Message Content"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__message_count
+msgid "Message Count"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__message_has_error
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__message_has_error
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__message_has_error
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__message_has_error
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__message_has_error
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__message_has_error
+msgid "Message Delivery error"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__quick_reply_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__quick_reply_id
+msgid "Message Template"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.act_window,name:open_whatsapp_connector.owa_quick_reply_action
+msgid "Message Templates"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_message__message_type
+msgid "Message Type"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_inbound_dedupe__msg_uid
+msgid "Message UID"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.constraint,message:open_whatsapp_connector.constraint_owa_inbound_dedupe_uid_per_account_uniq
+msgid "Message already processed."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__body_preview
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_pending_pair_form
+msgid "Message preview"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_chatbot_step__message
+msgid "Message to send at this step"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_chatbot_step_form
+msgid "Message to send at this step..."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__message_ids
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__message_ids
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__message_ids
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__message_ids
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__message_ids
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__message_ids
+#: model:ir.ui.menu,name:open_whatsapp_connector.menu_owa_messages
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_campaign_form
+msgid "Messages"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "Messages per day"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_auto_reply__cooldown_minutes
+msgid ""
+"Minimum minutes between auto-replies to the same number (0 = no cooldown)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_message__mobile_number_formatted
+msgid "Mobile Number Formatted"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_log__res_model
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__model_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__model_name
+msgid "Model"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_quick_reply__model_id
+msgid "Model this quick reply applies to (e.g. Sale Order)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_notification_rule__model_id
+msgid "Model to watch for changes (e.g. Sale Order, Invoice)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__my_activity_date_deadline
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__my_activity_date_deadline
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__my_activity_date_deadline
+msgid "My Activity Deadline"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list_member__name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__name
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply__name
+msgid "Name"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_message__failure_type__network
+msgid "Network Error"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__ack_reaction_group__never
+msgid "Never"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__chunk_mode__newline
+msgid "Newline (prefer paragraph boundaries)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__activity_date_deadline
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__activity_date_deadline
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__activity_date_deadline
+msgid "Next Activity Deadline"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__activity_summary
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__activity_summary
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__activity_summary
+msgid "Next Activity Summary"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__activity_type_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__activity_type_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__activity_type_id
+msgid "Next Activity Type"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_menu_option__next_step_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_step__next_step_id
+msgid "Next Step"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "No accounts configured."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_slash_command.py:0
+msgid "No active chatbot configured."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.actions.act_window,help:open_whatsapp_connector.owa_allowlist_entry_action
+msgid "No allowlist entries yet"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.actions.act_window,help:open_whatsapp_connector.owa_blacklist_action
+msgid "No blacklisted numbers"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "No contacts yet."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "No failures in the last 7 days. 🎉"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.actions.act_window,help:open_whatsapp_connector.owa_pending_pair_action
+msgid "No pending pair requests"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_message.py:0
+#: code:addons/open_whatsapp_connector/wizard/owa_composer.py:0
+msgid "No phone number specified"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "No recent failures."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/wizard/owa_composer.py:0
+msgid "No records found"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_quick_reply__header_type__none
+msgid "None"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_allowlist_entry__note
+msgid "Note"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__log_ids
+msgid "Notification Log"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_notification_rule_form
+msgid "Notification Rule"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.act_window,name:open_whatsapp_connector.owa_notification_rule_action
+#: model:ir.ui.menu,name:open_whatsapp_connector.menu_owa_notification_rules
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_notification_rule_list
+msgid "Notification Rules"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.actions.act_window,help:open_whatsapp_connector.owa_notification_rule_action
+msgid ""
+"Notification rules automatically send WhatsApp messages when records\n"
+"                reach specific states (e.g. when a Sale Order is confirmed)."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__notify_once
+msgid "Notify Once Per Record"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "Number"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__message_needaction_counter
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__message_needaction_counter
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__message_needaction_counter
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__message_needaction_counter
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__message_needaction_counter
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__message_needaction_counter
+msgid "Number of Actions"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__message_has_error_counter
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__message_has_error_counter
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__message_has_error_counter
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__message_has_error_counter
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__message_has_error_counter
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__message_has_error_counter
+msgid "Number of errors"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__message_needaction_counter
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_auto_reply__message_needaction_counter
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_campaign__message_needaction_counter
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_chatbot__message_needaction_counter
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_notification_rule__message_needaction_counter
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_pending_pair__message_needaction_counter
+msgid "Number of messages requiring action"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__message_has_error_counter
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_auto_reply__message_has_error_counter
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_campaign__message_has_error_counter
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_chatbot__message_has_error_counter
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_notification_rule__message_has_error_counter
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_pending_pair__message_has_error_counter
+msgid "Number of messages with delivery error"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__reply_to_mode__off
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_auto_reply__reply_to_mode_override__off
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_campaign__reply_to_mode_override__off
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_message__reply_to_mode_override__off
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_notification_rule__reply_to_mode_override__off
+msgid "Off (never quote)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__reaction_level__off
+msgid "Off (no reactions)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__group_allow_jids
+msgid ""
+"One group JID per line (e.g. '1234567890-1234567890@g.us'). Used when "
+"group_policy is 'allowlist'."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_slash_command__description
+msgid "One-line description shown by /help."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_campaign.py:0
+msgid "Only cancelled campaigns can be reset."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/core/common/composer_patch.js:0
+msgid "Only one attachment is allowed for each message"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_chatbot.py:0
+msgid ""
+"Only one chatbot can be active per WhatsApp account. Deactivate the other "
+"chatbot first."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_pending_pair.py:0
+msgid "Only pending requests can be approved."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_notification_rule__notify_once
+msgid "Only send one notification per record for this rule"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__ack_reaction_group__mentions
+msgid "Only when mentioned"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__group_policy__open
+msgid "Open (any group)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__dm_policy__open
+msgid "Open (anyone can DM)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_config_settings_view_form_inherit_owa
+msgid "Open WhatsApp Connector"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_account
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "Open WhatsApp Connector Account"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:res.groups,name:open_whatsapp_connector.group_owa_admin
+msgid "Open WhatsApp Connector Administrator"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_message
+msgid "Open WhatsApp Connector Message"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.server,name:open_whatsapp_connector.ir_cron_gc_messages_ir_actions_server
+msgid "Open WhatsApp Connector: Clean Old Messages"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.server,name:open_whatsapp_connector.ir_cron_send_owa_queue_ir_actions_server
+msgid "Open WhatsApp Connector: Send Queued Messages"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.server,name:open_whatsapp_connector.ir_cron_sync_session_status_ir_actions_server
+msgid "Open WhatsApp Connector: Sync Session Status"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid ""
+"Open WhatsApp on your phone &gt; Linked Devices &gt; Link a Device &gt; "
+"Point camera here"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__auth_dir
+msgid ""
+"Optional absolute path; sidecar reads Baileys multi-file auth state from "
+"here instead of the default per-account dir. Only set this if you need to "
+"share auth state with another tool."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__label
+msgid ""
+"Optional human-friendly label; if set, this overrides the internal name in "
+"lists."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "Optional security key. Leave empty if not configured in the sidecar."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_auto_reply_form
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_notification_rule_form
+msgid "Options"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.actions.act_window,help:open_whatsapp_connector.owa_contact_list_action
+msgid "Organize your contacts into lists for targeted WhatsApp campaigns."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_message__failure_type__unrecoverable
+msgid "Other Technical Error"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.js:0
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_message__message_type__outbound
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_message_view_search
+msgid "Outbound"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__media_max_mb
+msgid ""
+"Outbound + inbound media files larger than this are rejected (images are "
+"auto-resized first)."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__text_chunk_limit
+msgid ""
+"Outbound text messages longer than this are split into chunks and sent "
+"sequentially. WhatsApp's hard limit is ~65000 chars; 4000 keeps each chunk "
+"readable on a phone screen."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_notification_rule_form
+msgid "PDF Attachment"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_notification_rule__report_id
+msgid "PDF report to attach (e.g. Sale Order report, Invoice report)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__dm_policy__pairing
+msgid "Pairing (unknown senders need admin approval)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_config_settings_view_form_inherit_owa
+msgid "Paste this code into your website's HTML to add the WhatsApp button"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_pending_pair__state__pending
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_pending_pair_search
+msgid "Pending"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.act_window,name:open_whatsapp_connector.owa_pending_pair_action
+#: model:ir.ui.menu,name:open_whatsapp_connector.menu_owa_pending_pair
+msgid "Pending Approvals"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_pending_pair_form
+msgid "Pending Pair"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_pending_pair_list
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_pending_pair_search
+msgid "Pending Pair Requests"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_pending_pair
+msgid "Pending WhatsApp Pairing Request"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_allowlist_entry__phone
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__phone
+msgid "Phone"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__phone_field
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply__phone_field
+msgid "Phone Field"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_discuss_channel__whatsapp_number
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__phone_number
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply_log__phone_number
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_blacklist__phone
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_session__phone_number
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_composer__phone
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_contact_list_member__phone
+msgid "Phone Number"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_notification_rule.py:0
+msgid "Phone field is required"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_message.py:0
+msgid "Phone number is blacklisted"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_blacklist.py:0
+msgid "Phone number is required for a blacklist entry."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_allowlist.py:0
+msgid "Phone number is required."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.actions.act_window,help:open_whatsapp_connector.owa_blacklist_action
+msgid ""
+"Phone numbers can be blacklisted manually or automatically\n"
+"                when a contact replies with \"STOP\"."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_res_config_settings__owa_default_account_id
+msgid ""
+"Pre-selected account in the composer wizard and notification rules when no "
+"other account has been chosen."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__qr_code_base64
+msgid "QR Code Data"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "Queue"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "Queued"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.js:0
+msgid "Queued Messages"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.ui.menu,name:open_whatsapp_connector.menu_owa_quick_replies
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_quick_reply_view_list
+msgid "Quick Replies"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_composer__quick_reply_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_message__quick_reply_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_button__quick_reply_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_list_section__quick_reply_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_variable__quick_reply_id
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_quick_reply_view_form
+msgid "Quick Reply"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_notification_rule__quick_reply_id
+msgid "Quick reply template to use. If empty, a default message is sent."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__reply_to_mode__all
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_auto_reply__reply_to_mode_override__all
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_campaign__reply_to_mode_override__all
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_message__reply_to_mode_override__all
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_notification_rule__reply_to_mode_override__all
+msgid "Quote every chunk"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__reply_to_mode__first
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_auto_reply__reply_to_mode_override__first
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_campaign__reply_to_mode_override__first
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_message__reply_to_mode_override__first
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_notification_rule__reply_to_mode_override__first
+msgid "Quote first chunk only"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__reaction_level
+msgid "Reaction level"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__read_count
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_message__state__read
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_message_view_search
+msgid "Read"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_blacklist__reason
+msgid "Reason"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_message__state__received
+msgid "Received"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.js:0
+msgid "Received Messages"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "Recent failures"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_log__res_id
+msgid "Record"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "Refresh"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "Refresh Status"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_auto_reply__match_type__regex
+msgid "Regular Expression"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_pending_pair_form
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_pending_pair_list
+msgid "Reject"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_pending_pair__state__rejected
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_pending_pair_search
+msgid "Rejected"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_pending_pair.py:0
+msgid "Rejected via pending-pair"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/discuss_channel.py:0
+msgid "Related %(model_name)s: "
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_blacklist_list
+msgid "Remove"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_blacklist_list
+msgid "Remove this number from the blacklist?"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_blacklist_form
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_blacklist_search
+msgid "Removed"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_message__state__replied
+msgid "Replied"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__reply_to_mode
+msgid "Reply quoting"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__reply_to_mode_override
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__reply_to_mode_override
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_message__reply_to_mode_override
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__reply_to_mode_override
+msgid "Reply quoting (override)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_auto_reply__trigger_type__all
+msgid "Reply to All Messages"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__report_id
+msgid "Report"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_message_view_form
+msgid "Resend"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_campaign_form
+msgid "Reset to Draft"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_auto_reply_form
+msgid "Response"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__response_body
+msgid "Response Message"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_message__parent_id
+msgid "Response To"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__activity_user_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__activity_user_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__activity_user_id
+msgid "Responsible User"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/core/common/composer_actions_patch.js:0
+msgid "Revive WhatsApp Conversation"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_step__target_user_id
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_chatbot_step__step_type__route_to_user
+msgid "Route to User"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_chatbot_session__state__routed
+msgid "Routed to Agent"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_list_row__row_id
+msgid "Row ID"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_list_row__title
+msgid "Row Title"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_quick_reply_list.py:0
+msgid "Row description exceeds 72 characters (%(length)d)."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_quick_reply_list.py:0
+msgid "Row title '%(title)s' exceeds 24 characters (%(length)d)."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_list_section__row_ids
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_quick_reply_list_section_view_form
+msgid "Rows"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply_log__rule_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_log__rule_id
+msgid "Rule"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "Run Diagnostics"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.js:0
+msgid "Running Campaigns"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "Running campaigns"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/components/qr_code_widget/qr_code_widget.xml:0
+msgid "Scan with WhatsApp → Settings → Linked Devices → Link a Device"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_composer__scheduled_date
+msgid "Schedule Send"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_composer__scheduled_date
+msgid "Schedule message for later delivery. Leave empty to send immediately."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__scheduled_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_message__scheduled_date
+msgid "Scheduled Date"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/core/public_web/discuss_app_model_patch.js:0
+msgid "Search WhatsApp Channel"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_list_row__section_id
+msgid "Section"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_list_section__title
+msgid "Section Title"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_notification_rule__wa_account_id
+msgid ""
+"Select the WhatsApp account to send notifications from. Required to activate"
+" the rule."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__self_chat_mode
+msgid "Self-chat mode"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_composer_view_form
+msgid "Send"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_chatbot_step__step_type__message
+msgid "Send Message"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.act_window,name:open_whatsapp_connector.owa_composer_action
+#: model:ir.actions.server,name:open_whatsapp_connector.action_send_whatsapp_partner
+msgid "Send WhatsApp"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#. odoo-python
+#: code:addons/open_whatsapp_connector/static/src/chatter/web/chatter_patch.js:0
+#: code:addons/open_whatsapp_connector/static/src/core/common/composer_patch.js:0
+#: code:addons/open_whatsapp_connector/wizard/owa_composer.py:0
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_composer_view_form
+msgid "Send WhatsApp Message"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_composer
+msgid "Send WhatsApp Message (Baileys)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__ack_reaction_dm
+msgid "Send ack reaction on direct messages."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__send_read_receipts
+msgid "Send read receipts"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__sender_name
+msgid "Sender name"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_campaign__state__sending
+msgid "Sending"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__sent_count
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_campaign__state__sent
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_message__state__sent
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_message_view_search
+msgid "Sent"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "Sent 24h"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply_log__create_date
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_log__create_date
+msgid "Sent At"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.js:0
+msgid "Sent Messages"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_message__mobile_number
+msgid "Sent To"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__group_intro_message
+msgid ""
+"Sent automatically the first time the bot is added to (or sees an inbound "
+"from) a new WhatsApp group."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_chatbot__welcome_message
+msgid "Sent when the chatbot first engages with a contact"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__sequence
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__sequence
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_menu_option__sequence
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_step__sequence
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__sequence
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_button__sequence
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_list_row__sequence
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_list_section__sequence
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_variable__sequence
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_slash_command__sequence
+msgid "Sequence"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__session_timeout_minutes
+msgid "Session Timeout (minutes)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_discuss_channel__group_intro_sent
+msgid ""
+"Set after the bot has greeted this group with the configured intro message; "
+"prevents re-sending."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.act_window,name:open_whatsapp_connector.action_owa_config_settings
+#: model:ir.ui.menu,name:open_whatsapp_connector.menu_owa_settings
+msgid "Settings"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__sidecar_api_key
+msgid "Shared API key for authenticating with the sidecar service"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_chatbot_step__step_type__menu
+msgid "Show Menu"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_config_settings_view_form_inherit_owa
+msgid "Show a floating WhatsApp chat button on your website"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_config_settings_view_form_inherit_owa
+msgid "Sidecar Defaults"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_config_settings_view_form_inherit_owa
+msgid "Sidecar Directory"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_res_config_settings__owa_sidecar_path
+msgid "Sidecar Path"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__sidecar_running
+msgid "Sidecar Running"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__sidecar_url
+msgid "Sidecar URL"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_account.py:0
+msgid "Sidecar is already running."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_account.py:0
+msgid "Sidecar path not configured. Go to Settings > Open WhatsApp Connector."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_account.py:0
+msgid "Sidecar service is running."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_account.py:0
+msgid "Sidecar started successfully."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_account.py:0
+msgid "Sidecar stopped."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_account.py:0
+msgid "Sidecar was not running."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_slash_command_form
+msgid "Slash Command"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.act_window,name:open_whatsapp_connector.owa_slash_command_action
+#: model:ir.ui.menu,name:open_whatsapp_connector.menu_owa_slash_commands
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_slash_command_list
+msgid "Slash Commands"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.constraint,message:open_whatsapp_connector.constraint_owa_slash_command_command_uniq
+msgid "Slash command must be unique."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_chatbot.py:0
+msgid "Sorry, I didn't understand that. Please choose from the options above."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "Start Sidecar"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_auto_reply__schedule_start
+msgid "Start of business hours (24h format, e.g. 9.0 = 9:00 AM)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_config_settings_view_form_inherit_owa
+msgid ""
+"Start the sidecar process automatically when you click Connect on a WhatsApp"
+" account"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_session__state
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_message__state
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_pending_pair__state
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_message_view_search
+msgid "State"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_campaign_form
+msgid "Statistics"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__session_state
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__state
+msgid "Status"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_auto_reply__activity_state
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_chatbot__activity_state
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_notification_rule__activity_state
+msgid ""
+"Status based on activities\n"
+"Overdue: Due date is already passed\n"
+"Today: Activity date is today\n"
+"Planned: Future activities."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "Status distribution"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_menu_option__step_id
+msgid "Step"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_step__name
+msgid "Step Name"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot_step__step_type
+msgid "Step Type"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__step_ids
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_chatbot_form
+msgid "Steps"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "Stop Sidecar"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply__template_type
+msgid "Template Type"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "Test Connection"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_quick_reply__header_type__text
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_quick_reply__template_type__text
+msgid "Text"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__text_chunk_limit
+msgid "Text chunk limit"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_quick_reply__list_button_text
+msgid "Text shown on the button that opens the list"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_chatbot_menu_option__label
+msgid "Text shown to user, e.g. '1. Sales' or '2. Support'"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_auto_reply_form
+msgid "Thank you for your message! We'll get back to you shortly."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_slash_command__command
+msgid ""
+"The literal slash command, e.g. '/menu' or '/stop'. Case-insensitive at "
+"match time."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/core/common/message_patch.js:0
+msgid "The message has been bounced."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/core/common/message_patch.js:0
+msgid "The message has been canceled."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/core/common/message_patch.js:0
+msgid "The message has been read by the recipient."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/core/common/message_patch.js:0
+msgid "The message has been sent."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/core/common/message_patch.js:0
+msgid "The message has been successfully delivered."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/core/common/message_patch.js:0
+msgid "The message has been successfully received."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/core/common/message_patch.js:0
+msgid "The message is being processed."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/core/common/message_patch.js:0
+msgid "The recipient has replied to the message."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/core/common/message_patch.js:0
+msgid "The status of this message is currently unknown."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/core/common/message_patch.js:0
+msgid "There was an issue sending this message."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid ""
+"These users will see incoming WhatsApp messages in their Discuss inbox."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/core/common/thread_patch.xml:0
+msgid "This conversation has been closed as the messaging window has expired."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.constraint,message:open_whatsapp_connector.constraint_owa_allowlist_entry_phone_uniq_per_account
+msgid "This number is already in the allowlist for that account."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid ""
+"This will delete the WhatsApp session. You will need to scan a new QR code. "
+"Continue?"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_campaign_form
+msgid "This will send messages to all contacts in the list. Continue?"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "This will stop the sidecar service for all accounts. Continue?"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__timezone
+msgid "Timezone"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_auto_reply__timezone
+msgid ""
+"Timezone for the business-hours schedule above. Defaults to the editing "
+"user's timezone."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "To"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "Top contacts"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "Top failure reasons (last 7d)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__total_count
+msgid "Total"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "Total Messages"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__self_chat_mode
+msgid ""
+"Treat this account as if WhatsApp messages may come from the same number as "
+"the account itself. Outbound replies get a [bot-name] prefix so you can tell"
+" them apart from your own manual messages, and read receipts are skipped on "
+"self-chat."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_auto_reply_form
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_notification_rule_form
+msgid "Trigger"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__trigger_field_id
+msgid "Trigger Field"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__trigger_type
+msgid "Trigger Type"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__trigger_value
+msgid "Trigger Value"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__is_listening
+msgid ""
+"True when the sidecar is actively delivering events to Odoo for this "
+"account."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_mail_mail__message_type
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_mail_message__message_type
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_message_view_search
+msgid "Type"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_auto_reply__activity_exception_decoration
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_chatbot__activity_exception_decoration
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_notification_rule__activity_exception_decoration
+msgid "Type of the exception activity on record."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_campaign_form
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_composer_view_form
+msgid "Type your message here..."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__sidecar_url
+msgid "URL of the Node.js Baileys sidecar service"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid ""
+"URL where the sidecar service is running. Default works for most setups."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_quick_reply_button__button_id
+msgid "Unique ID for this button. Auto-generated if empty."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_quick_reply_list_row__row_id
+msgid "Unique ID for this row. Auto-generated if empty."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_account__health_status__unknown
+msgid "Unknown"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_message__failure_type__unknown
+msgid "Unknown Error"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_quick_reply__body
+msgid "Use {{variable_name}} for placeholders, e.g. 'Hello {{partner_name}}'"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_campaign__body
+msgid "Used if no quick reply is selected"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_notification_rule__custom_body
+msgid ""
+"Used if no quick reply is selected. Supports {{record_name}}, "
+"{{partner_name}}"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_mail_mail__message_type
+#: model:ir.model.fields,help:open_whatsapp_connector.field_mail_message__message_type
+msgid ""
+"Used to categorize message generator\n"
+"'email': generated by an incoming email e.g. mailgateway\n"
+"'comment': generated by user input e.g. through discuss or composer\n"
+"'email_outgoing': generated by a mailing\n"
+"'notification': generated by system e.g. tracking messages\n"
+"'auto_comment': generated by automated notification mechanism e.g. acknowledgment\n"
+"'user_notification': generated for a specific recipient"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__notify_user_ids
+msgid "Users notified when a new message is received"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__notify_user_ids
+msgid "Users to Notify"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_notification_rule__trigger_value
+msgid "Value that triggers the notification (e.g. 'sale', 'posted', 'done')"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply_variable__name
+msgid "Variable Name"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_quick_reply__variable_ids
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_quick_reply_view_form
+msgid "Variables"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_quick_reply__header_type__video
+msgid "Video"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/core/web/thread_actions.js:0
+msgid "View Contact"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_partner_view_form_inherit_owa
+msgid "WA Chats"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_account__webhook_secret
+msgid "Webhook Secret"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_res_config_settings__owa_website_widget_enabled
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_config_settings_view_form_inherit_owa
+msgid "Website WhatsApp Widget"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__welcome_message
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_auto_reply__trigger_type__welcome
+msgid "Welcome Message"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_account.py:0
+#: code:addons/open_whatsapp_connector/static/src/chatter/web/chatter_patch.xml:0
+#: code:addons/open_whatsapp_connector/static/src/core/common/thread_icon_patch.xml:0
+#: code:addons/open_whatsapp_connector/static/src/core/public_web/discuss_app_model_patch.js:0
+#: code:addons/open_whatsapp_connector/static/src/core/public_web/messaging_menu_patch.js:0
+#: model:ir.ui.menu,name:open_whatsapp_connector.menu_owa_root
+msgid "WhatsApp"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_discuss_channel__owa_account_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_auto_reply__wa_account_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_campaign__wa_account_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_chatbot__wa_account_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_composer__wa_account_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_message__wa_account_id
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_notification_rule__wa_account_id
+msgid "WhatsApp Account"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.js:0
+#: model:ir.actions.act_window,name:open_whatsapp_connector.owa_account_action
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_list
+msgid "WhatsApp Accounts"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_auto_reply
+msgid "WhatsApp Auto-Reply Rule"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_campaign
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_campaign_form
+msgid "WhatsApp Campaign"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_campaign_list
+msgid "WhatsApp Campaigns"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_discuss_channel__whatsapp_channel_valid_until
+msgid "WhatsApp Channel Valid Until"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_res_partner__owa_channel_count
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_res_users__owa_channel_count
+msgid "WhatsApp Channels"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.res_config_settings_view_form_inherit_owa
+msgid "WhatsApp Chat Button"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_chatbot
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_chatbot_form
+msgid "WhatsApp Chatbot"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_chatbot_list
+msgid "WhatsApp Chatbots"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/components/qr_code_widget/qr_code_widget.xml:0
+msgid "WhatsApp Connected"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_contact_list
+msgid "WhatsApp Contact List"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_contact_list_member
+msgid "WhatsApp Contact List Member"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__discuss_channel__channel_type__whatsapp
+msgid "WhatsApp Conversation"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_allowlist_entry
+msgid "WhatsApp DM Allowlist Entry"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.client,name:open_whatsapp_connector.action_owa_dashboard
+msgid "WhatsApp Dashboard"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__mail_message__message_type__whatsapp_message
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_message_view_form
+msgid "WhatsApp Message"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_owa_message__msg_uid
+msgid "WhatsApp Message ID"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/wizard/owa_composer.py:0
+msgid "WhatsApp Message Queued"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.act_window,name:open_whatsapp_connector.owa_message_action
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_mail_mail__owa_message_ids
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_mail_message__owa_message_ids
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_message_view_list
+msgid "WhatsApp Messages"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_notification_log
+msgid "WhatsApp Notification Log"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_notification_rule
+msgid "WhatsApp Notification Rule"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_dashboard
+msgid "WhatsApp Operations Dashboard (data only)"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_discuss_channel__whatsapp_partner_id
+msgid "WhatsApp Partner"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_blacklist
+msgid "WhatsApp Phone Blacklist"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/components/qr_code_widget/qr_code_widget.xml:0
+msgid "WhatsApp QR Code"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_quick_reply
+msgid "WhatsApp Quick Reply"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_quick_reply_button
+msgid "WhatsApp Quick Reply Button"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_quick_reply_list_row
+msgid "WhatsApp Quick Reply List Row"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_quick_reply_list_section
+msgid "WhatsApp Quick Reply List Section"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_quick_reply_variable
+msgid "WhatsApp Quick Reply Variable"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_slash_command
+msgid "WhatsApp Slash Command"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/core/common/im_status_patch.xml:0
+#: code:addons/open_whatsapp_connector/static/src/discuss/core/common/channel_member_list_patch.xml:0
+msgid "WhatsApp User"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_message.py:0
+msgid "WhatsApp account is not connected"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_campaign.py:0
+msgid "WhatsApp account is not connected."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/wizard/owa_composer.py:0
+msgid "WhatsApp account is not connected. Please connect first."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model,name:open_whatsapp_connector.model_owa_inbound_dedupe
+msgid "WhatsApp inbound dedupe key"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.server,name:open_whatsapp_connector.ir_cron_heartbeat_ir_actions_server
+msgid "WhatsApp: Account Heartbeat"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.server,name:open_whatsapp_connector.ir_cron_expire_chatbot_sessions_ir_actions_server
+msgid "WhatsApp: Expire Chatbot Sessions"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.server,name:open_whatsapp_connector.ir_cron_expire_pending_pair_ir_actions_server
+msgid "WhatsApp: Expire Pending Pair Requests"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.server,name:open_whatsapp_connector.ir_cron_gc_inbound_dedupe_ir_actions_server
+msgid "WhatsApp: GC Inbound Dedupe"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.actions.server,name:open_whatsapp_connector.ir_cron_update_campaign_state_ir_actions_server
+msgid "WhatsApp: Update Campaign State"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "When"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.actions.act_window,help:open_whatsapp_connector.owa_allowlist_entry_action
+msgid ""
+"When a WhatsApp account's DM policy is set to \"allowlist\" or\n"
+"                \"pairing\", only contacts with an entry here can DM it."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.actions.act_window,help:open_whatsapp_connector.owa_pending_pair_action
+msgid ""
+"When a WhatsApp account's DM policy is set to \"pairing\",\n"
+"                inbound messages from unknown numbers land here for admin\n"
+"                approval before they can reach the discuss thread."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_discuss_channel__require_mention
+msgid ""
+"When set, chatbots and auto-replies in this group only fire when the bot's "
+"name or number is @-mentioned in the inbound text."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__remove_ack_after_reply
+msgid ""
+"When the bot or an agent replies to a message we ack'd, remove the original "
+"ack reaction so the recipient sees only the reply."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,help:open_whatsapp_connector.field_owa_account__reply_to_mode
+msgid ""
+"Whether outbound replies natively quote the inbound message they're replying"
+" to."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid ""
+"Which companies can use this WhatsApp account. Leave default for single-"
+"company setups."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_res_config_settings__owa_website_widget_code
+msgid "Widget Embed Code"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields,field_description:open_whatsapp_connector.field_res_config_settings__owa_website_widget_phone
+msgid "Widget Phone Number"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model:ir.model.fields.selection,name:open_whatsapp_connector.selection__owa_message__failure_type__phone_invalid
+msgid "Wrong Number Format"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/discuss_channel.py:0
+msgid "You can't leave this channel. As the owner, you can only delete it."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_slash_command.py:0
+msgid "You've been opted out. Reply /start to opt back in."
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_message.py:0
+msgid "[media failed: %(name)s — %(reason)s]"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/models/owa_message.py:0
+msgid "[media too large to send: %(name)s — %(size).1f MB > %(max)d MB cap]"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "active"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "auto-reply"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "awaiting send"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_quick_reply_list_section_view_form
+msgid "e.g. $19.99 - Great value"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_auto_reply_form
+msgid "e.g. Business Hours Auto-Reply"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_chatbot_form
+msgid "e.g. Customer Support Bot"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_campaign_form
+msgid "e.g. Holiday Promotion"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_account_view_form
+msgid "e.g. My WhatsApp"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_quick_reply_view_form
+msgid "e.g. Order Confirmation"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_quick_reply_view_form
+msgid "e.g. Powered by Our Company"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_quick_reply_list_section_view_form
+msgid "e.g. Product A"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_quick_reply_view_form
+msgid "e.g. Products"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_notification_rule_form
+msgid "e.g. Sale Order Confirmed"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_contact_list_form
+msgid "e.g. VIP Customers"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_quick_reply_view_form
+msgid "e.g. View Options"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_quick_reply_view_form
+msgid "e.g. Yes, Confirm"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_quick_reply_view_form
+msgid "e.g. partner_id.name"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_notification_rule_form
+msgid "e.g. sale, posted, done"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "error / bounced"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#: model_terms:ir.ui.view,arch_db:open_whatsapp_connector.owa_auto_reply_form
+msgid "hello, hi, help"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "inbound"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "last 7 days"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "notification"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "outbound delivered+"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/wizard/owa_composer.py:0
+msgid "queued for sending"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-python
+#: code:addons/open_whatsapp_connector/wizard/owa_composer.py:0
+msgid "scheduled"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "selected range"
+msgstr ""
+
+#. module: open_whatsapp_connector
+#. odoo-javascript
+#: code:addons/open_whatsapp_connector/static/src/dashboard/owa_dashboard.xml:0
+msgid "session_state = connected"
+msgstr ""

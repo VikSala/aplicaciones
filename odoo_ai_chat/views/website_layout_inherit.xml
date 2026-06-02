@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Carga directa del JS en website.layout. Esto evita depender solo del bundle de assets cacheado. -->
+    <template id="odoo_ai_chat_force_script" inherit_id="website.layout" name="Odoo AI Chat direct script loader">
+        <xpath expr="//body" position="inside">
+            <script type="text/javascript" src="/odoo_ai_chat/static/src/js/ai_chat_v18.js?v=18.0"></script>
+        </xpath>
+    </template>
+</odoo>

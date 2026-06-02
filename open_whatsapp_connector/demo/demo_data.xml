@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- Phase 15: demo data — a fresh install with demo data enabled lands a
+         sample account, contact list, chatbot tree, notification + auto-reply
+         rules so the user has something to look at. All disconnected /
+         inactive so nothing accidentally fires. Numbers use the +1 555
+         range that's reserved for fictional use. -->
+
+    <record id="demo_account" model="owa.account">
+        <field name="name">demo</field>
+        <field name="label">Demo WhatsApp Account</field>
+        <field name="sidecar_url">http://localhost:3100</field>
+        <field name="session_state">disconnected</field>
+        <field name="phone_number">+15550100100</field>
+        <field name="enabled">False</field>
+        <field name="dm_policy">open</field>
+        <field name="reaction_level">ack</field>
+        <field name="ack_reaction_emoji">👀</field>
+        <field name="send_read_receipts" eval="True"/>
+        <field name="reply_to_mode">first</field>
+        <field name="text_chunk_limit">4000</field>
+        <field name="chunk_mode">newline</field>
+        <field name="media_max_mb">50</field>
+        <field name="notify_user_ids" eval="[(6, 0, [ref('base.user_admin')])]"/>
+    </record>
+
+    <record id="demo_contact_list" model="owa.contact.list">
+        <field name="name">Demo Contacts</field>
+    </record>
+
+    <record id="demo_contact_1" model="owa.contact.list.member">
+        <field name="list_id" ref="demo_contact_list"/>
+        <field name="name">Alice Sample</field>
+        <field name="phone">+15550101001</field>
+    </record>
+    <record id="demo_contact_2" model="owa.contact.list.member">
+        <field name="list_id" ref="demo_contact_list"/>
+        <field name="name">Bob Sample</field>
+        <field name="phone">+15550101002</field>
+    </record>
+    <record id="demo_contact_3" model="owa.contact.list.member">
+        <field name="list_id" ref="demo_contact_list"/>
+        <field name="name">Carol Sample</field>
+        <field name="phone">+15550101003</field>
+    </record>
+
+    <!-- Demo chatbot tree (intentionally inactive — single-active rule) -->
+    <record id="demo_chatbot" model="owa.chatbot">
+        <field name="name">Demo Support Bot</field>
+        <field name="wa_account_id" ref="demo_account"/>
+        <field name="active">False</field>
+        <field name="welcome_message">Hi! I'm the demo support bot. Choose an option below or type /menu anytime.</field>
+        <field name="session_timeout_minutes">30</field>
+    </record>
+
+    <record id="demo_chatbot_step_main" model="owa.chatbot.step">
+        <field name="chatbot_id" ref="demo_chatbot"/>
+        <field name="name">Main menu</field>
+        <field name="sequence">10</field>
+        <field name="step_type">menu</field>
+        <field name="message">Please pick one:</field>
+    </record>
+
+    <record id="demo_chatbot_step_sales" model="owa.chatbot.step">
+        <field name="chatbot_id" ref="demo_chatbot"/>
+        <field name="name">Sales handoff</field>
+        <field name="sequence">20</field>
+        <field name="step_type">route_to_user</field>
+        <field name="message">Connecting you to sales — please hold on.</field>
+    </record>
+
+    <record id="demo_chatbot_step_support" model="owa.chatbot.step">
+        <field name="chatbot_id" ref="demo_chatbot"/>
+        <field name="name">Support ticket</field>
+        <field name="sequence">30</field>
+        <field name="step_type">end</field>
+        <field name="message">Got it — a support ticket has been created. We'll reply within one business day.</field>
+    </record>
+
+    <record id="demo_menu_option_sales" model="owa.chatbot.menu.option">
+        <field name="step_id" ref="demo_chatbot_step_main"/>
+        <field name="sequence">10</field>
+        <field name="label">1. Sales</field>
+        <field name="keyword">sales</field>
+        <field name="next_step_id" ref="demo_chatbot_step_sales"/>
+    </record>
+    <record id="demo_menu_option_support" model="owa.chatbot.menu.option">
+        <field name="step_id" ref="demo_chatbot_step_main"/>
+        <field name="sequence">20</field>
+        <field name="label">2. Support</field>
+        <field name="keyword">support</field>
+        <field name="next_step_id" ref="demo_chatbot_step_support"/>
+    </record>
+
+    <!-- Demo auto-reply (welcome) — inactive so it never fires by surprise -->
+    <record id="demo_auto_reply_welcome" model="owa.auto.reply">
+        <field name="name">Demo: Welcome message</field>
+        <field name="active">False</field>
+        <field name="trigger_type">welcome</field>
+        <field name="response_body">👋 Hi! Thanks for messaging. A team member will respond shortly.</field>
+        <field name="wa_account_id" ref="demo_account"/>
+        <field name="cooldown_minutes">60</field>
+    </record>
+
+    <!-- Demo notification rule (inactive) — uses the bundled SO Confirmed
+         template if the sale module is installed. -->
+    <record id="demo_quick_reply_so" model="owa.quick.reply">
+        <field name="name">Demo: Sale Order Confirmed</field>
+        <field name="template_type">text</field>
+        <field name="body">Hi {{partner_name}}, your order {{record_name}} for {{amount_total}} {{currency}} has been confirmed. Thanks for your business!</field>
+        <field name="wa_account_id" ref="demo_account"/>
+    </record>
+
+</odoo>

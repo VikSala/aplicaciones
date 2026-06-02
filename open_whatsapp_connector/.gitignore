@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+*.egg
+dist/
+build/
+
+# Node.js sidecar
+sidecar/node_modules/
+sidecar/dist/
+sidecar/sidecar.log
+sidecar/.env
+
+# WhatsApp session data (CREDENTIALS - NEVER COMMIT)
+sidecar/sessions/
+sessions/
+
+# IDE / Tools
+.vscode/
+.idea/
+.factory/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Odoo
+*.pyc

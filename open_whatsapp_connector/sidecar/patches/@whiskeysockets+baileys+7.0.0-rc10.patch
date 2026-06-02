@@ -1,0 +1,124 @@
+diff --git a/node_modules/@whiskeysockets/baileys/lib/Signal/libsignal.js b/node_modules/@whiskeysockets/baileys/lib/Signal/libsignal.js
+index beadd06..e85f3df 100644
+--- a/node_modules/@whiskeysockets/baileys/lib/Signal/libsignal.js
++++ b/node_modules/@whiskeysockets/baileys/lib/Signal/libsignal.js
+@@ -40,6 +40,24 @@ export function makeLibSignalRepository(auth, logger, pnToLIDFunc) {
+         ttlAutopurge: true,
+         updateAgeOnGet: true
+     });
++    /**
++     * Resolve a JID to its canonical (LID-preferred) form for use as transaction lock key.
++     * This prevents race conditions where PN and LID JIDs for the same contact
++     * acquire different mutex locks, allowing concurrent session modifications.
++     * See: https://github.com/WhiskeySockets/Baileys/issues/1769
++     */
++    const resolveCanonicalJid = async (jid) => {
++        if (isLidUser(jid) || isHostedLidUser(jid)) {
++            return jid;
++        }
++        if (isPnUser(jid) || isHostedPnUser(jid)) {
++            const lid = await lidMapping.getLIDForPN(jid);
++            if (lid) {
++                return lid;
++            }
++        }
++        return jid;
++    };
+     const ensureSenderKeyAndCreateSkdm = async (group, meId) => {
+         const senderName = jidToSignalSenderKeyName(group, meId);
+         const senderNameStr = senderName.toString();
+@@ -105,21 +123,23 @@ export function makeLibSignalRepository(auth, logger, pnToLIDFunc) {
+                 }
+                 return result;
+             }
+-            // If it's not a sync message, we need to ensure atomicity
+-            // For regular messages, we use a transaction to ensure atomicity
++            // Resolve to canonical (LID-preferred) JID for transaction lock key
++            // to prevent PN/LID race conditions on the same logical session
++            const canonicalJid = await resolveCanonicalJid(jid);
+             return parsedKeys.transaction(async () => {
+                 return await doDecrypt();
+-            }, jid);
++            }, canonicalJid);
+         },
+         async encryptMessage({ jid, data }) {
+             const addr = jidToSignalProtocolAddress(jid);
+             const cipher = new libsignal.SessionCipher(storage, addr);
+-            // Use transaction to ensure atomicity
++            // Resolve to canonical (LID-preferred) JID for transaction lock key
++            const canonicalJid = await resolveCanonicalJid(jid);
+             return parsedKeys.transaction(async () => {
+                 const { type: sigType, body } = await cipher.encrypt(data);
+                 const type = sigType === 3 ? 'pkmsg' : 'msg';
+                 return { type, ciphertext: Buffer.from(body, 'binary') };
+-            }, jid);
++            }, canonicalJid);
+         },
+         async encryptGroupMessage({ group, meId, data }) {
+             return parsedKeys.transaction(async () => {
+@@ -282,9 +302,11 @@ export function makeLibSignalRepository(auth, logger, pnToLIDFunc) {
+                         // Session exists (guaranteed from device discovery)
+                         const fromSession = libsignal.SessionRecord.deserialize(pnSession);
+                         if (fromSession.haveOpenSession()) {
+-                            // Queue for bulk update: copy to LID, delete from PN
++                            // Copy session to LID address but retain PN session.
++                            // PN session must stay alive so in-flight messages
++                            // addressed to the PN JID can still be decrypted.
++                            // See: https://github.com/WhiskeySockets/Baileys/issues/1769
+                             sessionUpdates[lidAddrStr] = fromSession.serialize();
+-                            sessionUpdates[pnAddrStr] = null;
+                             migratedCount++;
+                         }
+                     }
+@@ -324,6 +346,36 @@ const jidToSignalProtocolAddress = (jid) => {
+ const jidToSignalSenderKeyName = (group, user) => {
+     return new SenderKeyName(group, jidToSignalProtocolAddress(user));
+ };
++/**
++ * Grace period before actually deleting used pre-keys.
++ * Retransmissions reusing the same pre-key ID will succeed during this window.
++ * See: https://github.com/WhiskeySockets/Baileys/issues/1769
++ */
++const PREKEY_GRACE_PERIOD_MS = 5 * 60 * 1000; // 5 minutes
++const PREKEY_CLEANUP_INTERVAL_MS = 60000; // 1 minute
++const pendingPreKeyDeletions = new Map();
++let preKeyCleanupTimer;
++function ensurePreKeyCleanup() {
++    if (preKeyCleanupTimer) {
++        return;
++    }
++    preKeyCleanupTimer = setInterval(() => {
++        const now = Date.now();
++        for (const [key, entry] of pendingPreKeyDeletions) {
++            if (now >= entry.expiry) {
++                void entry.keys.set({ 'pre-key': { [entry.id]: null } });
++                pendingPreKeyDeletions.delete(key);
++            }
++        }
++        if (pendingPreKeyDeletions.size === 0 && preKeyCleanupTimer) {
++            clearInterval(preKeyCleanupTimer);
++            preKeyCleanupTimer = undefined;
++        }
++    }, PREKEY_CLEANUP_INTERVAL_MS);
++    if (preKeyCleanupTimer && typeof preKeyCleanupTimer === 'object' && 'unref' in preKeyCleanupTimer) {
++        preKeyCleanupTimer.unref();
++    }
++}
+ function signalStorage({ creds, keys }, lidMapping) {
+     // Shared function to resolve PN signal address to LID if mapping exists
+     const resolveLIDSignalAddress = async (id) => {
+@@ -397,7 +449,13 @@ function signalStorage({ creds, keys }, lidMapping) {
+                 };
+             }
+         },
+-        removePreKey: (id) => keys.set({ 'pre-key': { [id]: null } }),
++        removePreKey: (id) => {
++            // Delay pre-key deletion so retransmissions using the same
++            // pre-key ID can still decrypt during the grace period.
++            const key = `${id}`;
++            pendingPreKeyDeletions.set(key, { id, expiry: Date.now() + PREKEY_GRACE_PERIOD_MS, keys });
++            ensurePreKeyCleanup();
++        },
+         loadSignedPreKey: () => {
+             const key = creds.signedPreKey;
+             return {

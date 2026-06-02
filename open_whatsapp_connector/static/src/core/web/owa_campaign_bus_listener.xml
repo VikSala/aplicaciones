@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="open_whatsapp_connector.OwaCampaignBusListener">
+        <span class="d-none" aria-hidden="true"/>
+    </t>
+
+</templates>

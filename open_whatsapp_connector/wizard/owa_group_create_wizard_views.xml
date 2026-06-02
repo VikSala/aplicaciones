@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_owa_group_create_wizard_form" model="ir.ui.view">
+    <field name="name">owa.group.create.wizard.form</field>
+    <field name="model">owa.group.create.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Create WhatsApp Group">
+        <sheet>
+          <group>
+            <field name="wa_account_id"/>
+            <field name="subject" placeholder="e.g. Acme Logistics — Drivers"/>
+          </group>
+          <group string="Initial Participants (at least one required)">
+            <field name="partner_ids" widget="many2many_tags"
+                   options="{'no_create': True}"
+                   colspan="2" nolabel="1"/>
+            <field name="raw_phones" colspan="2" nolabel="1"
+                   placeholder="One per line, or comma-separated. Country code first.&#10;e.g. 919999999999&#10;14155552671"/>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_create" type="object" string="Create Group"
+                  class="btn-primary"/>
+          <button special="cancel" string="Cancel" class="btn-secondary"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_owa_group_create_wizard" model="ir.actions.act_window">
+    <field name="name">Create WhatsApp Group</field>
+    <field name="res_model">owa.group.create.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+  </record>
+</odoo>

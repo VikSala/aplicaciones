@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_owa_group_join_wizard_form" model="ir.ui.view">
+    <field name="name">owa.group.join.wizard.form</field>
+    <field name="model">owa.group.join.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Join WhatsApp Group">
+        <sheet>
+          <group>
+            <field name="wa_account_id"/>
+            <field name="invite_input"
+                   placeholder="https://chat.whatsapp.com/AbCdEfGhIjK1234... or just AbCdEfGhIjK1234"
+                   readonly="preview_loaded"/>
+          </group>
+          <group string="Preview" invisible="not preview_loaded">
+            <field name="preview_subject" readonly="1"/>
+            <field name="preview_description" readonly="1"/>
+            <field name="preview_owner" readonly="1"/>
+            <field name="preview_size" readonly="1"/>
+          </group>
+          <field name="preview_loaded" invisible="1"/>
+          <field name="preview_creation_ts" invisible="1"/>
+        </sheet>
+        <footer>
+          <button name="action_preview" type="object" string="Preview"
+                  class="btn-secondary" invisible="preview_loaded"/>
+          <button name="action_join" type="object" string="Join Group"
+                  class="btn-primary" invisible="not preview_loaded"/>
+          <button special="cancel" string="Cancel" class="btn-secondary"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_owa_group_join_wizard" model="ir.actions.act_window">
+    <field name="name">Join WhatsApp Group</field>
+    <field name="res_model">owa.group.join.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+  </record>
+</odoo>
