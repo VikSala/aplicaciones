@@ -224,11 +224,11 @@ def _sanitize_reply_for_customer(reply):
 
     replacements = [
         (r"\s*\(\s*qty_available\s*\)", ""),
-        (r"\s*\(\s*x_stock_nacional\s*\)", ""),
-        (r"\s*\(\s*x_stock_internacional\s*\)", ""),
+        (r"\s*\(\s*x_transit_stock_custom\s*\)", ""),
+        (r"\s*\(\s*x_almacen1_custom\s*\)", ""),
         (r"\s*\[\s*qty_available\s*\]", ""),
-        (r"\s*\[\s*x_stock_nacional\s*\]", ""),
-        (r"\s*\[\s*x_stock_internacional\s*\]", ""),
+        (r"\s*\[\s*x_transit_stock_custom\s*\]", ""),
+        (r"\s*\[\s*x_almacen1_custom\s*\]", ""),
     ]
 
     for pattern, replacement in replacements:
@@ -236,7 +236,7 @@ def _sanitize_reply_for_customer(reply):
 
     # Por si el modelo escribe frases explicativas con nombres internos.
     text = re.sub(
-        r"\s*,?\s*(?:campo|field)\s+(?:t[eé]cnico\s+)?(?:qty_available|x_stock_nacional|x_stock_internacional)",
+        r"\s*,?\s*(?:campo|field)\s+(?:t[eé]cnico\s+)?(?:qty_available|x_transit_stock_custom|x_almacen1_custom)",
         "",
         text,
         flags=re.IGNORECASE,
@@ -3498,7 +3498,7 @@ class OdooAIChatController(http.Controller):
             }
 
         if "internacional" in normalized:
-            self._admin_write_extra_stock_field(product, "x_stock_internacional", quantity)
+            self._admin_write_extra_stock_field(product, "x_almacen1_custom", quantity)
             return {
                 "reply": "Stock internacional actualizado para %s: %s." % (self._short_product_label(product), self._format_quantity(quantity)),
                 "handledLocally": True,
@@ -3510,7 +3510,7 @@ class OdooAIChatController(http.Controller):
                 "clearPendingCart": True,
             }
         if "nacional" in normalized:
-            self._admin_write_extra_stock_field(product, "x_stock_nacional", quantity)
+            self._admin_write_extra_stock_field(product, "x_transit_stock_custom", quantity)
             return {
                 "reply": "Stock nacional actualizado para %s: %s." % (self._short_product_label(product), self._format_quantity(quantity)),
                 "handledLocally": True,
@@ -4475,7 +4475,7 @@ class OdooAIChatController(http.Controller):
 
         if stock_nacional is not None:
             try:
-                self._admin_write_extra_stock_field(product, "x_stock_nacional", stock_nacional)
+                self._admin_write_extra_stock_field(product, "x_transit_stock_custom", stock_nacional)
                 notes.append("Stock nacional: %s." % self._format_quantity(stock_nacional))
             except Exception as error:
                 _logger.exception("Producto creado, pero no se pudo guardar el stock nacional")
@@ -4483,7 +4483,7 @@ class OdooAIChatController(http.Controller):
 
         if stock_internacional is not None:
             try:
-                self._admin_write_extra_stock_field(product, "x_stock_internacional", stock_internacional)
+                self._admin_write_extra_stock_field(product, "x_almacen1_custom", stock_internacional)
                 notes.append("Stock internacional: %s." % self._format_quantity(stock_internacional))
             except Exception as error:
                 _logger.exception("Producto creado, pero no se pudo guardar el stock internacional")
@@ -4617,10 +4617,10 @@ class OdooAIChatController(http.Controller):
                 image_changed = True
                 changed.append("imagen")
             if stock_nacional is not None:
-                self._admin_write_extra_stock_field(product, "x_stock_nacional", stock_nacional)
+                self._admin_write_extra_stock_field(product, "x_transit_stock_custom", stock_nacional)
                 changed.append("stock nacional")
             if stock_internacional is not None:
-                self._admin_write_extra_stock_field(product, "x_stock_internacional", stock_internacional)
+                self._admin_write_extra_stock_field(product, "x_almacen1_custom", stock_internacional)
                 changed.append("stock internacional")
         except Exception as error:
             _logger.exception("Error modificando producto desde la IA")
@@ -5578,7 +5578,7 @@ class OdooAIChatController(http.Controller):
     def _get_field_value(self, record, field_name, default=0.0):
         """Lee un campo personalizado de forma segura.
 
-        En algunas bases los campos x_stock_nacional y x_stock_internacional
+        En algunas bases los campos x_transit_stock_custom y x_almacen1_custom
         están en product.template; en otras pueden estar disponibles también
         desde product.product por herencia delegada. Este método evita errores
         si el campo no existe en uno de los modelos.
@@ -5596,18 +5596,18 @@ class OdooAIChatController(http.Controller):
 
         stock_real se mantiene como product.product.qty_available.
         stock_nacional y stock_internacional se leen de los campos personalizados:
-        - x_stock_nacional
-        - x_stock_internacional
+        - x_transit_stock_custom
+        - x_almacen1_custom
         """
         template = product.product_tmpl_id if getattr(product, "product_tmpl_id", False) else False
 
-        stock_nacional, found_nacional = self._get_field_value(product, "x_stock_nacional")
+        stock_nacional, found_nacional = self._get_field_value(product, "x_transit_stock_custom")
         if not found_nacional and template:
-            stock_nacional, _ = self._get_field_value(template, "x_stock_nacional")
+            stock_nacional, _ = self._get_field_value(template, "x_transit_stock_custom")
 
-        stock_internacional, found_internacional = self._get_field_value(product, "x_stock_internacional")
+        stock_internacional, found_internacional = self._get_field_value(product, "x_almacen1_custom")
         if not found_internacional and template:
-            stock_internacional, _ = self._get_field_value(template, "x_stock_internacional")
+            stock_internacional, _ = self._get_field_value(template, "x_almacen1_custom")
 
         return stock_nacional, stock_internacional
 
@@ -6712,7 +6712,7 @@ Instrucciones:
 - El borrado o archivado de productos está prohibido desde la IA para todos los usuarios; responde que contacte con la empresa.
 - Si Permisos admin IA es no, rechaza cualquier solicitud de creación, modificación o borrado de productos, clientes, cuentas o usuarios.
 - Si hay inventario en este mensaje y preguntas por productos, úsalo exclusivamente.
-- No muestres nombres técnicos de campos como qty_available, x_stock_nacional o x_stock_internacional.
+- No muestres nombres técnicos de campos como qty_available, x_transit_stock_custom o x_almacen1_custom.
 - Si faltan datos, dilo claramente o pide el dato mínimo necesario.
 - Devuelve texto plano o JSON con una clave reply/output/text/answer/message.
 """.strip()
