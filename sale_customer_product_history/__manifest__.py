@@ -30,7 +30,7 @@
     'company': "Cybrosys Techno Solutions",
     'maintainer': 'Cybrosys Techno Solutions',
     'website': "https://www.cybrosys.com",
-    'depends': ['sale_management'],
+    'depends': ['sale','website_sale','sale_management'],
     'data': [
         'security/ir.model.access.csv',
         'wizard/product_sale_order_history_wizard_views.xml',

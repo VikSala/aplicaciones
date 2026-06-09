@@ -52,3 +52,23 @@ class SaleOrderLine(models.Model):
             'target': 'new',
             'res_id': history_id.id
         }
+
+
+    def _get_last_customer_history_price(self, partner, product):
+        if not partner or not product:
+            return False
+
+        orders = self.env['sale.order'].sudo().search([
+            ('partner_id', '=', partner.commercial_partner_id.id),
+            ('state', 'in', ['sale', 'done']),
+            ('order_line.product_id', '=', product.id),
+        ], order='date_order desc, id desc', limit=1)
+
+        if not orders:
+            return False
+
+        line = orders.order_line.filtered(
+            lambda l: l.product_id.id == product.id and l.price_unit > 0
+        )[:1]
+
+        return line.price_unit if line else False
