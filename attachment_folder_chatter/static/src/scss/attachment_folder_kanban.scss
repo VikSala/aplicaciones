@@ -1,0 +1,107 @@
+.o_attachment_folder_kanban {
+    --AttachmentFolder-card-width: 280px;
+
+    .o_kanban_renderer {
+        align-items: flex-start;
+    }
+
+    .o_kanban_record {
+        width: var(--AttachmentFolder-card-width) !important;
+        min-width: var(--AttachmentFolder-card-width) !important;
+        max-width: var(--AttachmentFolder-card-width) !important;
+        margin: 8px !important;
+        padding: 0 !important;
+        border: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .o_attachment_folder_card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        min-height: 94px;
+        padding: 10px;
+        border: 1px solid var(--border-color, #dee2e6);
+        border-radius: 8px;
+        background: var(--o-view-background-color, #fff);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+        transition: border-color .12s ease, box-shadow .12s ease, transform .12s ease;
+    }
+
+    .o_attachment_folder_card:hover {
+        border-color: #b8b2d8;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.10);
+        transform: translateY(-1px);
+    }
+
+    .o_attachment_folder_thumb {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 74px;
+        height: 74px;
+        min-width: 74px;
+        overflow: hidden;
+        border: 1px solid var(--border-color, #dee2e6);
+        border-radius: 6px;
+        background: #f8f9fa;
+    }
+
+    .o_attachment_folder_thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .o_attachment_folder_icon {
+        font-size: 34px;
+    }
+
+    .o_attachment_folder_body {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .o_attachment_folder_name {
+        display: block;
+        color: var(--body-color, #212529);
+        font-weight: 600;
+        line-height: 1.2;
+        margin-bottom: 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .o_attachment_folder_meta {
+        color: #6c757d;
+        font-size: 12px;
+        line-height: 1.25;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .o_attachment_folder_actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 7px;
+    }
+
+    .o_attachment_folder_actions a {
+        color: #6c757d;
+        font-size: 13px;
+        text-decoration: none;
+    }
+
+    .o_attachment_folder_actions a:hover {
+        color: #017e84;
+    }
+}
+
+.o_form_view .o_attachment_folder_kanban {
+    --AttachmentFolder-card-width: 260px;
+}

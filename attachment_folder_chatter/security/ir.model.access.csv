@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_attachment_folder_user,attachment.folder.user,model_attachment_folder,base.group_user,1,1,1,1
+access_attachment_folder_upload_wizard_user,attachment.folder.upload.wizard.user,model_attachment_folder_upload_wizard,base.group_user,1,1,1,1

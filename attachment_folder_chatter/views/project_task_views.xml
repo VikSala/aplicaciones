@@ -1,0 +1,151 @@
+<odoo>
+    <record id="view_task_form_attachment_folders" model="ir.ui.view">
+        <field name="name">project.task.form.attachment.folders</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Carpetas de adjuntos">
+                    <field name="attachment_folder_ids"
+                           context="{'default_project_task_id': id}">
+                        <list>
+                            <field name="sequence" widget="handle"/>
+                            <field name="name"/>
+                            <field name="full_name" readonly="1"/>
+                            <field name="attachment_count" readonly="1" string="Archivos"/>
+                            <button name="action_open_attachments"
+                                    type="object"
+                                    string="Ver archivos"
+                                    class="btn-secondary"/>
+                            <button name="action_open_upload_wizard"
+                                    type="object"
+                                    string="Subir varios"
+                                    class="btn-primary"/>
+                        </list>
+
+                        <form string="Carpeta de adjuntos">
+                            <sheet>
+                                <div class="oe_button_box" name="button_box">
+                                    <button name="action_open_attachments"
+                                            type="object"
+                                            class="oe_stat_button"
+                                            icon="fa-paperclip">
+                                        <field name="attachment_count" widget="statinfo" string="Archivos"/>
+                                    </button>
+                                    <button name="action_open_upload_wizard"
+                                            type="object"
+                                            class="oe_stat_button"
+                                            icon="fa-upload"
+                                            string="Subir varios"/>
+                                </div>
+
+                                <group>
+                                    <group>
+                                        <field name="name"/>
+                                        <field name="project_task_id" invisible="1"/>
+                                        <field name="parent_id"/>
+                                    </group>
+                                    <group>
+                                        <field name="full_name" readonly="1"/>
+                                        <field name="res_model" readonly="1"/>
+                                        <field name="res_id" readonly="1"/>
+                                    </group>
+                                </group>
+
+                                <notebook>
+                                    <page string="Archivos">
+                                        <button name="action_open_upload_wizard"
+                                                type="object"
+                                                string="Subir varios archivos"
+                                                class="btn-primary mb-2"/>
+                                        <field name="attachment_ids"
+                                               mode="kanban,list"
+                                               context="{'default_folder_id': id}">
+                                            <kanban class="o_attachment_folder_kanban" create="true" quick_create="false">
+                                                <field name="id"/>
+                                                <field name="name"/>
+                                                <field name="mimetype"/>
+                                                <field name="file_size"/>
+                                                <templates>
+                                                    <t t-name="card">
+                                                        <div class="o_attachment_folder_card">
+                                                            <a t-attf-href="/web/content/#{record.id.raw_value}?download=false"
+                                                               target="_blank"
+                                                               class="o_attachment_folder_thumb"
+                                                               title="Previsualizar">
+                                                                <t t-if="record.mimetype.raw_value and record.mimetype.raw_value.indexOf('image/') === 0">
+                                                                    <img t-attf-src="/web/image/ir.attachment/#{record.id.raw_value}/datas"
+                                                                         alt="Vista previa"/>
+                                                                </t>
+                                                                <t t-elif="record.mimetype.raw_value == 'application/pdf'">
+                                                                    <i class="fa fa-file-pdf-o o_attachment_folder_icon text-danger"/>
+                                                                </t>
+                                                                <t t-elif="record.mimetype.raw_value and record.mimetype.raw_value.indexOf('video/') === 0">
+                                                                    <i class="fa fa-file-video-o o_attachment_folder_icon text-primary"/>
+                                                                </t>
+                                                                <t t-else="">
+                                                                    <i class="fa fa-file-o o_attachment_folder_icon text-muted"/>
+                                                                </t>
+                                                            </a>
+                                                            <div class="o_attachment_folder_body">
+                                                                <a t-attf-href="/web/content/#{record.id.raw_value}?download=false"
+                                                                   target="_blank"
+                                                                   class="o_attachment_folder_name"
+                                                                   title="Previsualizar">
+                                                                    <field name="name"/>
+                                                                </a>
+                                                                <div class="o_attachment_folder_meta"><field name="mimetype"/></div>
+                                                                <div class="o_attachment_folder_meta"><field name="file_size" widget="integer"/> bytes</div>
+                                                                <div class="o_attachment_folder_actions">
+                                                                    <a t-attf-href="/web/content/#{record.id.raw_value}?download=false" target="_blank">
+                                                                        <i class="fa fa-eye"/> Ver
+                                                                    </a>
+                                                                    <a t-attf-href="/web/content/#{record.id.raw_value}?download=true">
+                                                                        <i class="fa fa-download"/> Descargar
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </t>
+                                                </templates>
+                                            </kanban>
+                                            <list editable="bottom">
+                                                <field name="name"/>
+                                                <field name="datas" filename="name"/>
+                                                <field name="mimetype" readonly="1"/>
+                                                <field name="create_date" readonly="1"/>
+                                            </list>
+                                            <form>
+                                                <sheet>
+                                                    <group>
+                                                        <field name="name"/>
+                                                        <field name="datas" filename="name"/>
+                                                        <field name="folder_id" readonly="1"/>
+                                                        <field name="res_model" readonly="1"/>
+                                                        <field name="res_id" readonly="1"/>
+                                                        <field name="mimetype" readonly="1"/>
+                                                    </group>
+                                                </sheet>
+                                            </form>
+                                        </field>
+                                    </page>
+
+                                    <page string="Subcarpetas">
+                                        <field name="child_ids"
+                                               context="{'default_parent_id': id, 'default_project_task_id': project_task_id}">
+                                            <list editable="bottom">
+                                                <field name="sequence" widget="handle"/>
+                                                <field name="name"/>
+                                                <field name="attachment_count" readonly="1"/>
+                                            </list>
+                                        </field>
+                                    </page>
+                                </notebook>
+                            </sheet>
+                        </form>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
