@@ -1,0 +1,510 @@
+<odoo>
+    <!--
+        v3.6
+        Los sliders se crean SIEMPRE desde website.layout, usando un bloque de datos oculto.
+        No dependen de website_sale.products_attributes ni del listado de productos.
+    -->
+    <template id="wcf_range_filters_runtime" inherit_id="website.layout" priority="1000">
+        <xpath expr="//head" position="inside">
+            <style>
+                #wcf_runtime_range_filters {
+                    display: block !important;
+                    width: 100% !important;
+                    background: transparent !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    overflow: visible !important;
+                }
+                #wcf_runtime_range_filters .accordion-item.wcf-range-filter {
+                    background: transparent !important;
+                    border: 0 !important;
+                    border-bottom: 1px solid rgba(0, 0, 0, .125) !important;
+                    border-radius: 0 !important;
+                    box-shadow: none !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    overflow: visible !important;
+                }
+                #wcf_runtime_range_filters .accordion-header {
+                    margin: 0 !important;
+                }
+                #wcf_runtime_range_filters .accordion-button {
+                    width: 100% !important;
+                    color: inherit !important;
+                    font-size: inherit !important;
+                    font-weight: inherit !important;
+                    line-height: 1.5 !important;
+                    border: 0 !important;
+                    border-radius: 0 !important;
+                    padding-top: .75rem !important;
+                    padding-bottom: .75rem !important;
+                }
+                #wcf_runtime_range_filters .accordion-button:not(.collapsed) {
+                    color: inherit !important;
+                    background-color: transparent !important;
+                    box-shadow: none !important;
+                }
+                #wcf_runtime_range_filters .accordion-button:focus {
+                    border-color: transparent !important;
+                    box-shadow: none !important;
+                }
+                #wcf_runtime_range_filters .accordion-collapse {
+                    overflow: hidden !important;
+                }
+                #wcf_runtime_range_filters .accordion-collapse.show {
+                    overflow: visible !important;
+                }
+                #wcf_runtime_range_filters .accordion-collapse.collapsing {
+                    overflow: hidden !important;
+                    transition: height .35s ease !important;
+                }
+                #wcf_runtime_range_filters .wcf-range-body {
+                    display: block !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                    min-height: 76px !important;
+                    overflow: visible !important;
+                    margin: 0 !important;
+                    padding: .25rem 0 1.75rem 0 !important;
+                }
+                #wcf_runtime_range_filters .wcf-range-wrapper {
+                    position: relative !important;
+                    margin-bottom: 1rem !important;
+                    overflow: visible !important;
+                }
+                #wcf_runtime_range_filters input.wcf-range-slider {
+                    display: block !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                    width: 100% !important;
+                    height: 1.5rem !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    pointer-events: auto !important;
+                }
+                #wcf_runtime_range_filters .wcf-range-values {
+                    display: flex !important;
+                    justify-content: space-between !important;
+                    align-items: center !important;
+                    gap: .5rem !important;
+                    margin-top: .45rem !important;
+                    font-size: .875rem !important;
+                    color: rgba(33, 37, 41, .75) !important;
+                }
+                #wcf_runtime_range_filters .wcf-range-current {
+                    font-weight: 700 !important;
+                    color: inherit !important;
+                }
+                .wcf-native-range-hidden {
+                    display: none !important;
+                }
+                /*
+                    Evita el parpadeo/línea del atributo nativo duplicado durante la carga.
+                    Antes de que arranque el JS, el CSS oculta cualquier bloque nativo de Odoo
+                    que contenga inputs/selects attrib pertenecientes a atributos display_type='range'.
+                    No afecta al filtro nativo "Rango de precio", porque ese bloque no usa name="attrib".
+                */
+                <t t-if="request and request.httprequest and request.httprequest.path.startswith('/shop')">
+                    <t t-foreach="request.env['product.attribute'].sudo().search([('display_type', '=', 'range')])" t-as="wcf_attr">
+                        <t t-set="wcf_prefix" t-value="str(wcf_attr.id) + '-'"/>
+                        #products_grid_before .accordion-item:has([name="attrib"][value^="<t t-esc="wcf_prefix"/>"]),
+                        #products_grid_before .accordion-item:has(select[name="attrib"] option[value^="<t t-esc="wcf_prefix"/>"]),
+                        .o_wsale_products_grid_before .accordion-item:has([name="attrib"][value^="<t t-esc="wcf_prefix"/>"]),
+                        .o_wsale_products_grid_before .accordion-item:has(select[name="attrib"] option[value^="<t t-esc="wcf_prefix"/>"]),
+                        form.js_attributes .accordion-item:has([name="attrib"][value^="<t t-esc="wcf_prefix"/>"]),
+                        form.js_attributes .accordion-item:has(select[name="attrib"] option[value^="<t t-esc="wcf_prefix"/>"]),
+                        form.js_attributes .o_wsale_attribute:has([name="attrib"][value^="<t t-esc="wcf_prefix"/>"]),
+                        form.js_attributes .o_wsale_attribute:has(select[name="attrib"] option[value^="<t t-esc="wcf_prefix"/>"]),
+                        form.js_attributes .css_attribute_select:has([name="attrib"][value^="<t t-esc="wcf_prefix"/>"]),
+                        form.js_attributes .css_attribute_select:has(select[name="attrib"] option[value^="<t t-esc="wcf_prefix"/>"]),
+                        form.js_attributes .js_attribute:has([name="attrib"][value^="<t t-esc="wcf_prefix"/>"]),
+                        form.js_attributes .js_attribute:has(select[name="attrib"] option[value^="<t t-esc="wcf_prefix"/>"]) {
+                            display: none !important;
+                        }
+                    </t>
+                </t>
+                #wcf_range_filters_data {
+                    display: none !important;
+                }
+            </style>
+        </xpath>
+
+        <xpath expr="//body" position="inside">
+            <t t-if="request and request.httprequest and request.httprequest.path.startswith('/shop')">
+                <div id="wcf_range_filters_data" aria-hidden="true">
+                    <t t-foreach="request.env['product.attribute'].sudo().search([('display_type', '=', 'range')], order='sequence, id')" t-as="a">
+                        <div class="wcf-range-source"
+                             t-att-data-id="a.id"
+                             t-att-data-name="a.name"
+                             t-att-data-min="a.range_min"
+                             t-att-data-max="a.range_max"/>
+                    </t>
+                </div>
+            </t>
+
+            <script type="text/javascript"><![CDATA[
+                (function () {
+                    function isShopPage() {
+                        return window.location.pathname === '/shop' || window.location.pathname.indexOf('/shop/') === 0;
+                    }
+
+                    function normalizeText(value) {
+                        return (value || '')
+                            .replace(/[\n\t]+/g, ' ')
+                            .replace(/[⌄⌃˅˄›‹⌵^v∨∧]/g, '')
+                            .replace(/\s+/g, ' ')
+                            .trim()
+                            .toLowerCase();
+                    }
+
+                    function toNumber(value, fallbackValue) {
+                        var text = String(value === undefined || value === null ? '' : value).replace(',', '.');
+                        var number = parseFloat(text);
+                        return Number.isFinite(number) ? number : fallbackValue;
+                    }
+
+                    function formatNumber(value) {
+                        var number = toNumber(value, null);
+                        if (number === null) return String(value || '0');
+                        return Number.isInteger(number) ? String(number) : String(number).replace('.', ',');
+                    }
+
+                    function findTextNode(text) {
+                        var wanted = normalizeText(text);
+                        var candidates = document.querySelectorAll('h1,h2,h3,h4,h5,h6,strong,b,label,button,span,div');
+                        for (var i = 0; i < candidates.length; i++) {
+                            var node = candidates[i];
+                            if (node.closest('#wcf_runtime_range_filters') || node.closest('#wcf_range_filters_data')) continue;
+                            if (normalizeText(node.textContent) === wanted) return node;
+                        }
+                        return null;
+                    }
+
+                    function findPriceBlock() {
+                        var title = findTextNode('Rango de precio');
+                        if (!title) return null;
+
+                        var current = title;
+                        for (var i = 0; i < 8 && current; i++) {
+                            if (current.querySelector && current.querySelector('input[type="range"]')) return current;
+                            current = current.parentElement;
+                        }
+                        return title.parentElement || title;
+                    }
+
+                    function getSources() {
+                        return Array.prototype.slice.call(document.querySelectorAll('#wcf_range_filters_data .wcf-range-source')).map(function (node) {
+                            return {
+                                id: node.dataset.id,
+                                name: node.dataset.name || '',
+                                min: toNumber(node.dataset.min, 0),
+                                max: toNumber(node.dataset.max, 100)
+                            };
+                        }).filter(function (item) {
+                            return item.id && item.name;
+                        });
+                    }
+
+                    function syncAccordionState(block, open) {
+                        // Bootstrap/Odoo debe ser el único responsable de alternar
+                        // .show, .collapsed y aria-expanded. Aquí solo guardamos
+                        // una clase auxiliar propia para estilos/estado interno.
+                        block.classList.toggle('wcf-open', !!open);
+                    }
+
+                    function buildBlock(item, params) {
+                        var paramName = 'range_max_' + item.id;
+                        var hasParam = params.has(paramName);
+                        var value = hasParam ? toNumber(params.get(paramName), item.max) : item.max;
+                        if (value < item.min) value = item.min;
+                        if (value > item.max) value = item.max;
+
+                        var isOpen = hasParam && value < item.max;
+                        var collapseId = 'wcf_range_filter_inner_' + item.id;
+
+                        var block = document.createElement('div');
+                        block.className = 'accordion-item wcf-range-filter' + (isOpen ? ' wcf-open' : '');
+                        block.dataset.wcfAttributeId = item.id;
+                        block.dataset.wcfAttributeName = item.name;
+
+                        var header = document.createElement('h6');
+                        header.className = 'accordion-header';
+
+                        var button = document.createElement('button');
+                        button.type = 'button';
+                        button.className = 'accordion-button px-0 bg-transparent shadow-none' + (isOpen ? '' : ' collapsed');
+                        button.setAttribute('data-bs-toggle', 'collapse');
+                        button.setAttribute('data-bs-target', '#' + collapseId);
+                        button.setAttribute('aria-controls', collapseId);
+                        button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+                        var title = document.createElement('b');
+                        title.textContent = item.name;
+                        button.appendChild(title);
+                        header.appendChild(button);
+
+                        var collapse = document.createElement('div');
+                        collapse.id = collapseId;
+                        collapse.className = 'accordion-collapse collapse' + (isOpen ? ' show' : '');
+
+                        var body = document.createElement('div');
+                        body.className = 'wcf-range-body';
+
+                        var wrapper = document.createElement('div');
+                        wrapper.className = 'wcf-range-wrapper position-relative visible';
+
+                        var input = document.createElement('input');
+                        input.type = 'range';
+                        input.className = 'form-range range-with-input wcf-range-slider d-inline-block p-0 align-top';
+                        input.name = paramName;
+                        input.min = String(item.min);
+                        input.max = String(item.max);
+                        input.step = '1';
+                        input.value = String(value);
+
+                        var values = document.createElement('small');
+                        values.className = 'wcf-range-values d-flex justify-content-between mt-2';
+                        values.innerHTML = '<span class="opacity-75 opacity-100-hover mt-1">' + formatNumber(item.min) + '</span>' +
+                            '<span class="wcf-range-current opacity-75 opacity-100-hover mt-1"><span>' + formatNumber(value) + '</span></span>' +
+                            '<span class="opacity-75 opacity-100-hover mt-1">' + formatNumber(item.max) + '</span>';
+
+                        wrapper.appendChild(input);
+                        wrapper.appendChild(values);
+                        body.appendChild(wrapper);
+                        collapse.appendChild(body);
+                        block.appendChild(header);
+                        block.appendChild(collapse);
+
+                        collapse.addEventListener('shown.bs.collapse', function () {
+                            syncAccordionState(block, true);
+                        });
+                        collapse.addEventListener('hidden.bs.collapse', function () {
+                            syncAccordionState(block, false);
+                        });
+
+                        input.addEventListener('input', function () {
+                            var output = block.querySelector('.wcf-range-current span');
+                            if (output) output.textContent = formatNumber(this.value);
+                        });
+
+                        input.addEventListener('change', function () {
+                            var nextParams = new URLSearchParams(window.location.search);
+                            nextParams.set(this.name, this.value);
+                            if (!nextParams.has('search')) nextParams.set('search', '');
+                            if (!nextParams.has('order')) nextParams.set('order', '');
+                            window.location.href = window.location.pathname + '?' + nextParams.toString();
+                        });
+
+                        syncAccordionState(block, isOpen);
+                        return block;
+                    }
+
+                    function getNativeAttributeBlock(node) {
+                        if (!node || !node.closest) return null;
+                        if (node.closest('#wcf_runtime_range_filters') || node.closest('#wcf_range_filters_data')) return null;
+                        if (node.closest('#o_wsale_price_range_option_inner')) return null;
+
+                        var block = node.closest(
+                            '.accordion-item, .o_wsale_attribute, .css_attribute_select, .js_attribute, .mb-3, .border-bottom'
+                        );
+                        if (block && !block.closest('#wcf_runtime_range_filters')) return block;
+
+                        var current = node.parentElement;
+                        for (var i = 0; i < 6 && current; i++) {
+                            if (current.id === 'wcf_runtime_range_filters' || current.id === 'wcf_range_filters_data') return null;
+                            if (current.querySelector && current.querySelector('[name="attrib"]')) return current;
+                            current = current.parentElement;
+                        }
+                        return null;
+                    }
+
+                    function hideBlock(block) {
+                        if (!block) return;
+                        if (block.id === 'wcf_runtime_range_filters' || block.id === 'wcf_range_filters_data') return;
+                        if (block.closest('#wcf_runtime_range_filters') || block.closest('#wcf_range_filters_data')) return;
+                        if (block.querySelector && block.querySelector('#o_wsale_price_range_option_inner')) return;
+
+                        // Doble seguridad: clase CSS + estilo inline con prioridad.
+                        // Esto evita que otro JS del tema/Odoo vuelva a dejar visible el header nativo.
+                        block.classList.add('wcf-native-range-hidden');
+                        block.setAttribute('data-wcf-native-range-hidden', '1');
+                        if (block.style && block.style.setProperty) {
+                            block.style.setProperty('display', 'none', 'important');
+                        }
+                    }
+
+                    function getDirectTitleText(block) {
+                        if (!block || !block.querySelector) return '';
+                        var titleNode = block.querySelector('.accordion-header .accordion-button b, .accordion-header .accordion-button strong, .accordion-header .accordion-button, h6 b, h6 strong, h6');
+                        return normalizeText(titleNode ? titleNode.textContent : '');
+                    }
+
+                    function looksLikeNativePriceRange(block) {
+                        if (!block || !block.querySelector) return false;
+                        if (block.querySelector('#o_wsale_price_range_option_inner')) return true;
+                        if (block.id === 'o_wsale_price_range_option_inner') return true;
+                        return getDirectTitleText(block) === normalizeText('Rango de precio');
+                    }
+
+                    function findClosestNativeFilterBlockFromTitleNode(node) {
+                        if (!node || !node.closest) return null;
+                        if (node.closest('#wcf_runtime_range_filters') || node.closest('#wcf_range_filters_data')) return null;
+
+                        var accordionItem = node.closest('.accordion-item');
+                        if (accordionItem) return accordionItem;
+
+                        var current = node;
+                        for (var i = 0; i < 8 && current; i++) {
+                            if (current.id === 'wcf_runtime_range_filters' || current.id === 'wcf_range_filters_data') return null;
+                            if (current.classList && (
+                                current.classList.contains('o_wsale_attribute') ||
+                                current.classList.contains('css_attribute_select') ||
+                                current.classList.contains('js_attribute') ||
+                                current.classList.contains('border-bottom')
+                            )) return current;
+                            current = current.parentElement;
+                        }
+                        return null;
+                    }
+
+                    function collectNativeRangeAttributeBlocks(sources) {
+                        var found = [];
+
+                        function add(block) {
+                            if (!block || !block.querySelector) return;
+                            if (block.id === 'wcf_runtime_range_filters' || block.id === 'wcf_range_filters_data') return;
+                            if (block.closest('#wcf_runtime_range_filters') || block.closest('#wcf_range_filters_data')) return;
+                            if (block.querySelector('.wcf-range-slider')) return;
+                            if (looksLikeNativePriceRange(block)) return;
+                            if (found.indexOf(block) === -1) found.push(block);
+                        }
+
+                        if (!sources.length) return found;
+
+                        sources.forEach(function (item) {
+                            var prefix = String(item.id) + '-';
+                            var wantedName = normalizeText(item.name);
+
+                            // 1) Método principal: buscar campos nativos name="attrib" cuyo value pertenece
+                            // al atributo range real. Es lo más fiable cuando Odoo mantiene inputs/selects.
+                            Array.prototype.slice.call(document.querySelectorAll('[name="attrib"]')).forEach(function (field) {
+                                var values = [];
+                                if (field.tagName && field.tagName.toLowerCase() === 'select') {
+                                    values = Array.prototype.slice.call(field.options || []).map(function (option) {
+                                        return option.value || '';
+                                    });
+                                } else {
+                                    values = [field.value || ''];
+                                }
+                                var belongsToRangeAttribute = values.some(function (value) {
+                                    return String(value).indexOf(prefix) === 0;
+                                });
+                                if (belongsToRangeAttribute) add(getNativeAttributeBlock(field));
+                            });
+
+                            // 2) Fallback por bloque: cuando el tema/Odoo deja visible solo el acordeón
+                            // del atributo, localizarlo por el título exacto del atributo range.
+                            Array.prototype.slice.call(document.querySelectorAll('.accordion-item, .o_wsale_attribute, .css_attribute_select, .js_attribute, .mb-3, .border-bottom')).forEach(function (block) {
+                                if (!block || !block.querySelector) return;
+                                if (getDirectTitleText(block) === wantedName) add(block);
+                            });
+
+                            // 3) Fallback fuerte por nodo de texto: elimina el caso donde queda únicamente
+                            // el header nativo "Precio" aunque el body/input haya sido alterado por JS.
+                            Array.prototype.slice.call(document.querySelectorAll('h1,h2,h3,h4,h5,h6,button,b,strong,label,span')).forEach(function (node) {
+                                if (!node || !node.closest) return;
+                                if (node.closest('#wcf_runtime_range_filters') || node.closest('#wcf_range_filters_data')) return;
+                                if (normalizeText(node.textContent) !== wantedName) return;
+                                add(findClosestNativeFilterBlockFromTitleNode(node));
+                            });
+                        });
+
+                        found.sort(function (a, b) {
+                            if (a === b) return 0;
+                            return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+                        });
+                        return found;
+                    }
+
+                    function hideNativeRangeAttributeBlocks(sources, knownBlocks) {
+                        var blocks = knownBlocks || collectNativeRangeAttributeBlocks(sources);
+                        blocks.forEach(hideBlock);
+                        return blocks;
+                    }
+
+                    function renderRuntimeFilters() {
+                        if (!isShopPage()) return;
+                        var sources = getSources();
+                        if (!sources.length) return;
+
+                        var params = new URLSearchParams(window.location.search);
+
+                        // Localizamos el/los bloques nativos ANTES de insertar el slider propio.
+                        // Así podemos poner el slider exactamente donde estaba el atributo nativo
+                        // y después ocultar el nativo sin depender del orden de carga del JS de Odoo.
+                        var nativeBlocks = collectNativeRangeAttributeBlocks(sources);
+                        var firstNativeBlock = nativeBlocks.length ? nativeBlocks[0] : null;
+                        var priceBlock = findPriceBlock();
+
+                        var existing = document.getElementById('wcf_runtime_range_filters');
+                        if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+
+                        var wrapper = document.createElement('div');
+                        wrapper.id = 'wcf_runtime_range_filters';
+                        sources.forEach(function (item) {
+                            wrapper.appendChild(buildBlock(item, params));
+                        });
+
+                        if (firstNativeBlock && firstNativeBlock.parentNode) {
+                            firstNativeBlock.parentNode.insertBefore(wrapper, firstNativeBlock);
+                        } else if (priceBlock && priceBlock.parentNode) {
+                            priceBlock.parentNode.insertBefore(wrapper, priceBlock);
+                        } else {
+                            var fallback = document.querySelector('form.js_attributes') || document.querySelector('#products_grid_before') || document.querySelector('.o_wsale_products_grid_before');
+                            if (fallback) fallback.insertBefore(wrapper, fallback.firstChild);
+                        }
+
+                        hideNativeRangeAttributeBlocks(sources, nativeBlocks);
+                    }
+
+                    function refreshOnlyNativeHiding() {
+                        if (!isShopPage()) return;
+                        var sources = getSources();
+                        if (!sources.length) return;
+                        if (!document.getElementById('wcf_runtime_range_filters')) {
+                            renderRuntimeFilters();
+                        } else {
+                            hideNativeRangeAttributeBlocks(sources);
+                        }
+                    }
+
+                    function setupMutationObserver() {
+                        if (!window.MutationObserver) return;
+                        var target = document.querySelector('form.js_attributes') || document.querySelector('#products_grid_before') || document.querySelector('.o_wsale_products_grid_before') || document.body;
+                        if (!target) return;
+
+                        var timer = null;
+                        var observer = new MutationObserver(function () {
+                            window.clearTimeout(timer);
+                            timer = window.setTimeout(refreshOnlyNativeHiding, 80);
+                        });
+                        observer.observe(target, { childList: true, subtree: true });
+                    }
+
+                    document.addEventListener('DOMContentLoaded', function () {
+                        renderRuntimeFilters();
+                        setupMutationObserver();
+                    });
+                    window.addEventListener('load', function () {
+                        renderRuntimeFilters();
+                        refreshOnlyNativeHiding();
+                    });
+                    window.setTimeout(renderRuntimeFilters, 100);
+                    window.setTimeout(refreshOnlyNativeHiding, 500);
+                    window.setTimeout(refreshOnlyNativeHiding, 1200);
+                    window.setTimeout(refreshOnlyNativeHiding, 2500);
+                })();
+            ]]></script>
+        </xpath>
+    </template>
+</odoo>
