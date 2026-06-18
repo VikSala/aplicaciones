@@ -1,6 +1,6 @@
 <odoo>
     <!--
-        v3.6
+        v3.8
         Los sliders se crean SIEMPRE desde website.layout, usando un bloque de datos oculto.
         No dependen de website_sale.products_attributes ni del listado de productos.
     -->
@@ -72,15 +72,68 @@
                     margin-bottom: 1rem !important;
                     overflow: visible !important;
                 }
+                #wcf_runtime_range_filters .wcf-range-track {
+                    position: absolute !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    top: .76rem !important;
+                    height: .16rem !important;
+                    border-radius: 999px !important;
+                    background: rgba(33, 37, 41, .18) !important;
+                    pointer-events: none !important;
+                }
+                #wcf_runtime_range_filters .wcf-range-fill {
+                    position: absolute !important;
+                    top: .76rem !important;
+                    height: .16rem !important;
+                    border-radius: 999px !important;
+                    background: #23c979 !important;
+                    pointer-events: none !important;
+                }
                 #wcf_runtime_range_filters input.wcf-range-slider {
+                    position: absolute !important;
+                    left: 0 !important;
+                    top: 0 !important;
                     display: block !important;
                     visibility: visible !important;
                     opacity: 1 !important;
                     width: 100% !important;
-                    height: 1.5rem !important;
+                    height: 1.55rem !important;
                     margin: 0 !important;
                     padding: 0 !important;
+                    pointer-events: none !important;
+                    background: transparent !important;
+                }
+                #wcf_runtime_range_filters input.wcf-range-slider::-webkit-slider-runnable-track {
+                    height: .16rem !important;
+                    background: transparent !important;
+                    border: 0 !important;
+                    box-shadow: none !important;
+                }
+                #wcf_runtime_range_filters input.wcf-range-slider::-moz-range-track {
+                    height: .16rem !important;
+                    background: transparent !important;
+                    border: 0 !important;
+                    box-shadow: none !important;
+                }
+                #wcf_runtime_range_filters input.wcf-range-slider::-webkit-slider-thumb {
                     pointer-events: auto !important;
+                    cursor: pointer !important;
+                }
+                #wcf_runtime_range_filters input.wcf-range-slider::-moz-range-thumb {
+                    pointer-events: auto !important;
+                    cursor: pointer !important;
+                }
+                #wcf_runtime_range_filters input.wcf-range-min {
+                    z-index: 4 !important;
+                }
+                #wcf_runtime_range_filters input.wcf-range-max {
+                    z-index: 5 !important;
+                }
+                #wcf_runtime_range_filters .wcf-range-slider-space {
+                    position: relative !important;
+                    height: 1.55rem !important;
+                    margin: 0 !important;
                 }
                 #wcf_runtime_range_filters .wcf-range-values {
                     display: flex !important;
@@ -213,13 +266,24 @@
                     }
 
                     function buildBlock(item, params) {
-                        var paramName = 'range_max_' + item.id;
-                        var hasParam = params.has(paramName);
-                        var value = hasParam ? toNumber(params.get(paramName), item.max) : item.max;
-                        if (value < item.min) value = item.min;
-                        if (value > item.max) value = item.max;
+                        var minParamName = 'range_min_' + item.id;
+                        var maxParamName = 'range_max_' + item.id;
+                        var hasMinParam = params.has(minParamName);
+                        var hasMaxParam = params.has(maxParamName);
+                        var currentMin = hasMinParam ? toNumber(params.get(minParamName), item.min) : item.min;
+                        var currentMax = hasMaxParam ? toNumber(params.get(maxParamName), item.max) : item.max;
 
-                        var isOpen = hasParam && value < item.max;
+                        if (currentMin < item.min) currentMin = item.min;
+                        if (currentMin > item.max) currentMin = item.max;
+                        if (currentMax < item.min) currentMax = item.min;
+                        if (currentMax > item.max) currentMax = item.max;
+                        if (currentMin > currentMax) {
+                            var tmp = currentMin;
+                            currentMin = currentMax;
+                            currentMax = tmp;
+                        }
+
+                        var isOpen = (currentMin > item.min) || (currentMax < item.max);
                         var collapseId = 'wcf_range_filter_inner_' + item.id;
 
                         var block = document.createElement('div');
@@ -253,22 +317,109 @@
                         var wrapper = document.createElement('div');
                         wrapper.className = 'wcf-range-wrapper position-relative visible';
 
-                        var input = document.createElement('input');
-                        input.type = 'range';
-                        input.className = 'form-range range-with-input wcf-range-slider d-inline-block p-0 align-top';
-                        input.name = paramName;
-                        input.min = String(item.min);
-                        input.max = String(item.max);
-                        input.step = '1';
-                        input.value = String(value);
+                        var sliderSpace = document.createElement('div');
+                        sliderSpace.className = 'wcf-range-slider-space';
+
+                        var track = document.createElement('span');
+                        track.className = 'wcf-range-track';
+
+                        var fill = document.createElement('span');
+                        fill.className = 'wcf-range-fill';
+
+                        var minInput = document.createElement('input');
+                        minInput.type = 'range';
+                        minInput.className = 'form-range range-with-input wcf-range-slider wcf-range-min d-inline-block p-0 align-top';
+                        minInput.name = minParamName;
+                        minInput.min = String(item.min);
+                        minInput.max = String(item.max);
+                        minInput.step = '1';
+                        minInput.value = String(currentMin);
+                        minInput.setAttribute('aria-label', item.name + ' mínimo');
+
+                        var maxInput = document.createElement('input');
+                        maxInput.type = 'range';
+                        maxInput.className = 'form-range range-with-input wcf-range-slider wcf-range-max d-inline-block p-0 align-top';
+                        maxInput.name = maxParamName;
+                        maxInput.min = String(item.min);
+                        maxInput.max = String(item.max);
+                        maxInput.step = '1';
+                        maxInput.value = String(currentMax);
+                        maxInput.setAttribute('aria-label', item.name + ' máximo');
 
                         var values = document.createElement('small');
                         values.className = 'wcf-range-values d-flex justify-content-between mt-2';
                         values.innerHTML = '<span class="opacity-75 opacity-100-hover mt-1">' + formatNumber(item.min) + '</span>' +
-                            '<span class="wcf-range-current opacity-75 opacity-100-hover mt-1"><span>' + formatNumber(value) + '</span></span>' +
+                            '<span class="wcf-range-current opacity-75 opacity-100-hover mt-1"><span class="wcf-range-current-min">' + formatNumber(currentMin) + '</span> - <span class="wcf-range-current-max">' + formatNumber(currentMax) + '</span></span>' +
                             '<span class="opacity-75 opacity-100-hover mt-1">' + formatNumber(item.max) + '</span>';
 
-                        wrapper.appendChild(input);
+                        function percent(value) {
+                            var total = item.max - item.min;
+                            if (!total) return 0;
+                            return ((value - item.min) / total) * 100;
+                        }
+
+                        function updateRangeUI(activeInput) {
+                            var minValue = toNumber(minInput.value, item.min);
+                            var maxValue = toNumber(maxInput.value, item.max);
+
+                            if (minValue > maxValue) {
+                                if (activeInput === minInput) {
+                                    maxValue = minValue;
+                                    maxInput.value = String(maxValue);
+                                } else {
+                                    minValue = maxValue;
+                                    minInput.value = String(minValue);
+                                }
+                            }
+
+                            var minOutput = block.querySelector('.wcf-range-current-min');
+                            var maxOutput = block.querySelector('.wcf-range-current-max');
+                            if (minOutput) minOutput.textContent = formatNumber(minValue);
+                            if (maxOutput) maxOutput.textContent = formatNumber(maxValue);
+
+                            var left = percent(minValue);
+                            var right = 100 - percent(maxValue);
+                            fill.style.left = left + '%';
+                            fill.style.right = right + '%';
+
+                            // Cuando los dos iconos se juntan, se prioriza el que se está moviendo.
+                            minInput.style.zIndex = activeInput === minInput ? '6' : '4';
+                            maxInput.style.zIndex = activeInput === maxInput ? '6' : '5';
+                        }
+
+                        function applyRange() {
+                            var nextParams = new URLSearchParams(window.location.search);
+                            var minValue = toNumber(minInput.value, item.min);
+                            var maxValue = toNumber(maxInput.value, item.max);
+
+                            if (minValue > maxValue) {
+                                var tmp = minValue;
+                                minValue = maxValue;
+                                maxValue = tmp;
+                            }
+
+                            if (minValue <= item.min) {
+                                nextParams.delete(minParamName);
+                            } else {
+                                nextParams.set(minParamName, String(minValue));
+                            }
+
+                            if (maxValue >= item.max) {
+                                nextParams.delete(maxParamName);
+                            } else {
+                                nextParams.set(maxParamName, String(maxValue));
+                            }
+
+                            if (!nextParams.has('search')) nextParams.set('search', '');
+                            if (!nextParams.has('order')) nextParams.set('order', '');
+                            window.location.href = window.location.pathname + '?' + nextParams.toString();
+                        }
+
+                        sliderSpace.appendChild(track);
+                        sliderSpace.appendChild(fill);
+                        sliderSpace.appendChild(minInput);
+                        sliderSpace.appendChild(maxInput);
+                        wrapper.appendChild(sliderSpace);
                         wrapper.appendChild(values);
                         body.appendChild(wrapper);
                         collapse.appendChild(body);
@@ -282,19 +433,12 @@
                             syncAccordionState(block, false);
                         });
 
-                        input.addEventListener('input', function () {
-                            var output = block.querySelector('.wcf-range-current span');
-                            if (output) output.textContent = formatNumber(this.value);
-                        });
+                        minInput.addEventListener('input', function () { updateRangeUI(minInput); });
+                        maxInput.addEventListener('input', function () { updateRangeUI(maxInput); });
+                        minInput.addEventListener('change', applyRange);
+                        maxInput.addEventListener('change', applyRange);
 
-                        input.addEventListener('change', function () {
-                            var nextParams = new URLSearchParams(window.location.search);
-                            nextParams.set(this.name, this.value);
-                            if (!nextParams.has('search')) nextParams.set('search', '');
-                            if (!nextParams.has('order')) nextParams.set('order', '');
-                            window.location.href = window.location.pathname + '?' + nextParams.toString();
-                        });
-
+                        updateRangeUI(null);
                         syncAccordionState(block, isOpen);
                         return block;
                     }

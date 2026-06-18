@@ -24,33 +24,58 @@ class WebsiteSaleRange(WebsiteSale):
             return None
 
     def _get_active_range_filters(self):
-        """Lee de la URL los filtros range_max_ID que realmente limitan resultados."""
+        """Lee de la URL los filtros range_min_ID/range_max_ID que realmente limitan resultados."""
         active_filters = []
+        range_values = {}
+
         for param, value in (request.params or {}).items():
-            if not param.startswith('range_max_') or value in (None, ''):
+            if value in (None, ''):
                 continue
+            is_min = param.startswith('range_min_')
+            is_max = param.startswith('range_max_')
+            if not is_min and not is_max:
+                continue
+
             try:
-                attr_id = int(param.replace('range_max_', '', 1))
+                attr_id = int(param.replace('range_min_' if is_min else 'range_max_', '', 1))
             except (TypeError, ValueError):
                 continue
 
-            current_max = self._range_to_float(value)
-            if current_max is None:
+            number = self._range_to_float(value)
+            if number is None:
                 continue
 
+            range_values.setdefault(attr_id, {})['min' if is_min else 'max'] = number
+
+        for attr_id, values in range_values.items():
             attribute = request.env['product.attribute'].sudo().browse(attr_id).exists()
             if not attribute or attribute.display_type != 'range':
                 continue
 
+            configured_min = self._range_to_float(attribute.range_min)
             configured_max = self._range_to_float(attribute.range_max)
-            if configured_max is not None and current_max >= configured_max:
+            current_min = values.get('min', configured_min)
+            current_max = values.get('max', configured_max)
+
+            if current_min is None and current_max is None:
+                continue
+            if configured_min is not None and current_min is not None and current_min < configured_min:
+                current_min = configured_min
+            if configured_max is not None and current_max is not None and current_max > configured_max:
+                current_max = configured_max
+            if current_min is not None and current_max is not None and current_min > current_max:
+                current_min, current_max = current_max, current_min
+
+            min_is_default = configured_min is None or current_min is None or current_min <= configured_min
+            max_is_default = configured_max is None or current_max is None or current_max >= configured_max
+            if min_is_default and max_is_default:
                 continue
 
-            active_filters.append((attribute, current_max))
+            active_filters.append((attribute, current_min, current_max))
         return active_filters
 
-    def _template_matches_range_filter(self, product_tmpl, attribute, current_max):
-        """Comprueba si el producto tiene ese atributo con valor numérico <= current_max."""
+    def _template_matches_range_filter(self, product_tmpl, attribute, current_min, current_max):
+        """Comprueba si el producto tiene ese atributo dentro del rango numérico seleccionado."""
         lines = product_tmpl.sudo().attribute_line_ids.filtered(
             lambda line: line.attribute_id.id == attribute.id
         )
@@ -60,8 +85,13 @@ class WebsiteSaleRange(WebsiteSale):
         for line in lines:
             for value in line.value_ids:
                 numeric_value = self._range_to_float(value.name)
-                if numeric_value is not None and numeric_value <= current_max:
-                    return True
+                if numeric_value is None:
+                    continue
+                if current_min is not None and numeric_value < current_min:
+                    continue
+                if current_max is not None and numeric_value > current_max:
+                    continue
+                return True
         return False
 
     def _filter_products_recordset_by_ranges(self, products):
@@ -71,14 +101,15 @@ class WebsiteSaleRange(WebsiteSale):
             return products
 
         filtered_products = products
-        for attribute, current_max in active_filters:
+        for attribute, current_min, current_max in active_filters:
             filtered_products = filtered_products.filtered(
-                lambda product, attr=attribute, max_value=current_max:
-                    self._template_matches_range_filter(product, attr, max_value)
+                lambda product, attr=attribute, min_value=current_min, max_value=current_max:
+                    self._template_matches_range_filter(product, attr, min_value, max_value)
             )
             _logger.info(
-                "Filtro range aplicado: atributo=%s max=%s productos_restantes=%s",
+                "Filtro range aplicado: atributo=%s min=%s max=%s productos_restantes=%s",
                 attribute.name,
+                current_min,
                 current_max,
                 len(filtered_products),
             )
@@ -103,6 +134,6 @@ class WebsiteSaleRange(WebsiteSale):
             order=order, tags=tags, attribute_value=attribute_value, **post
         )
         for key, value in (request.params or {}).items():
-            if key.startswith('range_max_') and value not in (None, ''):
+            if (key.startswith('range_min_') or key.startswith('range_max_')) and value not in (None, ''):
                 values[key] = value
         return values

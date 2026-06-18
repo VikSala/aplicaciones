@@ -1,6 +1,6 @@
 {
     'name': 'Filtro Slider Profesional Odoo 18',
-    'version': '3.6',
+    'version': '3.8',
     'depends': ['product', 'website_sale'],
     'data': [
         'views/product_attribute_views.xml',
