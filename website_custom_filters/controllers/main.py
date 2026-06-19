@@ -3,7 +3,6 @@ import re
 
 from odoo import http
 from odoo.http import request
-from werkzeug.urls import url_encode
 from odoo.addons.website_sale.controllers.main import WebsiteSale
 
 _logger = logging.getLogger(__name__)
@@ -13,34 +12,36 @@ class WebsiteSaleRange(WebsiteSale):
     """Añade filtros reales de rango numérico a /shop."""
 
 
-    def _request_has_range_params(self):
-        return any(
-            key.startswith('range_min_') or key.startswith('range_max_')
-            for key in (request.httprequest.args or {}).keys()
-        )
+    def _request_has_product_unsafe_params(self):
+        """Detecta parámetros que no deben entrar nunca en la ficha de producto.
 
-    def _current_url_without_range_params(self):
-        clean_args = []
-        for key in (request.httprequest.args or {}).keys():
-            if key.startswith('range_min_') or key.startswith('range_max_'):
-                continue
-            for value in request.httprequest.args.getlist(key):
-                clean_args.append((key, value))
-        query = url_encode(clean_args)
-        return request.httprequest.path + (('?' + query) if query else '')
-
-    @http.route(['/shop/product/<model("product.template"):product>'], type='http', auth='public', website=True, sitemap=True)
-    def product(self, product, category='', search='', **kwargs):
-        """Evita que los parámetros del slider lleguen a la ficha de producto.
-
-        En catálogos filtrados, Odoo puede conservar la query al entrar al producto.
-        Aunque el producto se renderice bien al principio, el JS de variantes de website_sale
-        puede reevaluar la combinación tras cargar y dejar la ficha en
-        "Esta combinación no existe". La solución robusta es redirigir la ficha limpia,
-        sin range_min_/range_max_, antes de que se renderice la página de producto.
+        El caso real en Odoo 18 no siempre usa /shop/product/..., sino /shop/slug-id.
+        Además, el problema no lo provocan solo range_min_/range_max_: los attribute_value
+        vacíos y el hash #attribute_values=... también pueden activar el JS de variantes y
+        terminar mostrando "Esta combinación no existe" tras la carga inicial.
         """
-        if self._request_has_range_params():
-            return request.redirect(self._current_url_without_range_params(), code=302)
+        for key in (request.httprequest.args or {}).keys():
+            if key.startswith('range_min_') or key.startswith('range_max_') or key == 'attribute_value':
+                return True
+        return False
+
+    def _clean_product_url(self):
+        """En ficha de producto volvemos a la URL canónica: ruta limpia, sin query."""
+        return request.httprequest.path
+
+    @http.route([
+        '/shop/<model("product.template"):product>',
+        '/shop/product/<model("product.template"):product>',
+    ], type='http', auth='public', website=True, sitemap=True)
+    def product(self, product, category='', search='', **kwargs):
+        """Evita que filtros de catálogo lleguen a la ficha de producto.
+
+        En catálogos filtrados, algunos temas/Odoo conservan la query y el hash del listado
+        al entrar al producto. La ficha puede renderizar bien al principio, pero el JS de
+        variantes relee esos datos después y marca la combinación como inexistente.
+        """
+        if self._request_has_product_unsafe_params():
+            return request.redirect(self._clean_product_url(), code=302)
         return super().product(product, category=category, search=search, **kwargs)
 
     def _range_to_float(self, value):

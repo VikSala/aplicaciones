@@ -1,6 +1,6 @@
 <odoo>
     <!--
-        v4.1
+        v4.2
         Los sliders se crean SIEMPRE desde website.layout, usando un bloque de datos oculto.
         No dependen de website_sale.products_attributes ni del listado de productos.
     -->
@@ -8,20 +8,26 @@
         <xpath expr="//head" position="inside">
             <script type="text/javascript"><![CDATA[
                 (function () {
-                    var path = window.location.pathname || '';
-                    var search = window.location.search || '';
-                    if (path.indexOf('/shop/product') !== 0 || (search.indexOf('range_min_') === -1 && search.indexOf('range_max_') === -1)) {
-                        return;
+                    function isProductPage(path) {
+                        path = path || '';
+                        if (path.indexOf('/shop/product') === 0) return true;
+                        if (path.indexOf('/shop/') !== 0) return false;
+                        if (path.indexOf('/shop/category/') === 0 || path.indexOf('/shop/page/') === 0) return false;
+                        return path !== '/shop';
                     }
-                    try {
-                        var url = new URL(window.location.href);
-                        Array.prototype.slice.call(url.searchParams.keys()).forEach(function (key) {
-                            if (key.indexOf('range_min_') === 0 || key.indexOf('range_max_') === 0) {
-                                url.searchParams.delete(key);
-                            }
-                        });
-                        window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
-                    } catch (error) {}
+
+                    var path = window.location.pathname || '';
+                    if (!isProductPage(path)) return;
+
+                    var full = window.location.href || '';
+                    var unsafe = full.indexOf('range_min_') !== -1 ||
+                        full.indexOf('range_max_') !== -1 ||
+                        full.indexOf('attribute_value') !== -1 ||
+                        full.indexOf('#attribute_values=') !== -1;
+
+                    if (unsafe) {
+                        window.location.replace(path);
+                    }
                 })();
             ]]></script>
             <style>
@@ -215,26 +221,32 @@
 
             <script type="text/javascript"><![CDATA[
                 (function () {
+                    function isProductUrlPath(path) {
+                        path = path || '';
+                        if (path.indexOf('/shop/product') === 0) return true;
+                        if (path.indexOf('/shop/') !== 0) return false;
+                        if (path.indexOf('/shop/category/') === 0 || path.indexOf('/shop/page/') === 0) return false;
+                        return path !== '/shop';
+                    }
+
                     function isShopPage() {
                         var path = window.location.pathname || '';
                         if (path === '/shop') return true;
-                        if (path.indexOf('/shop/product') === 0) return false;
+                        if (isProductUrlPath(path)) return false;
                         return path.indexOf('/shop/category/') === 0 || path.indexOf('/shop/page/') === 0;
                     }
 
                     function cleanProductLinks() {
                         if (!isShopPage()) return;
-                        Array.prototype.slice.call(document.querySelectorAll('a[href*="/shop/product"]')).forEach(function (link) {
+                        Array.prototype.slice.call(document.querySelectorAll('a[href*="/shop/"]')).forEach(function (link) {
                             var href = link.getAttribute('href') || '';
-                            if (href.indexOf('range_min_') === -1 && href.indexOf('range_max_') === -1) return;
                             try {
                                 var url = new URL(href, window.location.origin);
-                                Array.prototype.slice.call(url.searchParams.keys()).forEach(function (key) {
-                                    if (key.indexOf('range_min_') === 0 || key.indexOf('range_max_') === 0) {
-                                        url.searchParams.delete(key);
-                                    }
-                                });
-                                link.setAttribute('href', url.pathname + url.search + url.hash);
+                                if (!isProductUrlPath(url.pathname)) return;
+
+                                // En ficha de producto no debe viajar nada del listado:
+                                // ni range_min_/range_max_, ni attribute_value vacíos, ni hash attribute_values.
+                                link.setAttribute('href', url.pathname);
                             } catch (error) {}
                         });
                     }
