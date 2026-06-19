@@ -1,7 +1,6 @@
 import logging
 import re
 
-from odoo import http
 from odoo.http import request
 from odoo.addons.website_sale.controllers.main import WebsiteSale
 
@@ -9,40 +8,21 @@ _logger = logging.getLogger(__name__)
 
 
 class WebsiteSaleRange(WebsiteSale):
-    """Añade filtros reales de rango numérico a /shop."""
+    """Añade filtros reales de rango numérico solo a páginas de listado de /shop."""
 
+    def _is_shop_listing_request(self):
+        """True solo en listados donde deben actuar los sliders.
 
-    def _request_has_product_unsafe_params(self):
-        """Detecta parámetros que no deben entrar nunca en la ficha de producto.
-
-        El caso real en Odoo 18 no siempre usa /shop/product/..., sino /shop/slug-id.
-        Además, el problema no lo provocan solo range_min_/range_max_: los attribute_value
-        vacíos y el hash #attribute_values=... también pueden activar el JS de variantes y
-        terminar mostrando "Esta combinación no existe" tras la carga inicial.
+        Importante: en Odoo también hay fichas de producto con ruta /shop/<slug>,
+        por ejemplo /shop/3300-vq22633001-producto-11069. Esas rutas NO deben
+        pasar por la lógica custom del slider ni propagar parámetros del filtro.
         """
-        for key in (request.httprequest.args or {}).keys():
-            if key.startswith('range_min_') or key.startswith('range_max_') or key == 'attribute_value':
-                return True
-        return False
-
-    def _clean_product_url(self):
-        """En ficha de producto volvemos a la URL canónica: ruta limpia, sin query."""
-        return request.httprequest.path
-
-    @http.route([
-        '/shop/<model("product.template"):product>',
-        '/shop/product/<model("product.template"):product>',
-    ], type='http', auth='public', website=True, sitemap=True)
-    def product(self, product, category='', search='', **kwargs):
-        """Evita que filtros de catálogo lleguen a la ficha de producto.
-
-        En catálogos filtrados, algunos temas/Odoo conservan la query y el hash del listado
-        al entrar al producto. La ficha puede renderizar bien al principio, pero el JS de
-        variantes relee esos datos después y marca la combinación como inexistente.
-        """
-        if self._request_has_product_unsafe_params():
-            return request.redirect(self._clean_product_url(), code=302)
-        return super().product(product, category=category, search=search, **kwargs)
+        path = getattr(getattr(request, 'httprequest', None), 'path', '') or ''
+        return (
+            path in ('/shop', '/shop/')
+            or path.startswith('/shop/category/')
+            or path.startswith('/shop/page/')
+        )
 
     def _range_to_float(self, value):
         """Convierte textos como '150', '150 W' o '150,5' a float."""
@@ -58,7 +38,15 @@ class WebsiteSaleRange(WebsiteSale):
             return None
 
     def _get_active_range_filters(self):
-        """Lee de la URL los filtros range_min_ID/range_max_ID que realmente limitan resultados."""
+        """Lee de la URL los filtros range_min_ID/range_max_ID activos.
+
+        Esta función se blinda para que nunca devuelva filtros en ficha de
+        producto. Así evitamos que una URL /shop/<producto> con parámetros
+        heredados pueda contaminar la lógica nativa de variantes.
+        """
+        if not self._is_shop_listing_request():
+            return []
+
         active_filters = []
         range_values = {}
 
@@ -83,7 +71,7 @@ class WebsiteSaleRange(WebsiteSale):
 
         for attr_id, values in range_values.items():
             attribute = request.env['product.attribute'].sudo().browse(attr_id).exists()
-            if not attribute or attribute.display_type != 'range':
+            if not attribute or not attribute._wcf_is_range_attribute():
                 continue
 
             configured_min = self._range_to_float(attribute.range_min)
@@ -109,12 +97,7 @@ class WebsiteSaleRange(WebsiteSale):
         return active_filters
 
     def _get_matching_range_value_ids(self, attribute, current_min, current_max):
-        """Devuelve los product.attribute.value que caen dentro del rango seleccionado.
-
-        Importante para rendimiento: se parsean solo los valores posibles del atributo,
-        no los atributos de cada producto. En catálogos grandes evita recorrer miles
-        de product.template en Python con lecturas ORM repetidas.
-        """
+        """Devuelve los product.attribute.value que caen dentro del rango seleccionado."""
         values = request.env['product.attribute.value'].sudo().search([
             ('attribute_id', '=', attribute.id),
         ])
@@ -133,10 +116,9 @@ class WebsiteSaleRange(WebsiteSale):
     def _filter_products_recordset_by_ranges(self, products):
         """Filtra un recordset de product.template con todos los rangos activos.
 
-        Versión optimizada para catálogos grandes: primero calcula los valores
-        permitidos del atributo y después deja que PostgreSQL encuentre las líneas
-        de atributo coincidentes. Así evitamos recorrer producto a producto y leer
-        attribute_line_ids/value_ids para miles de productos.
+        Punto crítico de rendimiento: este método solo debe ejecutarse en listado
+        y solo cuando existan range_min_/range_max_ activos. No debe intervenir
+        nunca en ficha de producto.
         """
         active_filters = self._get_active_range_filters()
         if not active_filters or not products:
@@ -160,7 +142,7 @@ class WebsiteSaleRange(WebsiteSale):
                 filtered_ids = [product_id for product_id in filtered_ids if product_id in allowed_ids]
 
             _logger.info(
-                "Filtro range optimizado aplicado: atributo=%s min=%s max=%s valores_validos=%s productos_restantes=%s",
+                "Filtro range aplicado: atributo=%s min=%s max=%s valores_validos=%s productos_restantes=%s",
                 attribute.name,
                 current_min,
                 current_max,
@@ -178,6 +160,10 @@ class WebsiteSaleRange(WebsiteSale):
         fuzzy_search_term, product_count, search_result = super()._shop_lookup_products(
             attrib_set, options, post, search, website
         )
+
+        if not self._is_shop_listing_request() or not self._get_active_range_filters():
+            return fuzzy_search_term, product_count, search_result
+
         filtered_result = self._filter_products_recordset_by_ranges(search_result)
         if filtered_result != search_result:
             product_count = len(filtered_result)
@@ -186,11 +172,24 @@ class WebsiteSaleRange(WebsiteSale):
     def _shop_get_query_url_kwargs(
         self, category, search, min_price, max_price, order=None, tags=None, attribute_value=None, **post
     ):
-        """Mantiene range_max_ID al paginar, ordenar o cambiar vista."""
+        """Mantiene range_min_ID/range_max_ID solo en URLs de listado.
+
+        Aquí es donde debes fijarte si vuelven a aparecer parámetros extraños en
+        enlaces de producto: esta función controla qué parámetros conserva Odoo al
+        paginar, ordenar o regenerar enlaces del shop. No debe inyectar nada en una
+        ficha /shop/<producto>.
+        """
         values = super()._shop_get_query_url_kwargs(
             category, search, min_price, max_price,
             order=order, tags=tags, attribute_value=attribute_value, **post
         )
+
+        if not self._is_shop_listing_request():
+            for key in list(values):
+                if key.startswith('range_min_') or key.startswith('range_max_'):
+                    values.pop(key, None)
+            return values
+
         for key, value in (request.params or {}).items():
             if (key.startswith('range_min_') or key.startswith('range_max_')) and value not in (None, ''):
                 values[key] = value

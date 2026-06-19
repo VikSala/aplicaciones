@@ -1,35 +1,13 @@
 <odoo>
     <!--
-        v4.2
-        Los sliders se crean SIEMPRE desde website.layout, usando un bloque de datos oculto.
+        JS/CSS solo en listado, sin override de ficha producto
+        Los sliders se crean solo en páginas de listado, usando un bloque de datos oculto.
         No dependen de website_sale.products_attributes ni del listado de productos.
     -->
     <template id="wcf_range_filters_runtime" inherit_id="website.layout" priority="1000">
         <xpath expr="//head" position="inside">
-            <script type="text/javascript"><![CDATA[
-                (function () {
-                    function isProductPage(path) {
-                        path = path || '';
-                        if (path.indexOf('/shop/product') === 0) return true;
-                        if (path.indexOf('/shop/') !== 0) return false;
-                        if (path.indexOf('/shop/category/') === 0 || path.indexOf('/shop/page/') === 0) return false;
-                        return path !== '/shop';
-                    }
+            <t t-if="request and request.httprequest and (request.httprequest.path == '/shop' or request.httprequest.path == '/shop/' or request.httprequest.path.startswith('/shop/category/') or request.httprequest.path.startswith('/shop/page/'))">
 
-                    var path = window.location.pathname || '';
-                    if (!isProductPage(path)) return;
-
-                    var full = window.location.href || '';
-                    var unsafe = full.indexOf('range_min_') !== -1 ||
-                        full.indexOf('range_max_') !== -1 ||
-                        full.indexOf('attribute_value') !== -1 ||
-                        full.indexOf('#attribute_values=') !== -1;
-
-                    if (unsafe) {
-                        window.location.replace(path);
-                    }
-                })();
-            ]]></script>
             <style>
                 #wcf_runtime_range_filters {
                     display: block !important;
@@ -178,11 +156,11 @@
                 /*
                     Evita el parpadeo/línea del atributo nativo duplicado durante la carga.
                     Antes de que arranque el JS, el CSS oculta cualquier bloque nativo de Odoo
-                    que contenga inputs/selects attrib pertenecientes a atributos display_type='range'.
+                    que contenga inputs/selects attrib pertenecientes a atributos wcf_is_range_filter=True.
                     No afecta al filtro nativo "Rango de precio", porque ese bloque no usa name="attrib".
                 */
-                <t t-if="request and request.httprequest and request.httprequest.path.startswith('/shop') and not request.httprequest.path.startswith('/shop/product')">
-                    <t t-foreach="request.env['product.attribute'].sudo().search([('display_type', '=', 'range')])" t-as="wcf_attr">
+                <t t-if="request and request.httprequest and (request.httprequest.path == '/shop' or request.httprequest.path == '/shop/' or request.httprequest.path.startswith('/shop/category/') or request.httprequest.path.startswith('/shop/page/'))">
+                    <t t-foreach="request.env['product.attribute'].sudo().search(['|', ('wcf_is_range_filter', '=', True), ('display_type', '=', 'range')])" t-as="wcf_attr">
                         <t t-set="wcf_prefix" t-value="str(wcf_attr.id) + '-'"/>
                         #products_grid_before .accordion-item:has([name="attrib"][value^="<t t-esc="wcf_prefix"/>"]),
                         #products_grid_before .accordion-item:has(select[name="attrib"] option[value^="<t t-esc="wcf_prefix"/>"]),
@@ -204,12 +182,13 @@
                     display: none !important;
                 }
             </style>
+            </t>
         </xpath>
 
         <xpath expr="//body" position="inside">
-            <t t-if="request and request.httprequest and request.httprequest.path.startswith('/shop') and not request.httprequest.path.startswith('/shop/product')">
+            <t t-if="request and request.httprequest and (request.httprequest.path == '/shop' or request.httprequest.path == '/shop/' or request.httprequest.path.startswith('/shop/category/') or request.httprequest.path.startswith('/shop/page/'))">
                 <div id="wcf_range_filters_data" aria-hidden="true">
-                    <t t-foreach="request.env['product.attribute'].sudo().search([('display_type', '=', 'range')], order='sequence, id')" t-as="a">
+                    <t t-foreach="request.env['product.attribute'].sudo().search(['|', ('wcf_is_range_filter', '=', True), ('display_type', '=', 'range')], order='sequence, id')" t-as="a">
                         <div class="wcf-range-source"
                              t-att-data-id="a.id"
                              t-att-data-name="a.name"
@@ -217,10 +196,14 @@
                              t-att-data-max="a.range_max"/>
                     </t>
                 </div>
-            </t>
 
             <script type="text/javascript"><![CDATA[
                 (function () {
+                    function wcfLog() {}
+                    function wcfWarn() {}
+                    function wcfElInfo(el) { return null; }
+                    function wcfInspect(label) {}
+
                     function isProductUrlPath(path) {
                         path = path || '';
                         if (path.indexOf('/shop/product') === 0) return true;
@@ -231,13 +214,18 @@
 
                     function isShopPage() {
                         var path = window.location.pathname || '';
-                        if (path === '/shop') return true;
-                        if (isProductUrlPath(path)) return false;
-                        return path.indexOf('/shop/category/') === 0 || path.indexOf('/shop/page/') === 0;
+                        var result = false;
+                        if (path === '/shop') result = true;
+                        else if (isProductUrlPath(path)) result = false;
+                        else result = path.indexOf('/shop/category/') === 0 || path.indexOf('/shop/page/') === 0;
+                        return result;
                     }
 
                     function cleanProductLinks() {
-                        if (!isShopPage()) return;
+                        if (!isShopPage()) {
+                            return;
+                        }
+                        var changed = 0;
                         Array.prototype.slice.call(document.querySelectorAll('a[href*="/shop/"]')).forEach(function (link) {
                             var href = link.getAttribute('href') || '';
                             try {
@@ -246,6 +234,9 @@
 
                                 // En ficha de producto no debe viajar nada del listado:
                                 // ni range_min_/range_max_, ni attribute_value vacíos, ni hash attribute_values.
+                                if (link.getAttribute('href') !== url.pathname) {
+                                    changed += 1;
+                                }
                                 link.setAttribute('href', url.pathname);
                             } catch (error) {}
                         });
@@ -627,10 +618,14 @@
                     }
 
                     function renderRuntimeFilters() {
-                        if (!isShopPage()) return;
+                        if (!isShopPage()) {
+                            return;
+                        }
                         cleanProductLinks();
                         var sources = getSources();
-                        if (!sources.length) return;
+                        if (!sources.length) {
+                            return;
+                        }
 
                         var params = new URLSearchParams(window.location.search);
 
@@ -663,10 +658,14 @@
                     }
 
                     function refreshOnlyNativeHiding() {
-                        if (!isShopPage()) return;
+                        if (!isShopPage()) {
+                            return;
+                        }
                         cleanProductLinks();
                         var sources = getSources();
-                        if (!sources.length) return;
+                        if (!sources.length) {
+                            return;
+                        }
                         if (!document.getElementById('wcf_runtime_range_filters')) {
                             renderRuntimeFilters();
                         } else {
@@ -675,12 +674,15 @@
                     }
 
                     function setupMutationObserver() {
-                        if (!window.MutationObserver) return;
+                        if (!window.MutationObserver) {
+                            return;
+                        }
                         var target = document.querySelector('form.js_attributes') || document.querySelector('#products_grid_before') || document.querySelector('.o_wsale_products_grid_before') || document.body;
-                        if (!target) return;
-
+                        if (!target) {
+                            return;
+                        }
                         var timer = null;
-                        var observer = new MutationObserver(function () {
+                        var observer = new MutationObserver(function (mutations) {
                             window.clearTimeout(timer);
                             timer = window.setTimeout(refreshOnlyNativeHiding, 80);
                         });
@@ -696,12 +698,14 @@
                         renderRuntimeFilters();
                         refreshOnlyNativeHiding();
                     });
-                    window.setTimeout(renderRuntimeFilters, 100);
-                    window.setTimeout(refreshOnlyNativeHiding, 500);
-                    window.setTimeout(refreshOnlyNativeHiding, 1200);
-                    window.setTimeout(refreshOnlyNativeHiding, 2500);
+                    window.setTimeout(function () { renderRuntimeFilters(); }, 100);
+                    window.setTimeout(function () { refreshOnlyNativeHiding(); }, 500);
+                    window.setTimeout(function () { refreshOnlyNativeHiding(); }, 1200);
+                    window.setTimeout(function () { refreshOnlyNativeHiding(); }, 2500);
+                    
                 })();
             ]]></script>
+            </t>
         </xpath>
     </template>
 </odoo>

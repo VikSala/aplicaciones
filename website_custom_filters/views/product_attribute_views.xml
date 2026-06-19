@@ -6,8 +6,9 @@
         <field name="priority">1</field>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='display_type']" position="after">
-                <label for="range_min" string="Límites del Slider" invisible="display_type != 'range'"/>
-                <div class="o_row" invisible="display_type != 'range'">
+                <field name="wcf_is_range_filter"/>
+                <label for="range_min" string="Límites del Slider" invisible="not wcf_is_range_filter and display_type != 'range'"/>
+                <div class="o_row" invisible="not wcf_is_range_filter and display_type != 'range'">
                     <field name="range_min" placeholder="Mínimo"/>
                     <span> a </span>
                     <field name="range_max" placeholder="Máximo"/>
