@@ -1,11 +1,29 @@
 <odoo>
     <!--
-        v4.0
+        v4.1
         Los sliders se crean SIEMPRE desde website.layout, usando un bloque de datos oculto.
         No dependen de website_sale.products_attributes ni del listado de productos.
     -->
     <template id="wcf_range_filters_runtime" inherit_id="website.layout" priority="1000">
         <xpath expr="//head" position="inside">
+            <script type="text/javascript"><![CDATA[
+                (function () {
+                    var path = window.location.pathname || '';
+                    var search = window.location.search || '';
+                    if (path.indexOf('/shop/product') !== 0 || (search.indexOf('range_min_') === -1 && search.indexOf('range_max_') === -1)) {
+                        return;
+                    }
+                    try {
+                        var url = new URL(window.location.href);
+                        Array.prototype.slice.call(url.searchParams.keys()).forEach(function (key) {
+                            if (key.indexOf('range_min_') === 0 || key.indexOf('range_max_') === 0) {
+                                url.searchParams.delete(key);
+                            }
+                        });
+                        window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+                    } catch (error) {}
+                })();
+            ]]></script>
             <style>
                 #wcf_runtime_range_filters {
                     display: block !important;
