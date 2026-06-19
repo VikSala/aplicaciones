@@ -1,6 +1,6 @@
 <odoo>
     <!--
-        v3.8
+        v4.0
         Los sliders se crean SIEMPRE desde website.layout, usando un bloque de datos oculto.
         No dependen de website_sale.products_attributes ni del listado de productos.
     -->
@@ -157,7 +157,7 @@
                     que contenga inputs/selects attrib pertenecientes a atributos display_type='range'.
                     No afecta al filtro nativo "Rango de precio", porque ese bloque no usa name="attrib".
                 */
-                <t t-if="request and request.httprequest and request.httprequest.path.startswith('/shop')">
+                <t t-if="request and request.httprequest and request.httprequest.path.startswith('/shop') and not request.httprequest.path.startswith('/shop/product')">
                     <t t-foreach="request.env['product.attribute'].sudo().search([('display_type', '=', 'range')])" t-as="wcf_attr">
                         <t t-set="wcf_prefix" t-value="str(wcf_attr.id) + '-'"/>
                         #products_grid_before .accordion-item:has([name="attrib"][value^="<t t-esc="wcf_prefix"/>"]),
@@ -183,7 +183,7 @@
         </xpath>
 
         <xpath expr="//body" position="inside">
-            <t t-if="request and request.httprequest and request.httprequest.path.startswith('/shop')">
+            <t t-if="request and request.httprequest and request.httprequest.path.startswith('/shop') and not request.httprequest.path.startswith('/shop/product')">
                 <div id="wcf_range_filters_data" aria-hidden="true">
                     <t t-foreach="request.env['product.attribute'].sudo().search([('display_type', '=', 'range')], order='sequence, id')" t-as="a">
                         <div class="wcf-range-source"
@@ -198,7 +198,27 @@
             <script type="text/javascript"><![CDATA[
                 (function () {
                     function isShopPage() {
-                        return window.location.pathname === '/shop' || window.location.pathname.indexOf('/shop/') === 0;
+                        var path = window.location.pathname || '';
+                        if (path === '/shop') return true;
+                        if (path.indexOf('/shop/product') === 0) return false;
+                        return path.indexOf('/shop/category/') === 0 || path.indexOf('/shop/page/') === 0;
+                    }
+
+                    function cleanProductLinks() {
+                        if (!isShopPage()) return;
+                        Array.prototype.slice.call(document.querySelectorAll('a[href*="/shop/product"]')).forEach(function (link) {
+                            var href = link.getAttribute('href') || '';
+                            if (href.indexOf('range_min_') === -1 && href.indexOf('range_max_') === -1) return;
+                            try {
+                                var url = new URL(href, window.location.origin);
+                                Array.prototype.slice.call(url.searchParams.keys()).forEach(function (key) {
+                                    if (key.indexOf('range_min_') === 0 || key.indexOf('range_max_') === 0) {
+                                        url.searchParams.delete(key);
+                                    }
+                                });
+                                link.setAttribute('href', url.pathname + url.search + url.hash);
+                            } catch (error) {}
+                        });
                     }
 
                     function normalizeText(value) {
@@ -578,6 +598,7 @@
 
                     function renderRuntimeFilters() {
                         if (!isShopPage()) return;
+                        cleanProductLinks();
                         var sources = getSources();
                         if (!sources.length) return;
 
@@ -613,6 +634,7 @@
 
                     function refreshOnlyNativeHiding() {
                         if (!isShopPage()) return;
+                        cleanProductLinks();
                         var sources = getSources();
                         if (!sources.length) return;
                         if (!document.getElementById('wcf_runtime_range_filters')) {
@@ -636,6 +658,7 @@
                     }
 
                     document.addEventListener('DOMContentLoaded', function () {
+                        cleanProductLinks();
                         renderRuntimeFilters();
                         setupMutationObserver();
                     });
