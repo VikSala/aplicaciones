@@ -49,6 +49,16 @@ class BackupConfig(models.Model):
         ('dump', 'PostgreSQL Dump (SQL only)'),
     ], string='Backup Format', required=True, default='zip',
        help='Format of the backup file')
+    zip_content_mode = fields.Selection([
+        ('manifest', 'Modules JSON / manifest.json'),
+        ('odoo0_addons', 'Odoo project addons folder'),
+    ], string='ZIP Extra Content', required=True, default='manifest',
+       help='For ZIP backups, choose whether to include the modules JSON manifest or the addons folder from your Odoo project structure.')
+    odoo0_root_path = fields.Char(
+        string='Odoo Project Root Path',
+        default=lambda self: self._get_current_database(),
+        help='Optional root folder of your Odoo project structure. If empty, the module will auto-detect a folder such as /odoo0, /odoo1 or /odoo2 containing addons.'
+    )
     
     # Storage providers
     local_provider_ids = fields.Many2many(
@@ -183,6 +193,8 @@ class BackupConfig(models.Model):
             'config_id': self.id,
             'database_name': self.database_name,
             'backup_format': self.backup_format,
+            'zip_content_mode': self.zip_content_mode,
+            'odoo0_root_path': self.odoo0_root_path,
             'status': 'running',
             'start_time': fields.Datetime.now(),
             'is_manual': is_manual,  # Flag to indicate execution type
@@ -734,12 +746,21 @@ class BackupConfig(models.Model):
                     if email and not re.match(email_pattern, email):
                         raise ValidationError("Invalid email address: %s" % email)
     
+    @api.onchange('database_name')
+    def _onchange_database_name_set_odoo0_root_path(self):
+        """Use the current database name as the default Odoo project root path."""
+        for record in self:
+            if record.database_name and not record.odoo0_root_path:
+                record.odoo0_root_path = record.database_name
+
     @api.model_create_multi
     def create(self, vals_list):
         """Override create to validate configuration."""
         for vals in vals_list:
             if not vals.get('database_name'):
                 vals['database_name'] = self._get_current_database()
+            if not vals.get('odoo0_root_path'):
+                vals['odoo0_root_path'] = vals.get('database_name')
         
         return super().create(vals_list)
     

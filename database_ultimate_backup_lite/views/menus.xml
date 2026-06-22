@@ -1,11 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!--
+        The backup menus are placed inside the Odoo Settings application instead
+        of creating a standalone application tile in the main app launcher.
+
+        parent="base.menu_administration" = Settings / Ajustes
+        sequence close to the technical menus so it appears in the upper Settings bar
+        near "Technical" / "Técnico".
+    -->
     <menuitem
         id="database_ultimate_backup_menu_root"
-        name="Database Ultimate Backup Lite"
-        sequence="14"
-        web_icon="database_ultimate_backup_lite,static/description/icon.png">
+        name="Backups"
+        parent="base.menu_administration"
+        sequence="95"
+        groups="base.group_system">
 
         <menuitem
             id="menu_backup_configurations"

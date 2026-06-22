@@ -6,6 +6,7 @@ import re
 import subprocess
 import tempfile
 import json
+import glob
 import shutil
 import zipfile
 import logging
@@ -48,6 +49,15 @@ class BackupJob(models.Model):
         ('zip', 'ZIP Archive'),
         ('dump', 'PostgreSQL Dump'),
     ], string='Backup Format', required=True)
+    zip_content_mode = fields.Selection([
+        ('manifest', 'Modules JSON / manifest.json'),
+        ('odoo0_addons', 'Odoo project addons folder'),
+    ], string='ZIP Extra Content', default='manifest',
+       help='Extra content included inside ZIP backups.')
+    odoo0_root_path = fields.Char(
+        string='Odoo Project Root Path',
+        help='Optional root folder of the Odoo project structure used to copy the addons folder. If empty, it will be auto-detected.'
+    )
     is_manual = fields.Boolean(
         string='Manual Backup',
         default=False,
@@ -360,16 +370,24 @@ class BackupJob(models.Model):
                 if os.path.exists(filestore):
                     shutil.copytree(filestore, os.path.join(dump_dir, 'filestore'))
 
-                # Generate manifest
-                with open(os.path.join(dump_dir, 'manifest.json'), 'w') as fh:
-                    db = odoo.sql_db.db_connect(db_name)
-                    with db.cursor() as cr:
-                        json.dump(self._dump_db_manifest(cr), fh, indent=4)
+                # Extra ZIP content: either the standard Odoo manifest JSON or
+                # the addons folder from the user's detected Odoo project structure.
+                if self.zip_content_mode == 'odoo0_addons':
+                    self._copy_odoo_project_folder(dump_dir)
+                else:
+                    with open(os.path.join(dump_dir, 'manifest.json'), 'w') as fh:
+                        db = odoo.sql_db.db_connect(db_name)
+                        with db.cursor() as cr:
+                            json.dump(self._dump_db_manifest(cr), fh, indent=4)
 
-                # Run pg_dump
-                cmd.insert(-1, '--file=' + os.path.join(dump_dir, 'dump.sql'))
+                # Run pg_dump in PostgreSQL custom format.
+                # The ZIP will contain dump.dump instead of dump.sql.
+                dump_path = os.path.join(dump_dir, 'dump.dump')
+                dump_cmd = list(cmd)
+                dump_cmd.insert(-1, '--format=c')
+                dump_cmd.insert(-1, '--file=' + dump_path)
                 subprocess.run(
-                    cmd, env=env,
+                    dump_cmd, env=env,
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.STDOUT,
                     check=True,
@@ -378,7 +396,7 @@ class BackupJob(models.Model):
                 # Write ZIP to stream
                 osutil.zip_dir(
                     dump_dir, stream, include_dir=False,
-                    fnct_sort=lambda file_name: file_name != 'dump.sql',
+                    fnct_sort=lambda file_name: file_name != 'dump.dump',
                 )
         else:
             cmd.insert(-1, '--format=c')
@@ -388,6 +406,101 @@ class BackupJob(models.Model):
                 stdout=subprocess.PIPE,
             ).stdout
             shutil.copyfileobj(stdout, stream)
+
+    def _copy_odoo_project_folder(self, dump_dir):
+        """Copy the detected Odoo project folder into the backup ZIP.
+
+        The project root name is not hardcoded. If the configured path is empty
+        or invalid, the module searches for a folder such as /odoo0, /odoo1 or
+        /odoo2 that contains an addons directory. The detected folder basename is
+        preserved inside the ZIP.
+        """
+        root_path = self._get_odoo_project_root_path()
+        project_folder_name = os.path.basename(root_path.rstrip(os.sep))
+        target_root = os.path.join(dump_dir, project_folder_name)
+        addons_path = os.path.join(root_path, 'addons')
+
+        os.makedirs(target_root, exist_ok=True)
+        shutil.copytree(addons_path, os.path.join(target_root, 'addons'), dirs_exist_ok=True)
+
+        # Keep the known project structure visible inside the backup.
+        for folder_name in ('config', 'logs'):
+            source_folder = os.path.join(root_path, folder_name)
+            target_folder = os.path.join(target_root, folder_name)
+            if os.path.isdir(source_folder):
+                shutil.copytree(source_folder, target_folder, dirs_exist_ok=True)
+            else:
+                os.makedirs(target_folder, exist_ok=True)
+
+        for file_name in ('docker-compose.yml', 'Dockerfile', 'dockerfile'):
+            source_file = os.path.join(root_path, file_name)
+            if os.path.isfile(source_file):
+                shutil.copy2(source_file, os.path.join(target_root, file_name))
+
+        self._log(f"Copied Odoo project folder '{project_folder_name}' from {root_path}")
+
+    def _get_odoo_project_root_path(self):
+        """Return the configured or auto-detected Odoo project root path."""
+        configured_path = (self.odoo0_root_path or self.config_id.odoo0_root_path or '').strip().rstrip('/')
+
+        # Accept both the project root path and a direct addons path.
+        for candidate in self._normalize_odoo_project_candidates(configured_path):
+            if self._is_valid_odoo_project_root(candidate):
+                return candidate
+
+        detected_path = self._detect_odoo_project_root_path()
+        if detected_path:
+            return detected_path
+
+        searched = configured_path or '/odoo*, /opt/odoo*, /home/*/odoo*, /mnt/odoo*, /var/lib/odoo*'
+        raise UserError(
+            "Odoo project folder not found. Configure the 'Odoo Project Root Path' "
+            "or make sure the project folder contains an addons directory. Searched: %s"
+            % searched
+        )
+
+    def _normalize_odoo_project_candidates(self, configured_path):
+        """Build possible root candidates from a configured root or addons path."""
+        if not configured_path:
+            return []
+
+        candidates = [configured_path]
+        if os.path.basename(configured_path.rstrip(os.sep)) == 'addons':
+            candidates.append(os.path.dirname(configured_path.rstrip(os.sep)))
+        else:
+            candidates.append(os.path.dirname(configured_path.rstrip(os.sep)))
+        return [candidate for candidate in candidates if candidate]
+
+    def _is_valid_odoo_project_root(self, path):
+        """A valid project root contains an addons folder."""
+        return bool(path and os.path.isdir(os.path.join(path, 'addons')))
+
+    def _detect_odoo_project_root_path(self):
+        """Auto-detect /odoo0, /odoo1, /odoo2... preserving the real folder name."""
+        search_patterns = [
+            '/odoo*',
+            '/opt/odoo*',
+            '/home/*/odoo*',
+            '/mnt/odoo*',
+            '/var/lib/odoo*',
+        ]
+
+        candidates = []
+        for pattern in search_patterns:
+            candidates.extend(glob.glob(pattern))
+
+        # Prefer exact project-like folders first: odoo0, odoo1, odoo2...
+        candidates = sorted(set(candidates), key=lambda path: (
+            0 if os.path.basename(path).startswith('odoo') else 1,
+            os.path.basename(path),
+            path,
+        ))
+
+        for candidate in candidates:
+            if self._is_valid_odoo_project_root(candidate):
+                return candidate.rstrip('/')
+
+        return False
     
     def _verify_backup_integrity(self, backup_file_path):
         """Verify backup file integrity."""
@@ -426,17 +539,26 @@ class BackupJob(models.Model):
                 
                 # Check required files
                 file_list = zip_file.namelist()
-                if 'dump.sql' not in file_list:
-                    raise UserError("ZIP backup missing dump.sql file")
-                
-                if 'manifest.json' not in file_list:
-                    raise UserError("ZIP backup missing manifest.json file")
-                
-                # Validate manifest
-                with zip_file.open('manifest.json') as manifest_file:
-                    manifest = json.loads(manifest_file.read().decode())
-                    if manifest.get('db_name') != self.database_name:
-                        raise UserError("Manifest database name mismatch")
+                if 'dump.dump' not in file_list:
+                    raise UserError("ZIP backup missing dump.dump file")
+
+                # Validate the PostgreSQL custom dump header inside the ZIP.
+                with zip_file.open('dump.dump') as dump_file:
+                    if dump_file.read(5) != b'PGDMP':
+                        raise UserError("dump.dump is not a valid PostgreSQL custom dump")
+
+                if self.zip_content_mode == 'odoo0_addons':
+                    if not any(name.endswith('/addons/') or '/addons/' in name for name in file_list):
+                        raise UserError("ZIP backup missing Odoo project addons folder")
+                else:
+                    if 'manifest.json' not in file_list:
+                        raise UserError("ZIP backup missing manifest.json file")
+
+                    # Validate manifest
+                    with zip_file.open('manifest.json') as manifest_file:
+                        manifest = json.loads(manifest_file.read().decode())
+                        if manifest.get('db_name') != self.database_name:
+                            raise UserError("Manifest database name mismatch")
         except zipfile.BadZipFile:
             raise UserError("Backup file is not a valid ZIP archive")
     
