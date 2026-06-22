@@ -49,6 +49,11 @@ class BackupConfig(models.Model):
         ('dump', 'PostgreSQL Dump (SQL only)'),
     ], string='Backup Format', required=True, default='zip',
        help='Format of the backup file')
+    database_dump_format = fields.Selection([
+        ('dump', 'PostgreSQL Custom Dump (.dump)'),
+        ('sql', 'Plain SQL Dump (.sql)'),
+    ], string='Database Dump Type', required=True, default='dump',
+       help='Choose whether the database dump is generated as PostgreSQL custom format (.dump) or plain SQL (.sql). For ZIP backups, this controls the database file stored inside the ZIP.')
     zip_content_mode = fields.Selection([
         ('manifest', 'Modules JSON / manifest.json'),
         ('odoo0_addons', 'Odoo project addons folder'),
@@ -193,6 +198,7 @@ class BackupConfig(models.Model):
             'config_id': self.id,
             'database_name': self.database_name,
             'backup_format': self.backup_format,
+            'database_dump_format': self.database_dump_format,
             'zip_content_mode': self.zip_content_mode,
             'odoo0_root_path': self.odoo0_root_path,
             'status': 'running',

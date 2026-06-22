@@ -40,6 +40,7 @@
                             <field name="config_id"/>
                             <field name="database_name"/>
                             <field name="backup_format"/>
+                            <field name="database_dump_format"/>
                             <field name="backup_filename"/>
                         </group>
                         <group string="Timing">

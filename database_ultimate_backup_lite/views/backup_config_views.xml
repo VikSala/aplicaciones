@@ -46,6 +46,7 @@
                                 <group string="Database Configuration">
                                     <field name="database_name"/>
                                     <field name="backup_format"/>
+                                    <field name="database_dump_format"/>
                                     <field name="zip_content_mode" invisible="backup_format != 'zip'"/>
                                     <field name="odoo0_root_path" invisible="backup_format != 'zip' or zip_content_mode != 'odoo0_addons'"/>
                                     <field name="backup_name_template"/>

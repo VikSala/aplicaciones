@@ -49,6 +49,11 @@ class BackupJob(models.Model):
         ('zip', 'ZIP Archive'),
         ('dump', 'PostgreSQL Dump'),
     ], string='Backup Format', required=True)
+    database_dump_format = fields.Selection([
+        ('dump', 'PostgreSQL Custom Dump (.dump)'),
+        ('sql', 'Plain SQL Dump (.sql)'),
+    ], string='Database Dump Type', required=True, default='dump',
+       help='Database dump type used for the backup: PostgreSQL custom format or plain SQL.')
     zip_content_mode = fields.Selection([
         ('manifest', 'Modules JSON / manifest.json'),
         ('odoo0_addons', 'Odoo project addons folder'),
@@ -253,10 +258,11 @@ class BackupJob(models.Model):
         
         # Prepare template variables
         timestamp = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+        effective_format = 'zip' if self.backup_format == 'zip' else self.database_dump_format
         variables = {
             'database': self.database_name,
             'timestamp': timestamp,
-            'format': self.backup_format,
+            'format': effective_format,
             'config': self.config_id.name,
         }
         
@@ -320,7 +326,7 @@ class BackupJob(models.Model):
         self._log(f"Creating {self.backup_format} dump of database: {self.database_name}")
 
         try:
-            self._dump_db(self.database_name, stream, self.backup_format)
+            self._dump_db(self.database_name, stream, self.backup_format, self.database_dump_format)
             self._log("Database dump created successfully")
         except Exception as e:
             self._log(f"Database dump failed: {str(e)}")
@@ -349,7 +355,7 @@ class BackupJob(models.Model):
             'modules': modules,
         }
 
-    def _dump_db(self, db_name, stream, backup_format='zip'):
+    def _dump_db(self, db_name, stream, backup_format='zip', database_dump_format='dump'):
         """Dump *db_name* into the file-like *stream*.
 
         This is a faithful copy of ``odoo.service.db.dump_db`` **without**
@@ -380,11 +386,12 @@ class BackupJob(models.Model):
                         with db.cursor() as cr:
                             json.dump(self._dump_db_manifest(cr), fh, indent=4)
 
-                # Run pg_dump in PostgreSQL custom format.
-                # The ZIP will contain dump.dump instead of dump.sql.
-                dump_path = os.path.join(dump_dir, 'dump.dump')
+                # Run pg_dump in the selected database dump format.
+                dump_filename = 'dump.sql' if database_dump_format == 'sql' else 'dump.dump'
+                dump_path = os.path.join(dump_dir, dump_filename)
                 dump_cmd = list(cmd)
-                dump_cmd.insert(-1, '--format=c')
+                if database_dump_format == 'dump':
+                    dump_cmd.insert(-1, '--format=c')
                 dump_cmd.insert(-1, '--file=' + dump_path)
                 subprocess.run(
                     dump_cmd, env=env,
@@ -396,12 +403,14 @@ class BackupJob(models.Model):
                 # Write ZIP to stream
                 osutil.zip_dir(
                     dump_dir, stream, include_dir=False,
-                    fnct_sort=lambda file_name: file_name != 'dump.dump',
+                    fnct_sort=lambda file_name: file_name != dump_filename,
                 )
         else:
-            cmd.insert(-1, '--format=c')
+            dump_cmd = list(cmd)
+            if database_dump_format == 'dump':
+                dump_cmd.insert(-1, '--format=c')
             stdout = subprocess.Popen(
-                cmd, env=env,
+                dump_cmd, env=env,
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
             ).stdout
@@ -539,13 +548,17 @@ class BackupJob(models.Model):
                 
                 # Check required files
                 file_list = zip_file.namelist()
-                if 'dump.dump' not in file_list:
-                    raise UserError("ZIP backup missing dump.dump file")
+                dump_filename = 'dump.sql' if self.database_dump_format == 'sql' else 'dump.dump'
+                if dump_filename not in file_list:
+                    raise UserError(f"ZIP backup missing {dump_filename} file")
 
-                # Validate the PostgreSQL custom dump header inside the ZIP.
-                with zip_file.open('dump.dump') as dump_file:
-                    if dump_file.read(5) != b'PGDMP':
-                        raise UserError("dump.dump is not a valid PostgreSQL custom dump")
+                with zip_file.open(dump_filename) as dump_file:
+                    if self.database_dump_format == 'dump':
+                        if dump_file.read(5) != b'PGDMP':
+                            raise UserError("dump.dump is not a valid PostgreSQL custom dump")
+                    else:
+                        if not dump_file.read(1):
+                            raise UserError("dump.sql is empty")
 
                 if self.zip_content_mode == 'odoo0_addons':
                     if not any(name.endswith('/addons/') or '/addons/' in name for name in file_list):
@@ -564,13 +577,16 @@ class BackupJob(models.Model):
     
     def _verify_dump_backup(self, backup_file_path):
         """Verify PostgreSQL dump backup integrity."""
-        # For dump files, we can try to parse the header
         try:
             with open(backup_file_path, 'rb') as f:
-                header = f.read(5)
-                # PostgreSQL custom format dumps start with 'PGDMP'
-                if header != b'PGDMP':
-                    raise UserError("File is not a valid PostgreSQL dump")
+                if self.database_dump_format == 'dump':
+                    header = f.read(5)
+                    # PostgreSQL custom format dumps start with 'PGDMP'
+                    if header != b'PGDMP':
+                        raise UserError("File is not a valid PostgreSQL custom dump")
+                else:
+                    if not f.read(1):
+                        raise UserError("SQL dump file is empty")
         except Exception as e:
             raise UserError(f"Failed to verify dump file: {e}")
     
