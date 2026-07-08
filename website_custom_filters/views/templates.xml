@@ -155,25 +155,32 @@
                 }
                 /*
                     Evita el parpadeo/línea del atributo nativo duplicado durante la carga.
-                    Antes de que arranque el JS, el CSS oculta cualquier bloque nativo de Odoo
-                    que contenga inputs/selects attrib pertenecientes a atributos wcf_is_range_filter=True.
-                    No afecta al filtro nativo "Rango de precio", porque ese bloque no usa name="attrib".
+                    Odoo 18 usa name="attribute_value" en los filtros del shop; se mantiene
+                    también name="attrib" por compatibilidad con instalaciones antiguas/temas.
+                    No afecta al filtro nativo "Rango de precio", porque ese bloque no usa
+                    valores con prefijo atributo-valor.
                 */
                 <t t-if="request and request.httprequest and (request.httprequest.path == '/shop' or request.httprequest.path == '/shop/' or request.httprequest.path.startswith('/shop/category/') or request.httprequest.path.startswith('/shop/page/'))">
                     <t t-foreach="request.env['product.attribute'].sudo().search(['|', ('wcf_is_range_filter', '=', True), ('display_type', '=', 'range')])" t-as="wcf_attr">
                         <t t-set="wcf_prefix" t-value="str(wcf_attr.id) + '-'"/>
+                        #products_grid_before .accordion-item:has([name="attribute_value"][value^="<t t-esc="wcf_prefix"/>"]),
                         #products_grid_before .accordion-item:has([name="attrib"][value^="<t t-esc="wcf_prefix"/>"]),
+                        #products_grid_before .accordion-item:has(select[name="attribute_value"] option[value^="<t t-esc="wcf_prefix"/>"]),
                         #products_grid_before .accordion-item:has(select[name="attrib"] option[value^="<t t-esc="wcf_prefix"/>"]),
+                        .products_attributes_filters .accordion-item:has([name="attribute_value"][value^="<t t-esc="wcf_prefix"/>"]),
+                        .products_attributes_filters .accordion-item:has([name="attrib"][value^="<t t-esc="wcf_prefix"/>"]),
+                        .o_wsale_products_grid_before .accordion-item:has([name="attribute_value"][value^="<t t-esc="wcf_prefix"/>"]),
                         .o_wsale_products_grid_before .accordion-item:has([name="attrib"][value^="<t t-esc="wcf_prefix"/>"]),
-                        .o_wsale_products_grid_before .accordion-item:has(select[name="attrib"] option[value^="<t t-esc="wcf_prefix"/>"]),
+                        #o_wsale_offcanvas .accordion-item:has([name="attribute_value"][value^="<t t-esc="wcf_prefix"/>"]),
+                        #o_wsale_offcanvas .accordion-item:has([name="attrib"][value^="<t t-esc="wcf_prefix"/>"]),
+                        form.js_attributes .accordion-item:has([name="attribute_value"][value^="<t t-esc="wcf_prefix"/>"]),
                         form.js_attributes .accordion-item:has([name="attrib"][value^="<t t-esc="wcf_prefix"/>"]),
-                        form.js_attributes .accordion-item:has(select[name="attrib"] option[value^="<t t-esc="wcf_prefix"/>"]),
+                        form.js_attributes .o_wsale_attribute:has([name="attribute_value"][value^="<t t-esc="wcf_prefix"/>"]),
                         form.js_attributes .o_wsale_attribute:has([name="attrib"][value^="<t t-esc="wcf_prefix"/>"]),
-                        form.js_attributes .o_wsale_attribute:has(select[name="attrib"] option[value^="<t t-esc="wcf_prefix"/>"]),
+                        form.js_attributes .css_attribute_select:has([name="attribute_value"][value^="<t t-esc="wcf_prefix"/>"]),
                         form.js_attributes .css_attribute_select:has([name="attrib"][value^="<t t-esc="wcf_prefix"/>"]),
-                        form.js_attributes .css_attribute_select:has(select[name="attrib"] option[value^="<t t-esc="wcf_prefix"/>"]),
-                        form.js_attributes .js_attribute:has([name="attrib"][value^="<t t-esc="wcf_prefix"/>"]),
-                        form.js_attributes .js_attribute:has(select[name="attrib"] option[value^="<t t-esc="wcf_prefix"/>"]) {
+                        form.js_attributes .js_attribute:has([name="attribute_value"][value^="<t t-esc="wcf_prefix"/>"]),
+                        form.js_attributes .js_attribute:has([name="attrib"][value^="<t t-esc="wcf_prefix"/>"]) {
                             display: none !important;
                         }
                     </t>
@@ -428,8 +435,23 @@
                             maxInput.style.zIndex = activeInput === maxInput ? '6' : '5';
                         }
 
+                        function removeNativeAttributeParamsForRange(params, attributeId) {
+                            var prefix = String(attributeId) + '-';
+                            ['attribute_value', 'attrib'].forEach(function (paramName) {
+                                var values = params.getAll(paramName);
+                                if (!values.length) return;
+                                params.delete(paramName);
+                                values.forEach(function (value) {
+                                    if (String(value).indexOf(prefix) !== 0) {
+                                        params.append(paramName, value);
+                                    }
+                                });
+                            });
+                        }
+
                         function applyRange() {
                             var nextParams = new URLSearchParams(window.location.search);
+                            removeNativeAttributeParamsForRange(nextParams, item.id);
                             var minValue = toNumber(minInput.value, item.min);
                             var maxValue = toNumber(maxInput.value, item.max);
 
@@ -572,7 +594,7 @@
 
                             // 1) Método principal: buscar campos nativos name="attrib" cuyo value pertenece
                             // al atributo range real. Es lo más fiable cuando Odoo mantiene inputs/selects.
-                            Array.prototype.slice.call(document.querySelectorAll('[name="attrib"]')).forEach(function (field) {
+                            Array.prototype.slice.call(document.querySelectorAll('[name="attrib"], [name="attribute_value"]')).forEach(function (field) {
                                 var values = [];
                                 if (field.tagName && field.tagName.toLowerCase() === 'select') {
                                     values = Array.prototype.slice.call(field.options || []).map(function (option) {
@@ -708,4 +730,13 @@
             </t>
         </xpath>
     </template>
+
+    <!--
+        Importante: no heredamos website_sale.o_wsale_offcanvas para eliminar
+        el atributo range desde servidor, porque esta plantilla cambia entre
+        builds/temas de Odoo 18 y un xpath no encontrado rompe /shop con 500.
+        La ocultación del filtro nativo se hace con CSS preventivo + JS, usando
+        name="attribute_value" y name="attrib" para cubrir ambas variantes.
+    -->
+
 </odoo>
