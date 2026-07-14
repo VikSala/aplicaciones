@@ -150,6 +150,65 @@
                     font-weight: 700 !important;
                     color: inherit !important;
                 }
+                #wcf_runtime_range_filters .wcf-range-editors {
+                    display: grid !important;
+                    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+                    align-items: end !important;
+                    gap: .45rem !important;
+                    margin-top: .65rem !important;
+                }
+                #wcf_runtime_range_filters .wcf-range-editor {
+                    display: block !important;
+                    min-width: 0 !important;
+                    margin: 0 !important;
+                }
+                #wcf_runtime_range_filters .wcf-range-editor-label {
+                    display: block !important;
+                    margin-bottom: .2rem !important;
+                    font-size: .75rem !important;
+                    color: rgba(33, 37, 41, .72) !important;
+                }
+                #wcf_runtime_range_filters input.wcf-range-number {
+                    display: block !important;
+                    width: 100% !important;
+                    min-width: 0 !important;
+                    height: 2rem !important;
+                    padding: .25rem .4rem !important;
+                    border: 1px solid rgba(33, 37, 41, .25) !important;
+                    border-radius: .25rem !important;
+                    background: #fff !important;
+                    color: inherit !important;
+                    font: inherit !important;
+                    text-align: center !important;
+                    box-shadow: none !important;
+                }
+                #wcf_runtime_range_filters input.wcf-range-number:focus {
+                    border-color: #23c979 !important;
+                    outline: 0 !important;
+                    box-shadow: 0 0 0 .15rem rgba(35, 201, 121, .16) !important;
+                }
+                #wcf_runtime_range_filters input.wcf-range-number.wcf-range-number-invalid {
+                    border-color: #dc3545 !important;
+                }
+                #wcf_runtime_range_filters .wcf-range-editor-separator {
+                    padding-bottom: .45rem !important;
+                    font-weight: 700 !important;
+                    color: rgba(33, 37, 41, .55) !important;
+                }
+                #wcf_runtime_range_filters .wcf-range-manual-error {
+                    display: none !important;
+                    margin-top: .35rem !important;
+                    font-size: .75rem !important;
+                    line-height: 1.25 !important;
+                    color: #dc3545 !important;
+                }
+                #wcf_runtime_range_filters .wcf-range-manual-error.wcf-visible {
+                    display: block !important;
+                }
+                #wcf_runtime_range_filters .wcf-range-apply {
+                    width: 100% !important;
+                    margin-top: .5rem !important;
+                }
                 .wcf-native-range-hidden {
                     display: none !important;
                 }
@@ -331,6 +390,8 @@
                             currentMax = tmp;
                         }
 
+                        var selectedMin = currentMin;
+                        var selectedMax = currentMax;
                         var isOpen = (currentMin > item.min) || (currentMax < item.max);
                         var collapseId = 'wcf_range_filter_inner_' + item.id;
 
@@ -381,7 +442,7 @@
                         minInput.min = String(item.min);
                         minInput.max = String(item.max);
                         minInput.step = '1';
-                        minInput.value = String(currentMin);
+                        minInput.value = String(selectedMin);
                         minInput.setAttribute('aria-label', item.name + ' mínimo');
 
                         var maxInput = document.createElement('input');
@@ -391,14 +452,67 @@
                         maxInput.min = String(item.min);
                         maxInput.max = String(item.max);
                         maxInput.step = '1';
-                        maxInput.value = String(currentMax);
+                        maxInput.value = String(selectedMax);
                         maxInput.setAttribute('aria-label', item.name + ' máximo');
 
                         var values = document.createElement('small');
                         values.className = 'wcf-range-values d-flex justify-content-between mt-2';
                         values.innerHTML = '<span class="opacity-75 opacity-100-hover mt-1">' + formatNumber(item.min) + '</span>' +
-                            '<span class="wcf-range-current opacity-75 opacity-100-hover mt-1"><span class="wcf-range-current-min">' + formatNumber(currentMin) + '</span> - <span class="wcf-range-current-max">' + formatNumber(currentMax) + '</span></span>' +
                             '<span class="opacity-75 opacity-100-hover mt-1">' + formatNumber(item.max) + '</span>';
+
+                        var editors = document.createElement('div');
+                        editors.className = 'wcf-range-editors';
+
+                        var manualMinLabel = document.createElement('label');
+                        manualMinLabel.className = 'wcf-range-editor';
+                        var manualMinCaption = document.createElement('span');
+                        manualMinCaption.className = 'wcf-range-editor-label';
+                        var manualMinInput = document.createElement('input');
+                        manualMinInput.type = 'number';
+                        manualMinInput.className = 'wcf-range-number wcf-range-number-min';
+                        manualMinInput.min = String(item.min);
+                        manualMinInput.max = String(item.max);
+                        manualMinInput.step = '1';
+                        manualMinInput.value = String(selectedMin);
+                        manualMinInput.inputMode = 'numeric';
+                        manualMinInput.setAttribute('aria-label', 'Escribir mínimo para ' + item.name);
+                        manualMinLabel.appendChild(manualMinCaption);
+                        manualMinLabel.appendChild(manualMinInput);
+
+                        var separator = document.createElement('span');
+                        separator.className = 'wcf-range-editor-separator';
+                        separator.textContent = '–';
+                        separator.setAttribute('aria-hidden', 'true');
+
+                        var manualMaxLabel = document.createElement('label');
+                        manualMaxLabel.className = 'wcf-range-editor';
+                        var manualMaxCaption = document.createElement('span');
+                        manualMaxCaption.className = 'wcf-range-editor-label';
+                        var manualMaxInput = document.createElement('input');
+                        manualMaxInput.type = 'number';
+                        manualMaxInput.className = 'wcf-range-number wcf-range-number-max';
+                        manualMaxInput.min = String(item.min);
+                        manualMaxInput.max = String(item.max);
+                        manualMaxInput.step = '1';
+                        manualMaxInput.value = String(selectedMax);
+                        manualMaxInput.inputMode = 'numeric';
+                        manualMaxInput.setAttribute('aria-label', 'Escribir máximo para ' + item.name);
+                        manualMaxLabel.appendChild(manualMaxCaption);
+                        manualMaxLabel.appendChild(manualMaxInput);
+
+                        editors.appendChild(manualMinLabel);
+                        editors.appendChild(separator);
+                        editors.appendChild(manualMaxLabel);
+
+                        var manualError = document.createElement('div');
+                        manualError.className = 'wcf-range-manual-error';
+                        manualError.setAttribute('role', 'alert');
+                        manualError.textContent = 'Introduce valores entre ' + formatNumber(item.min) + ' y ' + formatNumber(item.max) + ', con el mínimo igual o inferior al máximo.';
+
+                        var applyButton = document.createElement('button');
+                        applyButton.type = 'button';
+                        applyButton.className = 'btn btn-outline-primary btn-sm wcf-range-apply';
+                        applyButton.textContent = 'Aplicar';
 
                         function percent(value) {
                             var total = item.max - item.min;
@@ -406,12 +520,34 @@
                             return ((value - item.min) / total) * 100;
                         }
 
-                        function updateRangeUI(activeInput) {
+                        function setManualValidity(valid) {
+                            manualMinInput.classList.toggle('wcf-range-number-invalid', !valid);
+                            manualMaxInput.classList.toggle('wcf-range-number-invalid', !valid);
+                            manualMinInput.setAttribute('aria-invalid', valid ? 'false' : 'true');
+                            manualMaxInput.setAttribute('aria-invalid', valid ? 'false' : 'true');
+                            manualError.classList.toggle('wcf-visible', !valid);
+                            applyButton.disabled = !valid;
+                        }
+
+                        function updateVisualState(activeSlider) {
+                            minInput.setAttribute('aria-valuetext', formatNumber(selectedMin));
+                            maxInput.setAttribute('aria-valuetext', formatNumber(selectedMax));
+
+                            var left = percent(selectedMin);
+                            var right = 100 - percent(selectedMax);
+                            fill.style.left = left + '%';
+                            fill.style.right = right + '%';
+
+                            minInput.style.zIndex = activeSlider === minInput ? '6' : '4';
+                            maxInput.style.zIndex = activeSlider === maxInput ? '6' : '5';
+                        }
+
+                        function syncFromSliders(activeSlider) {
                             var minValue = toNumber(minInput.value, item.min);
                             var maxValue = toNumber(maxInput.value, item.max);
 
                             if (minValue > maxValue) {
-                                if (activeInput === minInput) {
+                                if (activeSlider === minInput) {
                                     maxValue = minValue;
                                     maxInput.value = String(maxValue);
                                 } else {
@@ -420,19 +556,38 @@
                                 }
                             }
 
-                            var minOutput = block.querySelector('.wcf-range-current-min');
-                            var maxOutput = block.querySelector('.wcf-range-current-max');
-                            if (minOutput) minOutput.textContent = formatNumber(minValue);
-                            if (maxOutput) maxOutput.textContent = formatNumber(maxValue);
+                            selectedMin = minValue;
+                            selectedMax = maxValue;
+                            manualMinInput.value = String(selectedMin);
+                            manualMaxInput.value = String(selectedMax);
+                            setManualValidity(true);
+                            updateVisualState(activeSlider);
+                        }
 
-                            var left = percent(minValue);
-                            var right = 100 - percent(maxValue);
-                            fill.style.left = left + '%';
-                            fill.style.right = right + '%';
+                        function readManualRange() {
+                            var minText = String(manualMinInput.value || '').trim();
+                            var maxText = String(manualMaxInput.value || '').trim();
+                            var minValue = minText === '' ? null : Number(minText.replace(',', '.'));
+                            var maxValue = maxText === '' ? null : Number(maxText.replace(',', '.'));
+                            var valid = Number.isFinite(minValue) && Number.isFinite(maxValue) &&
+                                minValue >= item.min && minValue <= item.max &&
+                                maxValue >= item.min && maxValue <= item.max &&
+                                minValue <= maxValue;
 
-                            // Cuando los dos iconos se juntan, se prioriza el que se está moviendo.
-                            minInput.style.zIndex = activeInput === minInput ? '6' : '4';
-                            maxInput.style.zIndex = activeInput === maxInput ? '6' : '5';
+                            setManualValidity(valid);
+                            if (!valid) return null;
+                            return { min: minValue, max: maxValue };
+                        }
+
+                        function previewManualRange(activeManualInput) {
+                            var manualRange = readManualRange();
+                            if (!manualRange) return;
+
+                            selectedMin = manualRange.min;
+                            selectedMax = manualRange.max;
+                            minInput.value = String(selectedMin);
+                            maxInput.value = String(selectedMax);
+                            updateVisualState(activeManualInput === manualMinInput ? minInput : maxInput);
                         }
 
                         function removeNativeAttributeParamsForRange(params, attributeId) {
@@ -452,8 +607,8 @@
                         function applyRange() {
                             var nextParams = new URLSearchParams(window.location.search);
                             removeNativeAttributeParamsForRange(nextParams, item.id);
-                            var minValue = toNumber(minInput.value, item.min);
-                            var maxValue = toNumber(maxInput.value, item.max);
+                            var minValue = selectedMin;
+                            var maxValue = selectedMax;
 
                             if (minValue > maxValue) {
                                 var tmp = minValue;
@@ -478,12 +633,29 @@
                             window.location.href = window.location.pathname + '?' + nextParams.toString();
                         }
 
+                        function applyManualRange() {
+                            var manualRange = readManualRange();
+                            if (!manualRange) {
+                                if (manualMinInput.getAttribute('aria-invalid') === 'true') manualMinInput.focus();
+                                return;
+                            }
+                            selectedMin = manualRange.min;
+                            selectedMax = manualRange.max;
+                            minInput.value = String(selectedMin);
+                            maxInput.value = String(selectedMax);
+                            updateVisualState(null);
+                            applyRange();
+                        }
+
                         sliderSpace.appendChild(track);
                         sliderSpace.appendChild(fill);
                         sliderSpace.appendChild(minInput);
                         sliderSpace.appendChild(maxInput);
                         wrapper.appendChild(sliderSpace);
                         wrapper.appendChild(values);
+                        wrapper.appendChild(editors);
+                        wrapper.appendChild(manualError);
+                        wrapper.appendChild(applyButton);
                         body.appendChild(wrapper);
                         collapse.appendChild(body);
                         block.appendChild(header);
@@ -496,12 +668,27 @@
                             syncAccordionState(block, false);
                         });
 
-                        minInput.addEventListener('input', function () { updateRangeUI(minInput); });
-                        maxInput.addEventListener('input', function () { updateRangeUI(maxInput); });
+                        minInput.addEventListener('input', function () { syncFromSliders(minInput); });
+                        maxInput.addEventListener('input', function () { syncFromSliders(maxInput); });
                         minInput.addEventListener('change', applyRange);
                         maxInput.addEventListener('change', applyRange);
+                        manualMinInput.addEventListener('input', function () { previewManualRange(manualMinInput); });
+                        manualMaxInput.addEventListener('input', function () { previewManualRange(manualMaxInput); });
+                        manualMinInput.addEventListener('keydown', function (event) {
+                            if (event.key === 'Enter') {
+                                event.preventDefault();
+                                applyManualRange();
+                            }
+                        });
+                        manualMaxInput.addEventListener('keydown', function (event) {
+                            if (event.key === 'Enter') {
+                                event.preventDefault();
+                                applyManualRange();
+                            }
+                        });
+                        applyButton.addEventListener('click', applyManualRange);
 
-                        updateRangeUI(null);
+                        syncFromSliders(null);
                         syncAccordionState(block, isOpen);
                         return block;
                     }
