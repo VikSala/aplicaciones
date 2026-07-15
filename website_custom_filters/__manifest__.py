@@ -1,6 +1,6 @@
 {
     'name': 'Filtro Slider Profesional Odoo 18',
-    'version': '4.9',
+    'version': '5.0',
     'depends': ['product', 'website_sale'],
     'license': 'LGPL-3',
     'data': [
