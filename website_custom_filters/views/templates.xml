@@ -287,6 +287,167 @@
                         return result;
                     }
 
+                    function getNativeClearFiltersLinks() {
+                        var selectors = [
+                            '#o_wsale_offcanvas .accordion-item > a.btn[href]',
+                            '#products_grid_before .accordion-item > a.btn[href]',
+                            '.o_wsale_products_grid_before .accordion-item > a.btn[href]'
+                        ];
+                        var links = [];
+                        document.querySelectorAll(selectors.join(',')).forEach(function (link) {
+                            if (link.dataset.wcfClearFilters === '1') return;
+                            if (!link.querySelector('.oi.oi-close, .oi-close')) return;
+
+                            try {
+                                var url = new URL(link.getAttribute('href') || link.href, window.location.origin);
+                                if (url.origin !== window.location.origin) return;
+                                if (url.pathname !== '/shop' && url.pathname !== '/shop/') return;
+                            } catch (error) {
+                                return;
+                            }
+                            links.push(link);
+                        });
+                        return links;
+                    }
+
+                    function getClearFiltersTarget(originalLink) {
+                        var rawHref = originalLink ? (originalLink.getAttribute('href') || '/shop') : '/shop';
+                        var target;
+                        try {
+                            target = new URL(rawHref, window.location.origin);
+                        } catch (error) {
+                            target = new URL('/shop', window.location.origin);
+                        }
+
+                        // El destino siempre se deja sin query ni hash. Así se eliminan
+                        // tanto los filtros nativos como range_min_ID/range_max_ID.
+                        target.search = '';
+                        target.hash = '';
+                        return target.pathname || '/shop';
+                    }
+
+                    function hasActiveCustomRangeFilters() {
+                        var params = new URLSearchParams(window.location.search);
+                        return getSources().some(function (item) {
+                            var minName = 'range_min_' + item.id;
+                            var maxName = 'range_max_' + item.id;
+
+                            if (params.has(minName)) {
+                                var currentMin = toNumber(params.get(minName), item.min);
+                                if (currentMin > item.min) return true;
+                            }
+                            if (params.has(maxName)) {
+                                var currentMax = toNumber(params.get(maxName), item.max);
+                                if (currentMax < item.max) return true;
+                            }
+                            return false;
+                        });
+                    }
+
+                    function configureClearFiltersLink(link, target) {
+                        if (!link) return;
+                        link.dataset.wcfClearFilters = '1';
+                        link.setAttribute('href', target);
+                        link.classList.remove('disabled');
+                        link.removeAttribute('aria-disabled');
+
+                        link.addEventListener('click', function (event) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            event.stopImmediatePropagation();
+                            window.location.assign(target);
+                        }, true);
+                    }
+
+                    function createSyntheticClearFiltersItem() {
+                        var target = getClearFiltersTarget(null);
+                        var item = document.createElement('div');
+                        item.className = 'accordion-item rounded-0 border-top-0 py-3 wcf-clear-filters-item';
+                        item.dataset.wcfClearFiltersItem = '1';
+
+                        var link = document.createElement('a');
+                        link.title = 'Eliminar filtros';
+                        link.className = 'btn btn-light d-flex align-items-center py-1';
+
+                        var small = document.createElement('small');
+                        small.className = 'mx-auto';
+                        var bold = document.createElement('b');
+                        bold.textContent = 'Eliminar filtros';
+                        small.appendChild(bold);
+
+                        var icon = document.createElement('i');
+                        icon.className = 'oi oi-close';
+                        icon.setAttribute('role', 'presentation');
+
+                        link.appendChild(small);
+                        link.appendChild(icon);
+                        item.appendChild(link);
+                        configureClearFiltersLink(link, target);
+                        return item;
+                    }
+
+                    function insertSyntheticClearFiltersItem() {
+                        if (!hasActiveCustomRangeFilters()) return;
+                        if (document.querySelector('.wcf-clear-filters-item')) return;
+
+                        var runtimeFilters = document.getElementById('wcf_runtime_range_filters');
+                        if (!runtimeFilters || !runtimeFilters.parentNode) return;
+
+                        var filtersContainer = runtimeFilters.parentNode;
+                        var clearItem = createSyntheticClearFiltersItem();
+
+                        // El slider custom puede estar situado después de atributos nativos
+                        // como "Marca". Insertar el botón justo antes del slider hacía que
+                        // apareciese a mitad del listado. Lo colocamos como primer bloque del
+                        // mismo contenedor para reproducir la posición superior del botón
+                        // original de Odoo, por encima de todos los filtros.
+                        filtersContainer.insertBefore(
+                            clearItem,
+                            filtersContainer.firstChild
+                        );
+                    }
+
+                    function replaceNativeClearFiltersButtons() {
+                        var nativeLinks = getNativeClearFiltersLinks();
+
+                        if (nativeLinks.length) {
+                            // Si antes creamos el botón sintético porque solo había rangos
+                            // custom, lo quitamos al aparecer el original de Odoo.
+                            document.querySelectorAll('.wcf-clear-filters-item').forEach(function (item) {
+                                item.remove();
+                            });
+
+                            nativeLinks.forEach(function (originalLink) {
+                                var originalItem = originalLink.closest('.accordion-item');
+                                var target = getClearFiltersTarget(originalLink);
+
+                                if (originalItem) {
+                                    // Sustituimos el acordeón completo, no solo el enlace,
+                                    // para conservar exactamente estructura, márgenes y borde.
+                                    var replacementItem = originalItem.cloneNode(true);
+                                    replacementItem.classList.add('wcf-clear-filters-item');
+                                    replacementItem.dataset.wcfClearFiltersItem = '1';
+                                    var replacementLink = replacementItem.querySelector('a.btn[href]');
+                                    configureClearFiltersLink(replacementLink, target);
+                                    originalItem.replaceWith(replacementItem);
+                                } else {
+                                    var replacementLinkOnly = originalLink.cloneNode(true);
+                                    configureClearFiltersLink(replacementLinkOnly, target);
+                                    originalLink.replaceWith(replacementLinkOnly);
+                                }
+                            });
+                            return;
+                        }
+
+                        // Tras sustituir el original, las siguientes ejecuciones ya no lo
+                        // detectan como nativo. Si nuestro reemplazo existe, no duplicamos.
+                        if (document.querySelector('.wcf-clear-filters-item')) return;
+
+                        // Caso que faltaba: solo hay filtros custom activos. Odoo no pinta
+                        // su botón, por lo que creamos uno idéntico en la misma ubicación.
+                        insertSyntheticClearFiltersItem();
+                    }
+
                     function cleanProductLinks() {
                         if (!isShopPage()) {
                             return;
@@ -364,6 +525,7 @@
                             return item.id && item.name;
                         });
                     }
+
 
                     function syncAccordionState(block, open) {
                         // Bootstrap/Odoo debe ser el único responsable de alternar
@@ -706,7 +868,7 @@
                         var current = node.parentElement;
                         for (var i = 0; i < 6 && current; i++) {
                             if (current.id === 'wcf_runtime_range_filters' || current.id === 'wcf_range_filters_data') return null;
-                            if (current.querySelector && current.querySelector('[name="attrib"]')) return current;
+                            if (current.querySelector && current.querySelector('[name="attrib"], [name="attribute_value"]')) return current;
                             current = current.parentElement;
                         }
                         return null;
@@ -763,23 +925,15 @@
 
                     function collectNativeRangeAttributeBlocks(sources) {
                         var found = [];
-                        var availableSourceIds = {};
 
-                        function add(block, item) {
+                        function add(block) {
                             if (!block || !block.querySelector) return;
                             if (block.id === 'wcf_runtime_range_filters' || block.id === 'wcf_range_filters_data') return;
                             if (block.closest('#wcf_runtime_range_filters') || block.closest('#wcf_range_filters_data')) return;
                             if (block.querySelector('.wcf-range-slider')) return;
                             if (looksLikeNativePriceRange(block)) return;
-
-                            if (item && item.id) {
-                                availableSourceIds[String(item.id)] = true;
-                                block.setAttribute('data-wcf-native-range-attribute-id', String(item.id));
-                            }
                             if (found.indexOf(block) === -1) found.push(block);
                         }
-
-                        found.wcfAvailableSourceIds = availableSourceIds;
 
                         if (!sources.length) return found;
 
@@ -787,11 +941,8 @@
                             var prefix = String(item.id) + '-';
                             var wantedName = normalizeText(item.name);
 
-                            // 1) Método principal: buscar campos nativos name="attrib"/"attribute_value"
-                            // cuyo value pertenece al atributo range real.
-                            // Esto replica el comportamiento nativo de Odoo: si el atributo no existe
-                            // en ningún producto de la categoría/listado actual, Odoo no renderiza esos
-                            // campos y por tanto tampoco renderizamos nuestro slider custom.
+                            // 1) Método principal: buscar campos nativos name="attrib" cuyo value pertenece
+                            // al atributo range real. Es lo más fiable cuando Odoo mantiene inputs/selects.
                             Array.prototype.slice.call(document.querySelectorAll('[name="attrib"], [name="attribute_value"]')).forEach(function (field) {
                                 var values = [];
                                 if (field.tagName && field.tagName.toLowerCase() === 'select') {
@@ -804,23 +955,23 @@
                                 var belongsToRangeAttribute = values.some(function (value) {
                                     return String(value).indexOf(prefix) === 0;
                                 });
-                                if (belongsToRangeAttribute) add(getNativeAttributeBlock(field), item);
+                                if (belongsToRangeAttribute) add(getNativeAttributeBlock(field));
                             });
 
                             // 2) Fallback por bloque: cuando el tema/Odoo deja visible solo el acordeón
                             // del atributo, localizarlo por el título exacto del atributo range.
                             Array.prototype.slice.call(document.querySelectorAll('.accordion-item, .o_wsale_attribute, .css_attribute_select, .js_attribute, .mb-3, .border-bottom')).forEach(function (block) {
                                 if (!block || !block.querySelector) return;
-                                if (getDirectTitleText(block) === wantedName) add(block, item);
+                                if (getDirectTitleText(block) === wantedName) add(block);
                             });
 
                             // 3) Fallback fuerte por nodo de texto: elimina el caso donde queda únicamente
-                            // el header nativo del atributo aunque el body/input haya sido alterado por JS.
+                            // el header nativo "Precio" aunque el body/input haya sido alterado por JS.
                             Array.prototype.slice.call(document.querySelectorAll('h1,h2,h3,h4,h5,h6,button,b,strong,label,span')).forEach(function (node) {
                                 if (!node || !node.closest) return;
                                 if (node.closest('#wcf_runtime_range_filters') || node.closest('#wcf_range_filters_data')) return;
                                 if (normalizeText(node.textContent) !== wantedName) return;
-                                add(findClosestNativeFilterBlockFromTitleNode(node), item);
+                                add(findClosestNativeFilterBlockFromTitleNode(node));
                             });
                         });
 
@@ -828,29 +979,7 @@
                             if (a === b) return 0;
                             return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
                         });
-                        found.wcfAvailableSourceIds = availableSourceIds;
                         return found;
-                    }
-
-                    function hasNativeAttributeFilterArea() {
-                        return !!document.querySelector(
-                            'form.js_attributes, .products_attributes_filters, #products_grid_before, .o_wsale_products_grid_before, #o_wsale_offcanvas'
-                        );
-                    }
-
-                    function filterSourcesByNativeAvailability(sources, nativeBlocks) {
-                        // Los datos ocultos contienen todos los sliders configurados en backend.
-                        // Para imitar a website_sale, solo mostramos los que Odoo ha renderizado
-                        // como atributo disponible en el listado/categoría actual.
-                        // Si un tema no renderiza la zona nativa de filtros, mantenemos el comportamiento
-                        // anterior para no dejar el módulo sin salida visual.
-                        if (!hasNativeAttributeFilterArea()) {
-                            return sources;
-                        }
-                        var available = (nativeBlocks && nativeBlocks.wcfAvailableSourceIds) || {};
-                        return sources.filter(function (item) {
-                            return !!available[String(item.id)];
-                        });
                     }
 
                     function hideNativeRangeAttributeBlocks(sources, knownBlocks) {
@@ -875,21 +1004,15 @@
                         // Así podemos poner el slider exactamente donde estaba el atributo nativo
                         // y después ocultar el nativo sin depender del orden de carga del JS de Odoo.
                         var nativeBlocks = collectNativeRangeAttributeBlocks(sources);
-                        var visibleSources = filterSourcesByNativeAvailability(sources, nativeBlocks);
                         var firstNativeBlock = nativeBlocks.length ? nativeBlocks[0] : null;
                         var priceBlock = findPriceBlock();
 
                         var existing = document.getElementById('wcf_runtime_range_filters');
                         if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
 
-                        if (!visibleSources.length) {
-                            hideNativeRangeAttributeBlocks(sources, nativeBlocks);
-                            return;
-                        }
-
                         var wrapper = document.createElement('div');
                         wrapper.id = 'wcf_runtime_range_filters';
-                        visibleSources.forEach(function (item) {
+                        sources.forEach(function (item) {
                             wrapper.appendChild(buildBlock(item, params));
                         });
 
@@ -902,7 +1025,8 @@
                             if (fallback) fallback.insertBefore(wrapper, fallback.firstChild);
                         }
 
-                        hideNativeRangeAttributeBlocks(visibleSources, nativeBlocks);
+                        hideNativeRangeAttributeBlocks(sources, nativeBlocks);
+                        replaceNativeClearFiltersButtons();
                     }
 
                     function refreshOnlyNativeHiding() {
@@ -910,31 +1034,16 @@
                             return;
                         }
                         cleanProductLinks();
+                        replaceNativeClearFiltersButtons();
                         var sources = getSources();
                         if (!sources.length) {
                             return;
                         }
-
-                        var nativeBlocks = collectNativeRangeAttributeBlocks(sources);
-                        var visibleSources = filterSourcesByNativeAvailability(sources, nativeBlocks);
-                        var existing = document.getElementById('wcf_runtime_range_filters');
-
-                        if (!existing) {
+                        if (!document.getElementById('wcf_runtime_range_filters')) {
                             renderRuntimeFilters();
-                            return;
+                        } else {
+                            hideNativeRangeAttributeBlocks(sources);
                         }
-
-                        var expectedIds = visibleSources.map(function (item) { return String(item.id); }).join(',');
-                        var currentIds = Array.prototype.slice.call(existing.querySelectorAll('.wcf-range-filter')).map(function (block) {
-                            return String(block.dataset.wcfAttributeId || '');
-                        }).join(',');
-
-                        if (expectedIds !== currentIds) {
-                            renderRuntimeFilters();
-                            return;
-                        }
-
-                        hideNativeRangeAttributeBlocks(visibleSources, nativeBlocks);
                     }
 
                     function setupMutationObserver() {
@@ -955,11 +1064,17 @@
 
                     document.addEventListener('DOMContentLoaded', function () {
                         cleanProductLinks();
+                        replaceNativeClearFiltersButtons();
                         renderRuntimeFilters();
                         setupMutationObserver();
                     });
                     window.addEventListener('load', function () {
+                        replaceNativeClearFiltersButtons();
                         renderRuntimeFilters();
+                        refreshOnlyNativeHiding();
+                    });
+                    document.addEventListener('shown.bs.offcanvas', function () {
+                        replaceNativeClearFiltersButtons();
                         refreshOnlyNativeHiding();
                     });
                     window.setTimeout(function () { renderRuntimeFilters(); }, 100);
@@ -974,11 +1089,33 @@
     </template>
 
     <!--
-        Importante: no heredamos website_sale.o_wsale_offcanvas para eliminar
-        el atributo range desde servidor, porque esta plantilla cambia entre
-        builds/temas de Odoo 18 y un xpath no encontrado rompe /shop con 500.
-        La ocultación del filtro nativo se hace con CSS preventivo + JS, usando
-        name="attribute_value" y name="attrib" para cubrir ambas variantes.
+        Cuando Odoo renderiza su enlace original, se activa también desde QWeb.
+        Si Odoo omite el bloque completo al haber solo rangos custom activos,
+        el frontend crea el reemplazo idéntico en esa misma ubicación.
     -->
+    <template id="wcf_activate_native_clear_filters"
+              inherit_id="website_sale.o_wsale_offcanvas"
+              name="Activar Limpiar filtros nativo para rangos custom"
+              priority="1000">
+        <xpath expr="//aside[@id='o_wsale_offcanvas']/div[contains(concat(' ', normalize-space(@class), ' '), ' border-top ')]/a[@href='/shop']"
+               position="attributes">
+            <attribute name="t-attf-class">btn btn-{{navClass}} d-flex py-1 mb-2 {{(not attrib_values and not isFilteringByPrice and not tags and not wcf_has_active_range_filters) and 'disabled' }}</attribute>
+            <attribute name="t-att-aria-disabled">(not attrib_values and not isFilteringByPrice and not tags and not wcf_has_active_range_filters) and 'true' or 'false'</attribute>
+        </xpath>
+    </template>
+
+    <!--
+        Activa también el indicador rojo del botón nativo que abre los filtros
+        en móvil cuando únicamente hay un rango custom aplicado.
+    -->
+    <template id="wcf_activate_native_filters_indicator"
+              inherit_id="website_sale.products"
+              name="Indicador nativo de filtros para rangos custom"
+              priority="1000">
+        <xpath expr="//button[@data-bs-toggle='offcanvas' and @data-bs-target='#o_wsale_offcanvas']/span[span[contains(concat(' ', normalize-space(@class), ' '), ' visually-hidden ')]]"
+               position="attributes">
+            <attribute name="t-if">isFilteringByPrice or attrib_set or tags or wcf_has_active_range_filters</attribute>
+        </xpath>
+    </template>
 
 </odoo>

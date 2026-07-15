@@ -169,6 +169,27 @@ class WebsiteSaleRange(WebsiteSale):
             product_count = len(filtered_result)
         return fuzzy_search_term, product_count, filtered_result.with_context(bin_size=True)
 
+
+
+    def _get_additional_shop_values(self, values, **post):
+        """Activa el estado nativo de filtros cuando hay rangos custom activos.
+
+        Odoo 18 pinta el botón original "Clear Filters" del offcanvas como
+        disabled cuando no detecta `attrib_values`, `tags` ni rango de precio.
+        Nuestros sliders usan parámetros propios `range_min_ID/range_max_ID`,
+        así que el filtrado funciona, pero el botón nativo no se activa.
+
+        La bandera se mantiene para activar los estados nativos cuando la
+        plantilla los renderiza. El frontend añade un reemplazo idéntico en la
+        ubicación nativa cuando Odoo omite por completo el botón.
+        """
+        extra_values = super()._get_additional_shop_values(values, **post)
+        has_active_range_filters = bool(self._get_active_range_filters())
+        extra_values.update({
+            'wcf_has_active_range_filters': has_active_range_filters,
+        })
+        return extra_values
+
     def _shop_get_query_url_kwargs(
         self, category, search, min_price, max_price, order=None, tags=None, attribute_value=None, **post
     ):
