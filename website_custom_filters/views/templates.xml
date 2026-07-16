@@ -287,6 +287,32 @@
                         return result;
                     }
 
+                    function getClearFiltersDefaultPath() {
+                        var path = window.location.pathname || '/shop';
+
+                        // Si estamos dentro de una categoría, limpiar filtros debe mantener
+                        // la categoría actual. En paginación o /shop simple volvemos a /shop.
+                        if (path.indexOf('/shop/category/') === 0) return path;
+                        return '/shop';
+                    }
+
+                    function isClearFiltersUrl(url) {
+                        if (!url || url.origin !== window.location.origin) return false;
+
+                        var path = url.pathname || '';
+                        if (isProductUrlPath(path)) return false;
+
+                        // En categorías, el botón nativo de Odoo puede apuntar a
+                        // /shop/category/..., no solo a /shop. La versión anterior no lo
+                        // reconocía y por eso se insertaba otro botón encima.
+                        return (
+                            path === '/shop' ||
+                            path === '/shop/' ||
+                            path.indexOf('/shop/category/') === 0 ||
+                            path.indexOf('/shop/page/') === 0
+                        );
+                    }
+
                     function getNativeClearFiltersLinks() {
                         var selectors = [
                             '#o_wsale_offcanvas .accordion-item > a.btn[href]',
@@ -298,10 +324,12 @@
                             if (link.dataset.wcfClearFilters === '1') return;
                             if (!link.querySelector('.oi.oi-close, .oi-close')) return;
 
+                            var text = (link.textContent || '').trim().toLowerCase();
+                            if (text.indexOf('filtro') === -1 && text.indexOf('filter') === -1) return;
+
                             try {
                                 var url = new URL(link.getAttribute('href') || link.href, window.location.origin);
-                                if (url.origin !== window.location.origin) return;
-                                if (url.pathname !== '/shop' && url.pathname !== '/shop/') return;
+                                if (!isClearFiltersUrl(url)) return;
                             } catch (error) {
                                 return;
                             }
@@ -311,19 +339,25 @@
                     }
 
                     function getClearFiltersTarget(originalLink) {
-                        var rawHref = originalLink ? (originalLink.getAttribute('href') || '/shop') : '/shop';
+                        var rawHref = originalLink
+                            ? (originalLink.getAttribute('href') || getClearFiltersDefaultPath())
+                            : getClearFiltersDefaultPath();
                         var target;
                         try {
                             target = new URL(rawHref, window.location.origin);
                         } catch (error) {
-                            target = new URL('/shop', window.location.origin);
+                            target = new URL(getClearFiltersDefaultPath(), window.location.origin);
+                        }
+
+                        if (!isClearFiltersUrl(target)) {
+                            target = new URL(getClearFiltersDefaultPath(), window.location.origin);
                         }
 
                         // El destino siempre se deja sin query ni hash. Así se eliminan
                         // tanto los filtros nativos como range_min_ID/range_max_ID.
                         target.search = '';
                         target.hash = '';
-                        return target.pathname || '/shop';
+                        return target.pathname || getClearFiltersDefaultPath();
                     }
 
                     function hasActiveCustomRangeFilters() {
@@ -407,45 +441,101 @@
                         );
                     }
 
+                    function getClearFiltersScope(element) {
+                        if (!element || !element.closest) return document.body;
+                        return (
+                            element.closest('#o_wsale_offcanvas') ||
+                            element.closest('#products_grid_before') ||
+                            element.closest('.o_wsale_products_grid_before') ||
+                            element.closest('form.js_attributes') ||
+                            element.parentElement ||
+                            document.body
+                        );
+                    }
+
+                    function dedupeClearFiltersItems() {
+                        var seenScopes = [];
+                        Array.prototype.slice.call(document.querySelectorAll('.wcf-clear-filters-item')).forEach(function (item) {
+                            var scope = getClearFiltersScope(item);
+                            if (seenScopes.indexOf(scope) !== -1) {
+                                item.remove();
+                                return;
+                            }
+                            seenScopes.push(scope);
+                        });
+                    }
+
                     function replaceNativeClearFiltersButtons() {
                         var nativeLinks = getNativeClearFiltersLinks();
 
                         if (nativeLinks.length) {
-                            // Si antes creamos el botón sintético porque solo había rangos
-                            // custom, lo quitamos al aparecer el original de Odoo.
-                            document.querySelectorAll('.wcf-clear-filters-item').forEach(function (item) {
-                                item.remove();
-                            });
+                            var groups = [];
 
                             nativeLinks.forEach(function (originalLink) {
-                                var originalItem = originalLink.closest('.accordion-item');
-                                var target = getClearFiltersTarget(originalLink);
-
-                                if (originalItem) {
-                                    // Sustituimos el acordeón completo, no solo el enlace,
-                                    // para conservar exactamente estructura, márgenes y borde.
-                                    var replacementItem = originalItem.cloneNode(true);
-                                    replacementItem.classList.add('wcf-clear-filters-item');
-                                    replacementItem.dataset.wcfClearFiltersItem = '1';
-                                    var replacementLink = replacementItem.querySelector('a.btn[href]');
-                                    configureClearFiltersLink(replacementLink, target);
-                                    originalItem.replaceWith(replacementItem);
-                                } else {
-                                    var replacementLinkOnly = originalLink.cloneNode(true);
-                                    configureClearFiltersLink(replacementLinkOnly, target);
-                                    originalLink.replaceWith(replacementLinkOnly);
+                                var originalItem = originalLink.closest('.accordion-item') || originalLink;
+                                var scope = getClearFiltersScope(originalItem);
+                                var group = groups.find(function (candidate) {
+                                    return candidate.scope === scope;
+                                });
+                                if (!group) {
+                                    group = {scope: scope, links: []};
+                                    groups.push(group);
                                 }
+                                group.links.push(originalLink);
                             });
+
+                            groups.forEach(function (group) {
+                                // Si antes creamos el botón sintético en este mismo bloque de
+                                // filtros, lo quitamos al aparecer el original de Odoo.
+                                Array.prototype.slice.call(group.scope.querySelectorAll('.wcf-clear-filters-item')).forEach(function (item) {
+                                    item.remove();
+                                });
+
+                                group.links.forEach(function (originalLink, index) {
+                                    var originalItem = originalLink.closest('.accordion-item');
+
+                                    // En categorías puede haber más de un botón nativo compatible
+                                    // dentro del mismo contenedor. Se conserva solo el primero.
+                                    if (index > 0) {
+                                        if (originalItem) originalItem.remove();
+                                        else originalLink.remove();
+                                        return;
+                                    }
+
+                                    var target = getClearFiltersTarget(originalLink);
+
+                                    if (originalItem) {
+                                        // Sustituimos el acordeón completo, no solo el enlace,
+                                        // para conservar exactamente estructura, márgenes y borde.
+                                        var replacementItem = originalItem.cloneNode(true);
+                                        replacementItem.classList.add('wcf-clear-filters-item');
+                                        replacementItem.dataset.wcfClearFiltersItem = '1';
+                                        var replacementLink = replacementItem.querySelector('a.btn[href]');
+                                        configureClearFiltersLink(replacementLink, target);
+                                        originalItem.replaceWith(replacementItem);
+                                    } else {
+                                        var replacementLinkOnly = originalLink.cloneNode(true);
+                                        configureClearFiltersLink(replacementLinkOnly, target);
+                                        originalLink.replaceWith(replacementLinkOnly);
+                                    }
+                                });
+                            });
+
+                            dedupeClearFiltersItems();
                             return;
                         }
 
                         // Tras sustituir el original, las siguientes ejecuciones ya no lo
                         // detectan como nativo. Si nuestro reemplazo existe, no duplicamos.
-                        if (document.querySelector('.wcf-clear-filters-item')) return;
+                        if (document.querySelector('.wcf-clear-filters-item')) {
+                            dedupeClearFiltersItems();
+                            return;
+                        }
 
                         // Caso que faltaba: solo hay filtros custom activos. Odoo no pinta
                         // su botón, por lo que creamos uno idéntico en la misma ubicación.
                         insertSyntheticClearFiltersItem();
+                        dedupeClearFiltersItems();
                     }
 
                     function cleanProductLinks() {
