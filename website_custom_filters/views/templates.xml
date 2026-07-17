@@ -1013,7 +1013,40 @@
                         return null;
                     }
 
-                    function collectNativeRangeAttributeBlocks(sources) {
+                    function getNativeAttributeFieldValues(field) {
+                        if (!field) return [];
+                        if (field.tagName && field.tagName.toLowerCase() === 'select') {
+                            return Array.prototype.slice.call(field.options || []).map(function (option) {
+                                return option.value || '';
+                            });
+                        }
+                        return [field.value || ''];
+                    }
+
+                    function nativeAttributeFieldBelongsToItem(field, item) {
+                        var prefix = String(item.id) + '-';
+                        return getNativeAttributeFieldValues(field).some(function (value) {
+                            return String(value).indexOf(prefix) === 0;
+                        });
+                    }
+
+                    function hasNativeRangeAttributeFields(item) {
+                        // Esta comprobación replica el criterio de Odoo para la categoría actual:
+                        // si Odoo no ha renderizado ningún input/select del atributo, significa que
+                        // ningún producto visible de esa categoría/listado tiene valores para él.
+                        // En ese caso NO debemos crear el slider custom.
+                        return Array.prototype.slice.call(document.querySelectorAll('[name="attrib"], [name="attribute_value"]')).some(function (field) {
+                            return nativeAttributeFieldBelongsToItem(field, item);
+                        });
+                    }
+
+                    function getAvailableSources(sources) {
+                        return (sources || []).filter(function (item) {
+                            return hasNativeRangeAttributeFields(item);
+                        });
+                    }
+
+                    function collectNativeRangeAttributeBlocksForItem(item) {
                         var found = [];
 
                         function add(block) {
@@ -1025,46 +1058,47 @@
                             if (found.indexOf(block) === -1) found.push(block);
                         }
 
-                        if (!sources.length) return found;
+                        if (!item) return found;
 
-                        sources.forEach(function (item) {
-                            var prefix = String(item.id) + '-';
-                            var wantedName = normalizeText(item.name);
+                        var wantedName = normalizeText(item.name);
 
-                            // 1) Método principal: buscar campos nativos name="attrib" cuyo value pertenece
-                            // al atributo range real. Es lo más fiable cuando Odoo mantiene inputs/selects.
-                            Array.prototype.slice.call(document.querySelectorAll('[name="attrib"], [name="attribute_value"]')).forEach(function (field) {
-                                var values = [];
-                                if (field.tagName && field.tagName.toLowerCase() === 'select') {
-                                    values = Array.prototype.slice.call(field.options || []).map(function (option) {
-                                        return option.value || '';
-                                    });
-                                } else {
-                                    values = [field.value || ''];
-                                }
-                                var belongsToRangeAttribute = values.some(function (value) {
-                                    return String(value).indexOf(prefix) === 0;
-                                });
-                                if (belongsToRangeAttribute) add(getNativeAttributeBlock(field));
-                            });
-
-                            // 2) Fallback por bloque: cuando el tema/Odoo deja visible solo el acordeón
-                            // del atributo, localizarlo por el título exacto del atributo range.
-                            Array.prototype.slice.call(document.querySelectorAll('.accordion-item, .o_wsale_attribute, .css_attribute_select, .js_attribute, .mb-3, .border-bottom')).forEach(function (block) {
-                                if (!block || !block.querySelector) return;
-                                if (getDirectTitleText(block) === wantedName) add(block);
-                            });
-
-                            // 3) Fallback fuerte por nodo de texto: elimina el caso donde queda únicamente
-                            // el header nativo "Precio" aunque el body/input haya sido alterado por JS.
-                            Array.prototype.slice.call(document.querySelectorAll('h1,h2,h3,h4,h5,h6,button,b,strong,label,span')).forEach(function (node) {
-                                if (!node || !node.closest) return;
-                                if (node.closest('#wcf_runtime_range_filters') || node.closest('#wcf_range_filters_data')) return;
-                                if (normalizeText(node.textContent) !== wantedName) return;
-                                add(findClosestNativeFilterBlockFromTitleNode(node));
-                            });
+                        // 1) Método principal: buscar campos nativos name="attrib" o
+                        // name="attribute_value" cuyo value pertenece al atributo range real.
+                        // Es también lo que decide si el slider custom debe existir en esta categoría.
+                        Array.prototype.slice.call(document.querySelectorAll('[name="attrib"], [name="attribute_value"]')).forEach(function (field) {
+                            if (nativeAttributeFieldBelongsToItem(field, item)) add(getNativeAttributeBlock(field));
                         });
 
+                        // 2) Fallback por bloque: solo se usa para ocultar bien el bloque nativo
+                        // cuando ya sabemos que Odoo sí ha renderizado el atributo en la página.
+                        Array.prototype.slice.call(document.querySelectorAll('.accordion-item, .o_wsale_attribute, .css_attribute_select, .js_attribute, .mb-3, .border-bottom')).forEach(function (block) {
+                            if (!block || !block.querySelector) return;
+                            if (getDirectTitleText(block) === wantedName) add(block);
+                        });
+
+                        // 3) Fallback fuerte por nodo de texto: igual que el anterior, pero nunca
+                        // decide por sí solo que el slider deba mostrarse.
+                        Array.prototype.slice.call(document.querySelectorAll('h1,h2,h3,h4,h5,h6,button,b,strong,label,span')).forEach(function (node) {
+                            if (!node || !node.closest) return;
+                            if (node.closest('#wcf_runtime_range_filters') || node.closest('#wcf_range_filters_data')) return;
+                            if (normalizeText(node.textContent) !== wantedName) return;
+                            add(findClosestNativeFilterBlockFromTitleNode(node));
+                        });
+
+                        found.sort(function (a, b) {
+                            if (a === b) return 0;
+                            return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+                        });
+                        return found;
+                    }
+
+                    function collectNativeRangeAttributeBlocks(sources) {
+                        var found = [];
+                        (sources || []).forEach(function (item) {
+                            collectNativeRangeAttributeBlocksForItem(item).forEach(function (block) {
+                                if (found.indexOf(block) === -1) found.push(block);
+                            });
+                        });
                         found.sort(function (a, b) {
                             if (a === b) return 0;
                             return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
@@ -1083,8 +1117,19 @@
                             return;
                         }
                         cleanProductLinks();
-                        var sources = getSources();
+                        var allSources = getSources();
+                        if (!allSources.length) {
+                            return;
+                        }
+
+                        var sources = getAvailableSources(allSources);
+                        var existing = document.getElementById('wcf_runtime_range_filters');
+                        if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+
+                        // Si Odoo no ha renderizado ningún atributo range nativo para la
+                        // categoría/listado actual, no pintamos ningún slider custom.
                         if (!sources.length) {
+                            replaceNativeClearFiltersButtons();
                             return;
                         }
 
@@ -1096,9 +1141,6 @@
                         var nativeBlocks = collectNativeRangeAttributeBlocks(sources);
                         var firstNativeBlock = nativeBlocks.length ? nativeBlocks[0] : null;
                         var priceBlock = findPriceBlock();
-
-                        var existing = document.getElementById('wcf_runtime_range_filters');
-                        if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
 
                         var wrapper = document.createElement('div');
                         wrapper.id = 'wcf_runtime_range_filters';
@@ -1125,11 +1167,18 @@
                         }
                         cleanProductLinks();
                         replaceNativeClearFiltersButtons();
-                        var sources = getSources();
-                        if (!sources.length) {
+                        var allSources = getSources();
+                        if (!allSources.length) {
                             return;
                         }
-                        if (!document.getElementById('wcf_runtime_range_filters')) {
+                        var sources = getAvailableSources(allSources);
+                        var existing = document.getElementById('wcf_runtime_range_filters');
+                        var renderedIds = existing
+                            ? Array.prototype.slice.call(existing.querySelectorAll('.wcf-range-filter')).map(function (block) { return block.dataset.wcfAttributeId; }).join(',')
+                            : '';
+                        var availableIds = sources.map(function (item) { return String(item.id); }).join(',');
+
+                        if (!existing || renderedIds !== availableIds) {
                             renderRuntimeFilters();
                         } else {
                             hideNativeRangeAttributeBlocks(sources);
