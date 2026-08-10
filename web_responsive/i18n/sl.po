@@ -4,80 +4,70 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 14.0\n"
+"Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-02-13 14:09+0000\n"
-"Last-Translator: Administrator <alexzub@tut.by>\n"
+"PO-Revision-Date: 2026-06-06 11:46+0000\n"
+"Last-Translator: Matjaz Mozetic <matjaz@luxim.si>\n"
 "Language-Team: none\n"
-"Language: ru\n"
+"Language: sl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
-"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
-"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
+"Plural-Forms: nplurals=4; plural=n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || "
+"n%100==4 ? 2 : 3;\n"
 "X-Generator: Weblate 5.15.2\n"
 
 #. module: web_responsive
 #. odoo-javascript
-#: code:addons/web_responsive/static/src/views/form/status_bar_buttons.xml:0
-#, python-format
-msgid "Action"
-msgstr "Действие"
-
-#. module: web_responsive
-#. odoo-javascript
 #: code:addons/web_responsive/static/src/components/menu_canonical_searchbar/searchbar.xml:0
-#, python-format
 msgid "App Icon"
-msgstr "Иконка приложения"
+msgstr "Ikona aplikacije"
 
 #. module: web_responsive
 #: model:ir.actions.act_window,name:web_responsive.res_users_view_form_apps_menu_preferences_action
 msgid "Apps Menu Preferences"
-msgstr "Настройки меню приложений"
+msgstr "Aplikacije: meni nastavitve"
 
 #. module: web_responsive
 #: model:ir.model.fields,field_description:web_responsive.field_res_users__apps_menu_search_type
 #: model_terms:ir.ui.view,arch_db:web_responsive.res_users_view_form_apps_menu_preferences
 msgid "Apps Menu Search Type"
-msgstr "Тип поиска в меню приложений"
+msgstr "Aplikacije: Meni tip iskanja"
 
 #. module: web_responsive
 #: model:ir.model.fields,field_description:web_responsive.field_res_users__apps_menu_theme
 #: model_terms:ir.ui.view,arch_db:web_responsive.res_users_view_form_apps_menu_preferences
 msgid "Apps Menu Theme"
-msgstr "Тема меню приложений"
+msgstr "Aplikacije: Meni tema"
 
 #. module: web_responsive
 #: model:ir.model.fields.selection,name:web_responsive.selection__res_users__apps_menu_search_type__canonical
 #: model_terms:ir.ui.view,arch_db:web_responsive.res_users_view_form_apps_menu_preferences
 msgid "Canonical"
-msgstr "Канонический"
+msgstr "Canonical"
 
 #. module: web_responsive
 #: model:ir.model.fields.selection,name:web_responsive.selection__res_users__apps_menu_search_type__command_palette
 #: model_terms:ir.ui.view,arch_db:web_responsive.res_users_view_form_apps_menu_preferences
 msgid "Command Palette"
-msgstr "Палитра команд"
+msgstr "Paleta ukazov"
 
 #. module: web_responsive
 #: model:ir.model.fields.selection,name:web_responsive.selection__res_users__apps_menu_theme__community
 msgid "Community"
-msgstr "Сообщество"
+msgstr "Skupnost"
 
 #. module: web_responsive
 #. odoo-javascript
 #: code:addons/web_responsive/static/src/legacy/xml/form_buttons.xml:0
-#, python-format
 msgid "Discard"
-msgstr "Отменить"
+msgstr "Zavrzi"
 
 #. module: web_responsive
 #. odoo-javascript
 #: code:addons/web_responsive/static/src/components/command_palette/main.xml:0
-#, python-format
 msgid "Exit"
-msgstr "Выход"
+msgstr "Izhod"
 
 #. module: web_responsive
 #: model:ir.model.fields.selection,name:web_responsive.selection__res_users__apps_menu_search_type__fuse
@@ -88,177 +78,109 @@ msgstr "Fuse"
 #. module: web_responsive
 #: model:ir.model,name:web_responsive.model_ir_http
 msgid "HTTP Routing"
-msgstr "HTTP маршрутизация"
+msgstr "HTTP usmerjanje"
 
 #. module: web_responsive
 #. odoo-javascript
 #: code:addons/web_responsive/static/src/components/apps_menu/apps_menu.xml:0
-#, python-format
 msgid "Home Menu"
-msgstr "Главное меню"
+msgstr "Meni domov"
 
 #. module: web_responsive
 #. odoo-javascript
 #: code:addons/web_responsive/static/src/components/chatter/chatter.xml:0
-#, python-format
 msgid "Log note"
-msgstr "Записать заметку"
+msgstr "Opomba v logu"
 
 #. module: web_responsive
 #. odoo-javascript
 #: code:addons/web_responsive/static/src/components/file_viewer/file_viewer.xml:0
-#, python-format
 msgid "Maximize"
-msgstr "Увеличить"
+msgstr "Maksimiraj"
 
 #. module: web_responsive
 #: model:ir.model.fields.selection,name:web_responsive.selection__res_users__apps_menu_theme__milk
 msgid "Milk"
-msgstr "Молочная"
+msgstr "Milk"
 
 #. module: web_responsive
 #. odoo-javascript
 #: code:addons/web_responsive/static/src/components/file_viewer/file_viewer.xml:0
-#, python-format
 msgid "Minimize"
-msgstr "Уменьшить"
+msgstr "Minimiziraj"
 
 #. module: web_responsive
 #. odoo-javascript
 #: code:addons/web_responsive/static/src/legacy/xml/form_buttons.xml:0
-#, python-format
 msgid "New"
-msgstr "Создать"
+msgstr "Novo"
 
 #. module: web_responsive
 #. odoo-javascript
 #: code:addons/web_responsive/static/src/components/menu_canonical_searchbar/searchbar.xml:0
-#, python-format
 msgid "Nothing to show"
-msgstr "Нет результатов"
+msgstr "Nič za prikazati"
 
 #. module: web_responsive
 #: model:ir.model.fields,field_description:web_responsive.field_res_users__is_redirect_home
 msgid "Redirect to Home"
-msgstr "Перенаправлять на главную"
+msgstr "Preusmeri domov"
 
 #. module: web_responsive
 #: model:ir.model.fields,help:web_responsive.field_res_users__is_redirect_home
 msgid "Redirect to dashboard after signing in"
-msgstr "Перенаправлять на панель управления после входа в систему"
+msgstr "Po prijavi preusmeri na nadzorno ploščo"
 
 #. module: web_responsive
 #. odoo-javascript
 #: code:addons/web_responsive/static/src/legacy/xml/form_buttons.xml:0
-#, python-format
 msgid "Save"
-msgstr "Сохранить"
+msgstr "Shrani"
 
 #. module: web_responsive
 #: model_terms:ir.ui.view,arch_db:web_responsive.res_users_view_form_apps_menu_preferences
 msgid "Search Type"
-msgstr "Тип поиска"
+msgstr "Tip iskanja"
 
 #. module: web_responsive
 #: model_terms:ir.ui.view,arch_db:web_responsive.res_users_view_form_apps_menu_preferences
 msgid "Search Type Help"
-msgstr "Справка по типу поиска"
+msgstr "Pomoč pri tipu iskanja"
 
 #. module: web_responsive
 #. odoo-javascript
 #: code:addons/web_responsive/static/src/components/menu_canonical_searchbar/searchbar.xml:0
 #: code:addons/web_responsive/static/src/components/menu_odoo_searchbar/searchbar.xml:0
-#, python-format
 msgid "Search menus..."
-msgstr "Поиск по меню..."
+msgstr "Iskanje menijev..."
 
 #. module: web_responsive
 #. odoo-javascript
 #: code:addons/web_responsive/static/src/components/chatter/chatter.xml:0
-#, python-format
 msgid "Send message"
-msgstr "Отправить сообщение"
+msgstr "Pošlji sporočilo"
 
 #. module: web_responsive
 #: model_terms:ir.ui.view,arch_db:web_responsive.res_users_view_form_apps_menu_preferences
 msgid "Theme"
-msgstr "Тема оформления"
+msgstr "Tema"
 
 #. module: web_responsive
 #: model:ir.model,name:web_responsive.model_res_users
 msgid "User"
-msgstr "Пользователь"
+msgstr "Uporabnik"
 
 #. module: web_responsive
 #: model_terms:ir.ui.view,arch_db:web_responsive.res_users_view_form_apps_menu_preferences
 msgid "a new search algorithm is used"
-msgstr "используется новый алгоритм поиска"
+msgstr "uporablja se nov iskalni algoritem"
 
 #. module: web_responsive
 #: model_terms:ir.ui.view,arch_db:web_responsive.res_users_view_form_apps_menu_preferences
 msgid "the standard odoo search tool"
-msgstr "стандартный инструмент поиска Odoo"
+msgstr "standardno Odoo iskalno orodje"
 
 #. module: web_responsive
 #: model_terms:ir.ui.view,arch_db:web_responsive.res_users_view_form_apps_menu_preferences
 msgid "uses a standard algorithm"
-msgstr "использует стандартный алгоритм"
-
-#, python-format
-#~ msgid "All"
-#~ msgstr "Все"
-
-#, python-format
-#~ msgid "CLEAR"
-#~ msgstr "Очистить"
-
-#, python-format
-#~ msgid "FILTER"
-#~ msgstr "Фильтр"
-
-#, python-format
-#~ msgid "SEE RESULT"
-#~ msgstr "Применить"
-
-#, python-format
-#~ msgid "Search..."
-#~ msgstr "Поиск..."
-
-#, python-format
-#~ msgid "View switcher"
-#~ msgstr "Сменить вид"
-
-#, python-format
-#~ msgid "Create"
-#~ msgstr "Создать"
-
-#~ msgid "Chatter Position"
-#~ msgstr "Расположение Чата"
-
-#, python-format
-#~ msgid "Edit"
-#~ msgstr "Править"
-
-#~ msgid "Normal"
-#~ msgstr "Снизу"
-
-#, python-format
-#~ msgid "Quick actions"
-#~ msgstr "Действия"
-
-#~ msgid "Sided"
-#~ msgstr "Справа"
-
-#, python-format
-#~ msgid "Today"
-#~ msgstr "Сегодня"
-
-#, python-format
-#~ msgid "Undefined"
-#~ msgstr "Не определено"
-
-#~ msgid "Users"
-#~ msgstr "Пользователи"
-
-#~ msgid "Display Name"
-#~ msgstr "Видимое имя"
+msgstr "uporablja standardni algoritem"
