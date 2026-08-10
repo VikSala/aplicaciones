@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_res_users_login_security,res.users.login.security,base.model_res_users,base.group_system,1,1,0,0

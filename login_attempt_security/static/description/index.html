@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Login Attempt Security - Odoo 18</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+
+<h1 style="color:#6f42c1;">🔐 Login Attempt Security for Odoo 18</h1>
+
+<img src="banner.png" style="width:100%; margin-bottom:20px; border-radius:8px;"/>
+
+<p>
+    Protect your Odoo system from brute-force login attacks by limiting failed login attempts
+    and automatically blocking users for a configurable duration.
+</p>
+
+<hr/>
+
+<h2>🚀 Key Highlights</h2>
+
+<div style="background:#f8f9fa; padding:20px; border-radius:10px; margin-bottom:20px;">
+    <ul style="font-size:16px;">
+        <li><strong>✔ Protect Against Brute-Force Attacks</strong></li>
+        <li><strong>✔ Automatic Temporary Account Locking</strong></li>
+        <li><strong>✔ Configurable Login Attempt Limits</strong></li>
+        <li><strong>✔ Automatic Unlock After Timeout</strong></li>
+        <li><strong>✔ Lightweight & Upgrade-Safe</strong></li>
+    </ul>
+</div>
+
+<hr/>
+
+<h2>⚙ Configuration</h2>
+
+<p>
+    Go to:
+    <strong>Settings → Users & Companies → Login Security</strong>
+</p>
+
+<ul>
+    <li>Set maximum login attempts</li>
+    <li>Set block duration</li>
+    <li>Save configuration</li>
+</ul>
+
+<h3 style="margin-top:30px;">📸 Login Security Settings Screen</h3>
+
+<img src="screenshot_settings.png"
+     style="width:100%; border:1px solid #ddd; border-radius:10px; margin:15px 0 30px 0;" />
+
+<hr/>
+
+<h2>🛡 How It Works</h2>
+
+<ol>
+    <li>User enters incorrect password.</li>
+    <li>Failed attempts counter increases.</li>
+    <li>Once the limit is reached, the account is temporarily locked.</li>
+    <li>User cannot login even with correct password during block period.</li>
+    <li>After timeout, account is automatically unlocked.</li>
+</ol>
+
+<h3 style="margin-top:30px;">🚫 Blocked User Login Screen</h3>
+
+<img src="screenshot_blocked.png"
+     style="width:100%; border:1px solid #ddd; border-radius:10px; margin:15px 0 30px 0;" />
+
+<hr/>
+
+<h2>💡 Why Use This Module?</h2>
+
+<p>
+    Odoo Community Edition does not include built-in brute-force protection.
+    This module enhances your system security by preventing unlimited login attempts.
+</p>
+
+<ul>
+    <li>Improves security posture</li>
+    <li>Reduces risk of credential attacks</li>
+    <li>Simple and lightweight</li>
+    <li>No performance overhead</li>
+</ul>
+
+<hr/>
+
+<h2>📦 Technical Details</h2>
+
+<ul>
+    <li>Compatible with Odoo 18 Community & Enterprise</li>
+    <li>License: LGPL-3</li>
+    <li>No external dependencies</li>
+    <li>Clean integration with core authentication</li>
+</ul>
+
+<hr/>
+
+<h2>👨‍💻 Author</h2>
+
+<p>
+    <strong>Deepak Verma</strong><br/>
+    DeeCoders<br/>
+    📧 Support: dpakverma789@gmail.com
+</p>
+
+</body>
+</html>
