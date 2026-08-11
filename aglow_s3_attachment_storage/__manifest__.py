@@ -15,7 +15,7 @@ Key Features:
 Ideal for companies looking to reduce server disk usage, improve backup strategies, or scale Odoo deployments with cloud-native file storage.
 """,
     "author": "Alpenglow Technologies LLC",
-    "version": "18.0.1.0.3",
+    "version": "18.0.1.0.5",
     "category": "Tools",
     "license": "OPL-1",
     "depends": ["base", "web", "base_setup"],

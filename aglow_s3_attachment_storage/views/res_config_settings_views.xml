@@ -28,6 +28,10 @@
                              help="AWS region or provider region code">
                         <field name="s3_attachment_region" placeholder="us-east-1"/>
                     </setting>
+                    <setting string="Object Key Prefix"
+                             help="Optional. Leave empty for a dedicated bucket. Set a distinct prefix per instance (e.g. 'prod-a') only when several Odoo databases share one bucket, so each instance's garbage collection stays within its own objects.">
+                        <field name="s3_attachment_key_prefix" placeholder="e.g. prod-a"/>
+                    </setting>
                     <setting string="Production Only"
                              help="Only write to and delete from S3 on production Odoo SH builds. Staging and dev builds will still read from S3, but store new attachments locally.">
                         <field name="s3_attachment_production_only"/>

@@ -8,6 +8,7 @@ from botocore.exceptions import ClientError
 
 from odoo import api, models
 from odoo.exceptions import ValidationError
+from odoo.http import Stream
 from odoo.tools import config
 
 _logger = logging.getLogger(__name__)
@@ -167,6 +168,63 @@ class IrAttachment(models.Model):
                 return False
         return True
 
+    @api.model
+    def _s3_key(self, fname):
+        """Map a store_fname to its S3 object key.
+
+        When s3_attachment.key_prefix is set, every object this instance
+        writes lives under that prefix, which isolates instances that
+        share a single bucket: each instance's garbage collection only
+        ever sees keys under its own prefix. An empty prefix (the
+        default) returns the store_fname unchanged, so existing installs
+        are byte-for-byte unaffected.
+        """
+        prefix = (
+            self.env["ir.config_parameter"]
+            .sudo()
+            .get_param("s3_attachment.key_prefix", "")
+        )
+        prefix = (prefix or "").strip().strip("/")
+        return "%s/%s" % (prefix, fname) if prefix else fname
+
+    def _s3_get_bytes(self, s3, s3_bucket, fname, size=None):
+        """Read an object's bytes, preferring the prefixed key and
+        falling back to the legacy un-prefixed key.
+
+        The fallback lets an instance adopt a key prefix without
+        re-migrating objects that were written before the prefix was
+        configured. Returns the payload bytes; re-raises the final
+        ClientError if the object exists under neither key.
+        """
+        key = self._s3_key(fname)
+        try:
+            response = s3.get_object(Bucket=s3_bucket, Key=key)
+            return response["Body"].read(size)
+        except ClientError as e:
+            error_code = e.response["Error"]["Code"]
+            if error_code in ("NoSuchKey", "404") and key != fname:
+                response = s3.get_object(Bucket=s3_bucket, Key=fname)
+                return response["Body"].read(size)
+            raise
+
+    def _s3_head_key(self, s3, s3_bucket, fname):
+        """Return the S3 key under which ``fname`` exists, preferring the
+        prefixed key and falling back to the legacy un-prefixed key.
+
+        Re-raises the final ClientError if the object exists under
+        neither key.
+        """
+        key = self._s3_key(fname)
+        try:
+            s3.head_object(Bucket=s3_bucket, Key=key)
+            return key
+        except ClientError as e:
+            error_code = e.response["Error"]["Code"]
+            if error_code in ("NoSuchKey", "404") and key != fname:
+                s3.head_object(Bucket=s3_bucket, Key=fname)
+                return fname
+            raise
+
     def action_verify_and_cleanup_s3(self):
         """Verify attachment exists in S3, then delete the local copy.
 
@@ -178,8 +236,8 @@ class IrAttachment(models.Model):
         if not fname:
             raise ValidationError("This attachment has no store_fname.")
 
-        # Verify file exists in S3
-        s3.head_object(Bucket=s3_bucket, Key=fname)
+        # Verify file exists in S3 (prefixed key, or legacy un-prefixed)
+        self._s3_head_key(s3, s3_bucket, fname)
 
         # Delete local copy if it exists
         full_path = self._full_path(fname)
@@ -240,8 +298,7 @@ class IrAttachment(models.Model):
                 skipped += 1
                 continue
             try:
-                response = s3.get_object(Bucket=s3_bucket, Key=fname)
-                data = response["Body"].read()
+                data = self._s3_get_bytes(s3, s3_bucket, fname)
             except ClientError as e:
                 _logger.warning(
                     "S3 repair: attachment %d (%s) not fetchable from S3: %s",
@@ -310,7 +367,9 @@ class IrAttachment(models.Model):
 
         for attempt in range(S3_RETRY_MAX):
             try:
-                s3.put_object(Bucket=s3_bucket, Key=fname, Body=bin_data)
+                s3.put_object(
+                    Bucket=s3_bucket, Key=self._s3_key(fname), Body=bin_data
+                )
                 return fname
             except ClientError as e:
                 error_code = e.response["Error"]["Code"]
@@ -359,11 +418,10 @@ class IrAttachment(models.Model):
             return b""
 
         try:
-            response = s3.get_object(Bucket=s3_bucket, Key=fname)
-            return response["Body"].read()
+            return self._s3_get_bytes(s3, s3_bucket, fname)
         except ClientError as e:
             error_code = e.response["Error"]["Code"]
-            if error_code == "NoSuchKey":
+            if error_code in ("NoSuchKey", "404"):
                 return b""
             _logger.exception(
                 "Error reading from S3: %s - %s", error_code, e
@@ -373,36 +431,38 @@ class IrAttachment(models.Model):
         return b""
 
     def _to_http_stream(self):
-        """Override para Odoo 18.
-        Si Odoo va a generar un stream de un archivo que está en S3
-        pero no existe en el filestore local de Docker, lo descargamos
-        justo antes de que ejecute os.stat().
-        """
-        self.ensure_one()
-        if self.type == 'binary' and self.store_fname and self._should_use_s3():
-            full_path = self._full_path(self.store_fname)
-            
-            # Si el archivo no está físicamente en el contenedor
-            if not os.path.isfile(full_path):
-                try:
-                    s3, s3_bucket = self._get_s3_client()
-                    response = s3.get_object(Bucket=s3_bucket, Key=self.store_fname)
-                    bin_data = response["Body"].read()
-                    
-                    # Asegurar que el árbol de directorios local exista (ej: /3a/)
-                    dirname = os.path.dirname(full_path)
-                    if not os.path.isdir(dirname):
-                        os.makedirs(dirname, exist_ok=True)
-                        
-                    # Escribir el archivo en el filestore local
-                    tmp_path = full_path + ".tmp"
-                    with open(tmp_path, "wb") as f:
-                        f.write(bin_data)
-                    os.replace(tmp_path, full_path)
-                except Exception as e:
-                    _logger.error("S3: Error al descargar archivo para stream HTTP: %s", e)
+        """Serve attachments from S3 when the local filestore copy is gone.
 
-        return super(IrAttachment, self)._to_http_stream()
+        The base implementation streams attachments by os.stat()ing the
+        local filestore path directly and never goes through
+        _file_read(), so attachments whose bytes live only in S3 raised
+        FileNotFoundError on /web/content and /web/image.  Catch it and
+        serve the payload through _file_read() (local-first with S3
+        fallback) as an in-memory data stream.  Every core caller
+        (ir.binary._record_to_stream and ir.http attachment routing)
+        builds its stream through this method.
+        """
+        try:
+            return super()._to_http_stream()
+        except FileNotFoundError:
+            data = self._file_read(self.store_fname)
+            if not data:
+                raise
+            _logger.debug(
+                "Serving attachment %d (%s) from S3: no local filestore copy.",
+                self.id,
+                self.store_fname,
+            )
+            return Stream(
+                type="data",
+                data=data,
+                etag=self.checksum,
+                download_name=self.name,
+                mimetype=self.mimetype,
+                public=self.public,
+                size=len(data),
+                last_modified=self.write_date,
+            )
 
     @api.model
     def _file_write(self, bin_value, checksum):
@@ -497,7 +557,9 @@ class IrAttachment(models.Model):
                 if fname not in whitelist:
                     for attempt in range(S3_RETRY_MAX):
                         try:
-                            s3.delete_object(Bucket=s3_bucket, Key=fname)
+                            s3.delete_object(
+                                Bucket=s3_bucket, Key=self._s3_key(fname)
+                            )
                             _logger.debug(
                                 "S3 GC deleted '%s' from bucket '%s'.",
                                 fname,
@@ -767,8 +829,9 @@ class IrAttachment(models.Model):
                     continue
 
                 try:
-                    # Verify the file exists in S3 (HEAD is cheaper than GET)
-                    s3.head_object(Bucket=s3_bucket, Key=fname)
+                    # Verify the file exists in S3 (HEAD is cheaper than GET).
+                    # Checks the prefixed key, then the legacy un-prefixed key.
+                    self._s3_head_key(s3, s3_bucket, fname)
 
                     # S3 has it — safe to delete locally
                     os.remove(full_path)

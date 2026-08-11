@@ -31,6 +31,17 @@ class ResConfigSettings(models.TransientModel):
         groups="base.group_system",
         help="AWS region (e.g. us-east-1) or provider region code.",
     )
+    s3_attachment_key_prefix = fields.Char(
+        string="Object Key Prefix",
+        config_parameter="s3_attachment.key_prefix",
+        groups="base.group_system",
+        help="Optional path prefix applied to every S3 object key from this "
+        "instance. Leave empty unless multiple Odoo databases share one "
+        "bucket — then set a distinct prefix per instance (e.g. \"prod-a\") "
+        "so each instance's garbage collection only touches its own objects. "
+        "Reads fall back to un-prefixed keys, so existing objects stay "
+        "accessible after you set a prefix.",
+    )
     s3_attachment_production_only = fields.Boolean(
         string="Production Only",
         config_parameter="s3_attachment.production_only",
