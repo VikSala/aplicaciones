@@ -14,7 +14,7 @@ Features:
 
 Ideal for improving system security against brute-force attacks.
     """,
-    "version": "18.0.1.0.0",
+    "version": "18.0.1.0.1",
     "category": "Security",
     "author": "Deepak Verma",
     "company": "DeeCoders",
