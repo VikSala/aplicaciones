@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_odoo_ai_appointment_service_system,odoo.ai.appointment.service.system,model_odoo_ai_appointment_service,base.group_system,1,1,1,1
+access_odoo_ai_appointment_session_system,odoo.ai.appointment.session.system,model_odoo_ai_appointment_session,base.group_system,1,1,1,1
+access_odoo_ai_appointment_service_user,odoo.ai.appointment.service.user,model_odoo_ai_appointment_service,base.group_user,1,0,0,0
+access_odoo_ai_appointment_session_attendance_officer,odoo.ai.appointment.session.attendance.officer,model_odoo_ai_appointment_session,hr_attendance.group_hr_attendance_officer,1,0,0,0
+access_odoo_ai_appointment_availability_wizard_system,odoo.ai.appointment.availability.wizard.system,model_odoo_ai_appointment_availability_wizard,base.group_system,1,1,1,1
+access_odoo_ai_appointment_availability_wizard_line_system,odoo.ai.appointment.availability.wizard.line.system,model_odoo_ai_appointment_availability_wizard_line,base.group_system,1,1,1,1
+access_odoo_ai_appointment_conversation_wizard_system,odoo.ai.appointment.conversation.wizard.system,model_odoo_ai_appointment_conversation_wizard,base.group_system,1,1,1,1
+access_odoo_ai_appointment_conversation_wizard_line_system,odoo.ai.appointment.conversation.wizard.line.system,model_odoo_ai_appointment_conversation_wizard_line,base.group_system,1,1,1,1

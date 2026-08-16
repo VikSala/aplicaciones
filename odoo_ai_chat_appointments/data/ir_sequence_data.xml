@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo noupdate="1">
+    <record id="seq_odoo_ai_appointment_session" model="ir.sequence">
+        <field name="name">Sesión de reserva chatbot</field>
+        <field name="code">odoo.ai.appointment.session</field>
+        <field name="prefix">CITA-CHAT-</field>
+        <field name="padding">6</field>
+    </record>
+</odoo>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_odoo_ai_chat_appointments" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.odoo.ai.chat.appointments</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app string="AI Chat Citas" name="odoo_ai_chat_appointments" data-string="AI Chat Citas">
+                    <block title="Chatbot">
+                        <setting string="URL del webhook (fallback IA)"
+                                 help="Si hay una URL HTTP(S) válida, el fallback queda activo automáticamente. Python procesa siempre primero y n8n solo se llama cuando el parser devuelve fallback=True. Si n8n falla, se conserva la aclaración de Python.">
+                            <field name="odoo_ai_chat_appointments_webhook_url" placeholder="https://n8n.example.com/webhook/odoo-ai-chat"/>
+                        </setting>
+                        <setting string="Título" help="Nombre visible en la cabecera del widget.">
+                            <field name="odoo_ai_chat_appointments_title" placeholder="Asistente de citas"/>
+                        </setting>
+                        <setting string="Mensaje de bienvenida" help="Primer mensaje que verá el visitante al abrir el chat.">
+                            <field name="odoo_ai_chat_appointments_welcome_message" placeholder="Hola, ¿en qué puedo ayudarte?"/>
+                        </setting>
+                        <setting string="Páginas donde aparece" help="Selecciona las páginas del sitio donde debe cargarse el chatbot.">
+                            <field name="odoo_ai_chat_appointments_page_ids"
+                                   widget="many2many_tags"
+                                   placeholder="Selecciona páginas"
+                                   context="{'odoo_ai_chat_appointments_page_selector': True}"
+                                   options="{'no_create': True, 'no_create_edit': True}"/>
+                        </setting>
+                    </block>
+                    <block title="WhatsApp">
+                        <setting string="Activar chatbot de citas en WhatsApp"
+                                 help="Cuando está activo, los mensajes directos de las cuentas seleccionadas se procesan con la misma máquina de estados Python que el widget Web. No se aplica a grupos.">
+                            <field name="odoo_ai_chat_appointments_whatsapp_enabled"/>
+                        </setting>
+                        <setting string="Cuentas WhatsApp"
+                                 help="Selecciona exclusivamente las cuentas dedicadas al chatbot de citas. Las demás seguirán usando el chatbot y auto-respuestas nativas de Open WhatsApp Connector.">
+                            <field name="odoo_ai_chat_appointments_whatsapp_account_ids"
+                                   widget="many2many_tags"
+                                   options="{'no_create': True, 'no_create_edit': True}"
+                                   invisible="not odoo_ai_chat_appointments_whatsapp_enabled"/>
+                        </setting>
+                    </block>
+                    <block title="Robustez de conversación">
+                        <setting string="Caducidad por inactividad"
+                                 help="Las reservas incompletas que superen este tiempo sin mensajes se cierran como caducadas. La siguiente interacción empieza un proceso nuevo sin perder el histórico anterior.">
+                            <div class="d-flex gap-2 align-items-center">
+                                <field name="odoo_ai_chat_appointments_session_timeout_hours"/>
+                                <span>horas</span>
+                            </div>
+                        </setting>
+                    </block>
+                    <block title="Interpretación horaria por Python">
+                        <setting string="Franja de mañana" help="Horas usadas cuando el usuario dice “por la mañana”.">
+                            <div class="d-flex gap-2 align-items-center">
+                                <field name="odoo_ai_chat_appointments_morning_from" widget="float_time"/>
+                                <span>hasta</span>
+                                <field name="odoo_ai_chat_appointments_morning_to" widget="float_time"/>
+                            </div>
+                        </setting>
+                        <setting string="Franja de tarde" help="Horas usadas cuando el usuario dice “por la tarde”.">
+                            <div class="d-flex gap-2 align-items-center">
+                                <field name="odoo_ai_chat_appointments_afternoon_from" widget="float_time"/>
+                                <span>hasta</span>
+                                <field name="odoo_ai_chat_appointments_afternoon_to" widget="float_time"/>
+                            </div>
+                        </setting>
+                    </block>
+                    <block title="Apariencia">
+                        <setting string="Color primario">
+                            <field name="odoo_ai_chat_appointments_primary_color" widget="color"/>
+                        </setting>
+                        <setting string="Color secundario">
+                            <field name="odoo_ai_chat_appointments_secondary_color" widget="color"/>
+                        </setting>
+                        <setting string="Color de letra">
+                            <field name="odoo_ai_chat_appointments_text_color" widget="color"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+</odoo>
