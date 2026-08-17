@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_odoo_ai_appointment_service_list" model="ir.ui.view">
+        <field name="name">odoo.ai.appointment.service.list</field>
+        <field name="model">odoo.ai.appointment.service</field>
+        <field name="arch" type="xml">
+            <list string="Servicios" default_order="sequence,name">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="duration_minutes"/>
+                <field name="department_ids" widget="many2many_tags"/>
+                <field name="active" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_odoo_ai_appointment_service_form" model="ir.ui.view">
+        <field name="name">odoo.ai.appointment.service.form</field>
+        <field name="model">odoo.ai.appointment.service</field>
+        <field name="arch" type="xml">
+            <form string="Servicio">
+                <header>
+                    <button name="action_open_availability_wizard" string="Probar disponibilidad" type="object" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="aliases" placeholder="fisio, fisioterapeuta..."/>
+                            <field name="duration_minutes"/>
+                            <field name="slot_step_minutes"/>
+                            <field name="min_notice_minutes"/>
+                            <field name="max_search_days"/>
+                            <field name="sequence"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="department_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                            <field name="eligible_employee_ids" widget="many2many_tags" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Descripción">
+                        <field name="description" nolabel="1" placeholder="Notas internas sobre el servicio..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_odoo_ai_appointment_service_search" model="ir.ui.view">
+        <field name="name">odoo.ai.appointment.service.search</field>
+        <field name="model">odoo.ai.appointment.service</field>
+        <field name="arch" type="xml">
+            <search string="Servicios">
+                <field name="name"/>
+                <field name="department_ids"/>
+                <filter string="Archivados" name="inactive" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_odoo_ai_appointment_service" model="ir.actions.act_window">
+        <field name="name">Servicios</field>
+        <field name="res_model">odoo.ai.appointment.service</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_odoo_ai_chat_appointments_root"
+              name="Chatbot Citas"
+              sequence="95"
+              groups="base.group_system"/>
+    <menuitem id="menu_odoo_ai_appointment_service"
+              name="Servicios"
+              parent="menu_odoo_ai_chat_appointments_root"
+              action="action_odoo_ai_appointment_service"
+              sequence="10"
+              groups="base.group_system"/>
+</odoo>

@@ -1,0 +1,259 @@
+.o_ai_chat_appointments {
+    --ai-chat-primary: #0e273b;
+    --ai-chat-secondary: #4caf50;
+    --ai-chat-text: #ffffff;
+    --ai-chat-bg: var(--ai-chat-primary);
+    --ai-chat-accent: var(--ai-chat-secondary);
+    --ai-chat-input-bg: rgba(255, 255, 255, 0.08);
+    --ai-chat-border: rgba(255, 255, 255, 0.1);
+    --ai-chat-placeholder: rgba(255, 255, 255, 0.55);
+    --ai-chat-width: 31.625rem;
+    font-family: Arial, sans-serif;
+}
+
+.o_ai_chat_appointments_panel {
+    display: none;
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: 100vw;
+    height: 100vh;
+    min-height: 0;
+    overflow: hidden;
+    flex-direction: column;
+    box-sizing: border-box;
+    background: var(--ai-chat-bg);
+    color: var(--ai-chat-text);
+    border-left: 1px solid var(--ai-chat-border);
+    box-shadow: -5px 0 25px rgba(0, 0, 0, 0.3);
+    z-index: 2147483000;
+}
+
+.o_ai_chat_appointments_panel.is-open {
+    display: flex;
+}
+
+.o_ai_chat_appointments_header {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 20px 18px;
+    background: var(--ai-chat-bg);
+    color: var(--ai-chat-text);
+    border-bottom: 1px solid var(--ai-chat-border);
+}
+
+.o_ai_chat_appointments_brand {
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.o_ai_chat_appointments_brand small {
+    font-size: 10px;
+    opacity: 0.6;
+    vertical-align: top;
+}
+
+.o_ai_chat_appointments_status {
+    display: flex;
+    align-items: center;
+    margin-top: 4px;
+    color: var(--ai-chat-accent);
+    font-size: 11px;
+}
+
+.o_ai_chat_appointments_status span {
+    margin-right: 5px;
+}
+
+.o_ai_chat_appointments_close {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ai-chat-text);
+    font-size: 24px;
+    line-height: 24px;
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+.o_ai_chat_appointments_close:hover,
+.o_ai_chat_appointments_close:focus-visible {
+    opacity: 1;
+}
+
+.o_ai_chat_appointments_messages {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 15px;
+    background: var(--ai-chat-bg);
+    color: var(--ai-chat-text);
+    font-size: 14px;
+}
+
+.o_ai_chat_appointments_messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.o_ai_chat_appointments_messages::-webkit-scrollbar-thumb {
+    background: var(--ai-chat-border);
+    border-radius: 10px;
+}
+
+.o_ai_chat_appointments_message {
+    margin-bottom: 10px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.o_ai_chat_appointments_message_error {
+    color: #ff8f8f;
+}
+
+.o_ai_chat_appointments_footer {
+    flex: 0 0 auto;
+    border-top: 1px solid var(--ai-chat-border);
+    background: var(--ai-chat-bg);
+}
+
+.o_ai_chat_appointments_form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 15px;
+    background: var(--ai-chat-bg);
+}
+
+.o_ai_chat_appointments_input_shell {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    min-width: 0;
+    padding: 2px 15px;
+    border: 1px solid var(--ai-chat-border);
+    border-radius: 25px;
+    background: var(--ai-chat-input-bg);
+}
+
+.o_ai_chat_appointments_input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--ai-chat-text);
+    font: inherit;
+    font-size: 14px;
+}
+
+.o_ai_chat_appointments_input::placeholder {
+    color: var(--ai-chat-placeholder);
+}
+
+.o_ai_chat_appointments_input:disabled {
+    opacity: 0.65;
+}
+
+.o_ai_chat_appointments_send {
+    margin-left: 10px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ai-chat-accent);
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.o_ai_chat_appointments_send:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.o_ai_chat_appointments_signature {
+    margin: 0;
+    padding-bottom: 10px;
+    text-align: center;
+    font-size: 9px;
+    opacity: 0.4;
+}
+
+.o_ai_chat_appointments_launcher {
+    display: block;
+    position: fixed;
+    right: 25px;
+    bottom: 25px;
+    width: 60px;
+    height: 60px;
+    border: 1px solid var(--ai-chat-border);
+    border-radius: 50%;
+    background: var(--ai-chat-bg);
+    color: var(--ai-chat-text);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    z-index: 2147483000;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.o_ai_chat_appointments_launcher:hover,
+.o_ai_chat_appointments_launcher:focus-visible {
+    transform: translateY(-1px);
+}
+
+@media (max-width: 899.98px) {
+    html.o_ai_chat_appointments_open,
+    body.o_ai_chat_appointments_open {
+        overflow: hidden !important;
+        overscroll-behavior: none;
+    }
+
+    .o_ai_chat_appointments_panel {
+        inset: 0 !important;
+        width: 100vw !important;
+        min-width: 100vw !important;
+        max-width: 100vw !important;
+        height: 100vh !important;
+        min-height: 100vh !important;
+        max-height: 100vh !important;
+        border-left: 0;
+        box-shadow: none;
+    }
+
+    @supports (height: 100dvh) {
+        .o_ai_chat_appointments_panel {
+            height: 100dvh !important;
+            min-height: 100dvh !important;
+            max-height: 100dvh !important;
+        }
+    }
+
+    .o_ai_chat_appointments_header {
+        padding-top: calc(20px + env(safe-area-inset-top, 0px));
+        padding-left: calc(18px + env(safe-area-inset-left, 0px));
+        padding-right: calc(18px + env(safe-area-inset-right, 0px));
+    }
+
+    .o_ai_chat_appointments_messages {
+        padding-left: calc(15px + env(safe-area-inset-left, 0px));
+        padding-right: calc(15px + env(safe-area-inset-right, 0px));
+    }
+
+    .o_ai_chat_appointments_footer {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+}
+
+@media (min-width: 900px) {
+    .o_ai_chat_appointments_panel {
+        width: var(--ai-chat-width);
+    }
+}

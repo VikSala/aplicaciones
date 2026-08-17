@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_hr_attendance_form_odoo_ai_appointments" model="ir.ui.view">
+        <field name="name">hr.attendance.form.odoo.ai.appointments</field>
+        <field name="model">hr.attendance</field>
+        <field name="inherit_id" ref="hr_attendance.hr_attendance_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <group string="Cita chatbot">
+                    <group>
+                        <field name="is_chatbot_appointment"/>
+                        <field name="cliente" invisible="not is_chatbot_appointment"/>
+                    </group>
+                    <group>
+                        <field name="appointment_service_id" invisible="not is_chatbot_appointment"/>
+                        <field name="appointment_session_id" invisible="not is_chatbot_appointment"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_hr_attendance_list_odoo_ai_appointments" model="ir.ui.view">
+        <field name="name">hr.attendance.list.odoo.ai.appointments</field>
+        <field name="model">hr.attendance</field>
+        <field name="inherit_id" ref="hr_attendance.view_attendance_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='check_out']" position="after">
+                <field name="is_chatbot_appointment" optional="hidden"/>
+                <field name="cliente" optional="show"/>
+                <field name="appointment_service_id" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_hr_attendance_search_odoo_ai_appointments" model="ir.ui.view">
+        <field name="name">hr.attendance.search.odoo.ai.appointments</field>
+        <field name="model">hr.attendance</field>
+        <field name="inherit_id" ref="hr_attendance.hr_attendance_view_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="cliente"/>
+                <field name="appointment_service_id"/>
+                <filter string="Citas chatbot" name="chatbot_appointments" domain="[('is_chatbot_appointment', '=', True)]"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

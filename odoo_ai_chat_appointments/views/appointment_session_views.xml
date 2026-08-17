@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_odoo_ai_appointment_session_list" model="ir.ui.view">
+        <field name="name">odoo.ai.appointment.session.list</field>
+        <field name="model">odoo.ai.appointment.session</field>
+        <field name="arch" type="xml">
+            <list string="Sesiones de reserva" default_order="last_activity desc">
+                <field name="name"/>
+                <field name="source"/>
+                <field name="web_session_id" optional="hide"/>
+                <field name="is_test" optional="hide"/>
+                <field name="partner_id"/>
+                <field name="service_id"/>
+                <field name="employee_id" optional="show"/>
+                <field name="state"/>
+                <field name="last_activity"/>
+                <field name="attendance_id" optional="show"/>
+                <field name="booked_at" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_odoo_ai_appointment_session_form" model="ir.ui.view">
+        <field name="name">odoo.ai.appointment.session.form</field>
+        <field name="model">odoo.ai.appointment.session</field>
+        <field name="arch" type="xml">
+            <form string="Sesión de reserva">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Conversación">
+                            <field name="source"/>
+                            <field name="web_session_id" invisible="source != 'web'"/>
+                            <field name="whatsapp_channel_id" invisible="source != 'whatsapp'"/>
+                            <field name="whatsapp_number" invisible="source != 'whatsapp'"/>
+                            <field name="whatsapp_last_inbound_message_id" invisible="source != 'whatsapp'"/>
+                            <field name="whatsapp_last_outbound_message_id" invisible="source != 'whatsapp'"/>
+                            <field name="partner_id"/>
+                            <field name="last_activity"/>
+                            <field name="closed_at"/>
+                            <field name="close_reason"/>
+                        </group>
+                        <group string="Flujo">
+                            <field name="state"/>
+                            <field name="service_id"/>
+                            <field name="booking_mode"/>
+                            <field name="employee_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Preferencias">
+                            <group>
+                                <field name="preference_text"/>
+                                <field name="preferred_date_from"/>
+                                <field name="preferred_date_to"/>
+                                <field name="preferred_time_from" widget="float_time"/>
+                                <field name="preferred_time_to" widget="float_time"/>
+                            </group>
+                        </page>
+                        <page string="Propuesta y reserva">
+                            <group>
+                                <field name="proposed_employee_id"/>
+                                <field name="proposed_start"/>
+                                <field name="proposed_end"/>
+                                <field name="customer_name"/>
+                                <field name="attendance_id"/>
+                                <field name="booked_at"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_odoo_ai_appointment_session_search" model="ir.ui.view">
+        <field name="name">odoo.ai.appointment.session.search</field>
+        <field name="model">odoo.ai.appointment.session</field>
+        <field name="arch" type="xml">
+            <search string="Sesiones de reserva">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="service_id"/>
+                <field name="employee_id"/>
+                <filter string="Web" name="source_web" domain="[('source', '=', 'web')]"/>
+                <filter string="WhatsApp" name="source_whatsapp" domain="[('source', '=', 'whatsapp')]"/>
+                <filter string="Pruebas Fase 3" name="phase3_tests" domain="[('is_test', '=', True)]"/>
+                <separator/>
+                <filter string="Reservadas" name="booked" domain="[('state', '=', 'booked')]"/>
+                <filter string="Activas" name="active_flow" domain="[('state', 'not in', ['booked', 'cancelled', 'expired'])]"/>
+                <filter string="Canceladas" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
+                <filter string="Caducadas" name="expired" domain="[('state', '=', 'expired')]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_odoo_ai_appointment_session" model="ir.actions.act_window">
+        <field name="name">Sesiones de reserva</field>
+        <field name="res_model">odoo.ai.appointment.session</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_odoo_ai_appointment_session"
+              name="Sesiones de reserva"
+              parent="menu_odoo_ai_chat_appointments_root"
+              action="action_odoo_ai_appointment_session"
+              sequence="20"
+              groups="base.group_system"/>
+</odoo>
