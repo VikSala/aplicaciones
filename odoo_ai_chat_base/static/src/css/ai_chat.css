@@ -1,0 +1,142 @@
+.o_ai_chat_base {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1050;
+    font-family: inherit;
+}
+
+.o_ai_chat_base_launcher {
+    width: 54px;
+    height: 54px;
+    border: 0;
+    border-radius: 50%;
+    background: #714b67;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.o_ai_chat_base_panel {
+    display: none;
+    position: absolute;
+    right: 0;
+    bottom: 68px;
+    width: min(380px, calc(100vw - 32px));
+    height: min(520px, calc(100vh - 120px));
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+}
+
+.o_ai_chat_base_panel.is-open {
+    display: flex;
+    flex-direction: column;
+}
+
+.o_ai_chat_base_header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #714b67;
+    color: #fff;
+}
+
+.o_ai_chat_base_close {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.o_ai_chat_base_messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    background: #f7f7f8;
+}
+
+.o_ai_chat_base_message {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.o_ai_chat_base_message_user {
+    justify-content: flex-end;
+}
+
+.o_ai_chat_base_bubble {
+    max-width: 85%;
+    padding: 9px 12px;
+    border-radius: 12px;
+    background: #fff;
+    color: #212529;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.o_ai_chat_base_message_user .o_ai_chat_base_bubble {
+    background: #714b67;
+    color: #fff;
+}
+
+.o_ai_chat_base_message_error .o_ai_chat_base_bubble {
+    color: #b42318;
+}
+
+.o_ai_chat_base_form {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    padding: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    background: #fff;
+}
+
+.o_ai_chat_base_input {
+    flex: 1;
+    min-height: 40px;
+    max-height: 120px;
+    resize: vertical;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 9px 10px;
+    font: inherit;
+}
+
+.o_ai_chat_base_send {
+    border: 0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    background: #714b67;
+    color: #fff;
+    cursor: pointer;
+}
+
+.o_ai_chat_base_send:disabled {
+    opacity: 0.55;
+    cursor: default;
+}
+
+@media (max-width: 576px) {
+    .o_ai_chat_base {
+        right: 16px;
+        bottom: 16px;
+    }
+
+    .o_ai_chat_base_panel {
+        position: fixed;
+        right: 16px;
+        bottom: 82px;
+        left: 16px;
+        width: auto;
+        height: min(70vh, 520px);
+    }
+}
