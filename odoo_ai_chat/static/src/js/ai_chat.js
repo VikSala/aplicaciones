@@ -493,7 +493,7 @@
             }
             element.textContent = button.label;
             element.style.display = "inline-block";
-            element.style.background = "#714B67";
+            element.style.background = "#009557";
             element.style.color = "#fff";
             element.style.padding = "7px 11px";
             element.style.borderRadius = "6px";
@@ -1236,13 +1236,13 @@
         wrapper.setAttribute("data-odoo-ai-chat-version", CURRENT_WIDGET_VERSION);
         wrapper.innerHTML = `
             <div id="odoo-ai-chat-box" style="position:fixed;right:0;bottom:0;max-width:100vw;height:100vh;background:var(--ai-chat-bg);border-left:1px solid var(--ai-chat-border);border-radius:0;box-shadow:-5px 0 25px rgba(0,0,0,0.3);z-index:2147483000;font-family:Arial,sans-serif;overflow:hidden;display:none;flex-direction:column;color:var(--ai-chat-text);">
-                <div style="background:var(--ai-chat-bg);color:var(--ai-chat-text);padding:20px 18px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--ai-chat-border);gap:10px;">
+                <div style="background:var(--ai-chat-bg);color:var(--ai-chat-text);padding:20px 18px;padding-top: 40px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--ai-chat-border);gap:10px;">
                     <div>
                         <span style="font-weight:bold;font-size:18px;letter-spacing:0.5px;">OPTIMA <small style="font-size:10px;opacity:0.6;vertical-align:top;">IA</small></span>
                         <div style="font-size:11px;color:var(--ai-chat-accent);margin-top:4px;display:flex;align-items:center;"><span style="margin-right:5px;">●</span> ACTIVO</div>
                     </div>
                     <div style="display:flex;align-items:flex-start;gap:10px;">
-                        <button id="odoo-ai-chat-header-extra" type="button" aria-label="¿Qué puedo hacer?" title="Ver qué puede hacer esta cuenta" style="background:#714B67;border:none;color:#fff;font-size:13px;line-height:16px;font-weight:bold;cursor:pointer;border-radius:6px;padding:7px 12px;white-space:nowrap;">¿Qué puedo hacer?</button>
+                        <button id="odoo-ai-chat-header-extra" type="button" aria-label="¿Qué puedo hacer?" title="Ver qué puede hacer esta cuenta" style="background:#009557;border:none;color:#fff;font-size:13px;line-height:16px;font-weight:bold;cursor:pointer;border-radius:6px;padding:7px 12px;white-space:nowrap;">¿Qué puedo hacer?</button>
                         <button id="odoo-ai-chat-close" aria-label="Cerrar chat" style="background:transparent;border:none;color:var(--ai-chat-text);font-size:24px;line-height:24px;cursor:pointer;opacity:0.7;">×</button>
                     </div>
                 </div>
