@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Phase 5: user-facing explanations for the B2B access state.
+
+        Security is still enforced by Phases 2-4. These templates only explain
+        why price/stock/cart controls are absent and what the visitor can do
+        next. No commercial data is rendered here.
+    -->
+
+    <template id="b2b_access_notice" name="B2B access notice">
+        <t t-if="website and website.b2b_is_blocked()">
+            <t t-set="b2b_public_user" t-value="request.env.user._is_public()"/>
+            <t t-set="b2b_purchase_attempt" t-value="request.params.get('b2b_purchase_blocked')"/>
+            <div t-attf-class="alert #{'alert-warning' if b2b_purchase_attempt else 'alert-info'} d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-3 b2b-access-notice"
+                 role="alert">
+                <div class="d-flex align-items-start gap-2">
+                    <i t-attf-class="fa #{'fa-lock' if b2b_purchase_attempt else 'fa-info-circle'} mt-1" role="img" aria-hidden="true"/>
+                    <div>
+                        <strong class="d-block mb-1">
+                            <t t-if="b2b_purchase_attempt">Compra disponible solo para clientes verificados</t>
+                            <t t-elif="b2b_public_user">Acceso profesional B2B</t>
+                            <t t-else="">Cuenta pendiente de validación</t>
+                        </strong>
+                        <span t-if="b2b_public_user">
+                            Inicia sesión o crea una cuenta nueva.<br/>
+                            Una vez validada, podrás consultar nuestro stock y precios, y realizar pedidos.
+                        </span>
+                        <span t-else="">
+                            Tu cuenta ha sido registrada.<br/>
+                            En breve, te la validaremos y podrás consultar precios, disponibilidad y realizar pedidos.
+                        </span>
+                    </div>
+                </div>
+                <div t-if="b2b_notice_actions" class="d-flex flex-wrap gap-2 flex-shrink-0">
+                    <t t-if="b2b_public_user">
+                        <a t-att-href="'/web/login?redirect=%s' % request.httprequest.path"
+                           class="btn btn-primary btn-sm">
+                            Iniciar sesión
+                        </a>
+                        <a href="/web/signup" class="btn btn-outline-primary btn-sm">
+                            Crear cuenta
+                        </a>
+                    </t>
+                    <a t-else="" href="/#contacto" class="btn btn-primary btn-sm">
+                        Contáctenos
+                    </a>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- /shop and category pages: one clear explanation above the catalogue. -->
+    <template id="products_b2b_access_notice"
+              inherit_id="website_sale.products"
+              name="B2B catalogue access notice"
+              priority="110">
+        <xpath expr="//div[@id='products_grid']/div[hasclass('products_header')]" position="before">
+            <t t-if="website.b2b_is_blocked()" t-call="website_b2b_private.b2b_access_notice">
+                <t t-set="b2b_notice_actions" t-value="True"/>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- Product page: explain the missing commercial controls where the user
+         naturally expects the price. The existing Phase 4 'Contáctenos' CTA
+         remains below the warehouse heading, so this compact notice does not
+         duplicate buttons. -->
+    <template id="product_b2b_access_notice"
+              inherit_id="website_sale.product"
+              name="B2B product access notice"
+              priority="110">
+        <xpath expr="//div[@id='product_details']/form[@action='/shop/cart/update']" position="before">
+            <t t-if="website.b2b_is_blocked()" t-call="website_b2b_private.b2b_access_notice">
+                <t t-set="b2b_notice_actions" t-value="request.env.user._is_public()"/>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- Portal home: registered-but-unverified customers can immediately see
+         why the website is still in catalogue-only mode. -->
+    <template id="portal_my_home_b2b_pending_notice"
+              inherit_id="portal.portal_my_home"
+              name="B2B pending validation portal notice"
+              priority="110">
+        <xpath expr="//div[hasclass('o_portal_my_home')]/div[hasclass('o_portal_docs')]" position="before">
+            <div t-if="website and website.b2b_is_blocked() and not request.env.user._is_public()"
+                 class="alert alert-warning d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4"
+                 role="alert">
+                <div class="d-flex align-items-start gap-2">
+                    <i class="fa fa-clock-o mt-1" role="img" aria-hidden="true"/>
+                    <div>
+                        <strong class="d-block mb-1">Cuenta pendiente de validación</strong>
+                        <span>
+                            Tu cuenta ha sido registrada.<br/>
+                            En breve, te la validaremos y podrás consultar precios, disponibilidad y realizar pedidos.
+                        </span>
+                    </div>
+                </div>
+                <a href="/#contacto" class="btn btn-primary btn-sm flex-shrink-0">Contáctenos</a>
+            </div>
+        </xpath>
+    </template>
+</odoo>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <!--
+        Frontend safety net for website_sale_stock's dynamically rendered
+        availability component.  The server also sanitizes the underlying
+        combination JSON, so this template is not the only privacy layer.
+    -->
+    <t t-name="website_b2b_private.product_availability_privacy"
+       t-inherit="website_sale_stock.product_availability"
+       t-inherit-mode="extension">
+        <xpath expr="//div[@id='product_stock_availability']" position="attributes">
+            <attribute name="t-if">is_storable and !prevent_zero_price_sale and !b2b_stock_hidden</attribute>
+        </xpath>
+    </t>
+</templates>

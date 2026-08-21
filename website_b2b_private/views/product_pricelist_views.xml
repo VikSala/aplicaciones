@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="product_pricelist_view_b2b_private" model="ir.ui.view">
+        <field name="name">product.pricelist.form.b2b.private</field>
+        <field name="model">product.pricelist</field>
+        <field name="inherit_id" ref="product.product_pricelist_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='pricelist_settings']" position="inside">
+                <field name="is_b2b_blocking_pricelist"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="product_pricelist_tree_b2b_private" model="ir.ui.view">
+        <field name="name">product.pricelist.list.b2b.private</field>
+        <field name="model">product.pricelist</field>
+        <field name="inherit_id" ref="product.product_pricelist_view_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="is_b2b_blocking_pricelist" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

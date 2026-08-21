@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Re-evaluate custom QWeb protections on every module upgrade. -->
+    <function model="ir.ui.view" name="b2b_ensure_custom_similar_price_privacy_view"/>
+</odoo>

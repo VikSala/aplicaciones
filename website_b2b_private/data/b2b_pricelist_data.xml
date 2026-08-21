@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Intentionally NOT noupdate: <function> is executed both on install and
+        on every module upgrade. The Python method is idempotent and searches
+        the canonical pricelist by exact name before creating anything.
+    -->
+    <function model="product.pricelist" name="b2b_ensure_blocking_pricelists"/>
+</odoo>

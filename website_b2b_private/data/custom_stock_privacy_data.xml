@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Runs on install AND upgrade. It creates the custom stock privacy view
+         only if the supplied warehouse-stock view is actually present. -->
+    <function model="ir.ui.view" name="b2b_ensure_custom_stock_privacy_view"/>
+</odoo>

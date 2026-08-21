@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Global marker used as a CSS safety net for custom themes/snippets.
+        Server-side QWeb conditions below remain the primary protection.
+    -->
+    <template id="website_layout_b2b_price_marker"
+              inherit_id="website.layout"
+              name="B2B price privacy marker"
+              priority="90">
+        <xpath expr="//body" position="attributes">
+            <attribute name="t-att-data-b2b-price-hidden">'1' if website and website.b2b_is_blocked() else None</attribute>
+            <attribute name="t-att-data-b2b-cart-disabled">'1' if website and website.b2b_is_blocked() else None</attribute>
+            <attribute name="t-att-data-b2b-stock-hidden">'1' if website and website.b2b_is_blocked() else None</attribute>
+        </xpath>
+    </template>
+
+    <!-- /shop: standard Odoo product cards, including hidden structured price data. -->
+    <template id="products_item_b2b_hide_price"
+              inherit_id="website_sale.products_item"
+              name="B2B hide shop product prices"
+              priority="90">
+        <xpath expr="//div[hasclass('product_price')]" position="attributes">
+            <attribute name="t-if">website.b2b_can_purchase()</attribute>
+        </xpath>
+    </template>
+
+    <!-- Product page: hide the complete price offer, including list/compare prices.
+         Odoo 18 builds the wrapper class with t-attf-class, so we target the
+         stable schema.org itemprop instead of hasclass(). -->
+    <template id="product_price_b2b_hide_price"
+              inherit_id="website_sale.product_price"
+              name="B2B hide product page price"
+              priority="90">
+        <xpath expr="//div[@itemprop='offers']" position="attributes">
+            <attribute name="t-if">website.b2b_can_purchase()</attribute>
+        </xpath>
+        <!-- Keep Odoo's unavailable-price fallback private as well. The
+             blocking pricelist currently uses a neutral fixed value (1000 EUR);
+             B2B authorization, not that numeric value, controls visibility. -->
+        <xpath expr="//div[@id='product_unavailable']" position="attributes">
+            <attribute name="t-if">website.b2b_can_purchase()</attribute>
+        </xpath>
+    </template>
+
+    <!-- Product page base-unit price, when the UoM price option is enabled. -->
+    <template id="product_b2b_hide_base_unit_price"
+              inherit_id="website_sale.product"
+              name="B2B hide base unit price"
+              priority="90">
+        <xpath expr="//small[hasclass('o_base_unit_price_wrapper')]" position="attributes">
+            <attribute name="t-if">website.b2b_can_purchase() and 'base_unit_price' in combination_info</attribute>
+        </xpath>
+    </template>
+
+    <!-- Attribute surcharges (+/- EUR) are prices too. -->
+    <template id="badge_extra_price_b2b_hide"
+              inherit_id="website_sale.badge_extra_price"
+              name="B2B hide variant extra prices"
+              priority="90">
+        <xpath expr="//span[@t-if='price_extra']" position="attributes">
+            <attribute name="t-if">price_extra and website.b2b_can_purchase()</attribute>
+        </xpath>
+    </template>
+
+    <!-- Optional Odoo 'List View of Variants' also embeds differential prices. -->
+    <template id="product_variants_b2b_hide_diff_price"
+              inherit_id="website_sale.product_variants"
+              name="B2B hide variant list differential prices"
+              priority="90">
+        <xpath expr="//span[@t-if='diff_price != 0']" position="attributes">
+            <attribute name="t-if">diff_price != 0 and website.b2b_can_purchase()</attribute>
+        </xpath>
+        <xpath expr="//input[@t-att-data-price]" position="attributes">
+            <attribute name="t-att-data-price">combination_info['price'] if website.b2b_can_purchase() else None</attribute>
+        </xpath>
+    </template>
+
+    <!-- Price-range filter leaks minimum/maximum catalogue prices. -->
+    <template id="filter_products_price_b2b_hide"
+              inherit_id="website_sale.filter_products_price"
+              name="B2B hide price range filter"
+              priority="90">
+        <xpath expr="//div[@id='o_wsale_price_range_option']" position="attributes">
+            <attribute name="t-if">website.b2b_can_purchase()</attribute>
+        </xpath>
+    </template>
+
+    <!-- Do not offer website pricelist switching to blocked visitors/users.
+         In Odoo 18 this div also uses t-attf-class, therefore hasclass() cannot
+         reliably locate it during inheritance. -->
+    <template id="pricelist_list_b2b_hide"
+              inherit_id="website_sale.pricelist_list"
+              name="B2B hide pricelist selector"
+              priority="90">
+        <xpath expr="//div[contains(@t-attf-class, 'o_pricelist_dropdown')]" position="attributes">
+            <attribute name="t-if">website.b2b_can_purchase()</attribute>
+        </xpath>
+    </template>
+
+    <!--
+        One shared Odoo template renders prices for dynamic product snippets.
+        This covers product carousels/blocks used on the home page and other
+        pages (new products, recommendations, related dynamic selections, etc.).
+    -->
+    <template id="dynamic_product_price_b2b_hide"
+              inherit_id="website_sale.price_dynamic_filter_template_product_product"
+              name="B2B hide dynamic snippet prices"
+              priority="90">
+        <xpath expr="//t[@t-if=&quot;data.get('prevent_zero_price_sale')&quot;]" position="attributes">
+            <attribute name="t-if">website.b2b_can_purchase() and data.get('prevent_zero_price_sale')</attribute>
+        </xpath>
+        <xpath expr="//t[@t-elif=&quot;not data.get('is_sample')&quot;]" position="attributes">
+            <attribute name="t-elif">website.b2b_can_purchase() and not data.get('is_sample')</attribute>
+        </xpath>
+    </template>
+
+    <!-- Price privacy also remains in place as a defense-in-depth layer if an
+         old cart exists before the Phase 3 purchase lock is applied. -->
+    <template id="cart_product_price_b2b_hide"
+              inherit_id="website_sale.cart_product_price"
+              name="B2B hide cart product price"
+              priority="90">
+        <xpath expr="//span[@t-out='product_price']" position="attributes">
+            <attribute name="t-if">website.b2b_can_purchase()</attribute>
+        </xpath>
+    </template>
+
+    <template id="cart_lines_b2b_hide_prices"
+              inherit_id="website_sale.cart_lines"
+              name="B2B hide cart line prices"
+              priority="90">
+        <xpath expr="//div[@name='website_sale_cart_line_price']" position="attributes">
+            <attribute name="t-if">website.b2b_can_purchase()</attribute>
+        </xpath>
+    </template>
+
+    <template id="suggested_products_b2b_hide_price"
+              inherit_id="website_sale.suggested_products_list"
+              name="B2B hide suggested cart product prices"
+              priority="90">
+        <xpath expr="//div[@name='website_sale_suggested_product_price']" position="attributes">
+            <attribute name="t-if">website.b2b_can_purchase()</attribute>
+        </xpath>
+    </template>
+
+    <!-- Cart/checkout totals and the collapsed mobile order-total preview. -->
+    <template id="total_b2b_hide"
+              inherit_id="website_sale.total"
+              name="B2B hide cart totals"
+              priority="90">
+        <xpath expr="//div[@id='cart_total']" position="attributes">
+            <attribute name="t-if">website.b2b_can_purchase() and website_sale_order and website_sale_order.website_order_line</attribute>
+        </xpath>
+    </template>
+
+    <template id="checkout_layout_b2b_hide_amount_summary"
+              inherit_id="website_sale.checkout_layout"
+              name="B2B hide checkout amount summary"
+              priority="90">
+        <xpath expr="//span[@id='amount_total_summary']" position="attributes">
+            <attribute name="t-if">website.b2b_can_purchase()</attribute>
+        </xpath>
+    </template>
+
+    <!-- Phase 3: hide the header cart at its shared source template. -->
+    <template id="header_cart_link_b2b_hide"
+              inherit_id="website_sale.header_cart_link"
+              name="B2B hide header cart"
+              priority="95">
+        <xpath expr="//t[@t-set='show_cart']" position="attributes">
+            <attribute name="t-value">website.has_ecommerce_access() and website.b2b_can_purchase()</attribute>
+        </xpath>
+    </template>
+
+    <!--
+        IMPORTANT with website_sale_stock:
+        keep #o_wsale_cta_wrapper in the DOM. Odoo's stock JS dereferences that
+        node during variant changes. The CSS marker hides it for blocked users
+        and the Phase 3 backend guards make the control non-bypassable.
+    -->
+
+    <!-- Phase 4: native Odoo stock placeholder. It stays in the DOM because
+         website_sale_stock appends into it client-side; sanitized combination
+         data + CSS prevent any stock disclosure for blocked users. -->
+
+    <!--
+        The supplied custom warehouse view is protected by a small dynamic
+        inherited view created from data/custom_stock_privacy_data.xml.
+        Doing that conditionally avoids a hard install-time XPath dependency if
+        the Studio/custom view is temporarily disabled or moved.
+    -->
+
+    <!-- Phase 4 correction: blocked visitors and blocked registered users both
+         use Odoo's native contact wrapper. The Python combination payload
+         forces prevent_zero_price_sale=True for blocked users. A frontend helper
+         moves this exact wrapper below the custom warehouse heading. -->
+    <template id="product_contact_cta_b2b"
+              inherit_id="website_sale.product"
+              name="B2B contact CTA"
+              priority="100">
+        <xpath expr="//div[@id='contact_us_wrapper']//a[hasclass('btn_cta')]" position="replace">
+            <a href="/#contacto" class="btn btn-primary btn_cta">Contáctenos</a>
+        </xpath>
+    </template>
+
+
+    <!-- Phase 6: mobile shop offcanvas has its own pricelist selector. -->
+    <template id="products_mobile_pricelist_b2b_hide"
+              inherit_id="website_sale.o_wsale_offcanvas"
+              name="B2B hide mobile pricelist selector"
+              priority="120">
+        <xpath expr="//div[@id='o_wsale_offcanvas_content']/div[@t-if='hasPricelistDropdown']" position="attributes">
+            <attribute name="t-if">hasPricelistDropdown and website.b2b_can_purchase()</attribute>
+        </xpath>
+    </template>
+
+    <!-- Price sorting is itself a relative-price side channel. Hide the price
+         options for blocked users; the controller also rejects hand-crafted
+         list_price sort requests. -->
+    <template id="sort_price_options_b2b_hide"
+              inherit_id="website_sale.sort"
+              name="B2B hide price sort options"
+              priority="120">
+        <xpath expr="//t[@t-foreach='website_sale_sortable']/a" position="attributes">
+            <attribute name="t-if">website.b2b_can_purchase() or 'list_price' not in sortby[0]</attribute>
+        </xpath>
+    </template>
+
+    <template id="products_mobile_sort_price_options_b2b_hide"
+              inherit_id="website_sale.o_wsale_offcanvas"
+              name="B2B hide mobile price sort options"
+              priority="121">
+        <xpath expr="//div[@id='o_wsale_offcanvas_orderby']//a[@t-foreach='website_sale_sortable']" position="attributes">
+            <attribute name="t-if">website.b2b_can_purchase() or 'list_price' not in sortby[0]</attribute>
+        </xpath>
+    </template>
+
+</odoo>
