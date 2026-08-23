@@ -61,6 +61,30 @@ TODAY_APPOINTMENTS_WORDS = {
     "mis citas hoy",
 }
 
+APPOINTMENT_DATE_WORDS = {
+    "hoy",
+    "mañana",
+    "manana",
+    "pasado mañana",
+    "pasado manana",
+    "lunes",
+    "martes",
+    "miercoles",
+    "miércoles",
+    "jueves",
+    "viernes",
+    "sabado",
+    "sábado",
+    "domingo",
+}
+
+MONTHS_ES = {
+    "enero": 1, "febrero": 2, "marzo": 3, "abril": 4,
+    "mayo": 5, "junio": 6, "julio": 7, "agosto": 8,
+    "septiembre": 9, "setiembre": 9, "octubre": 10,
+    "noviembre": 11, "diciembre": 12,
+}
+
 
 class OdooAIAppointmentConversation(models.AbstractModel):
     _name = "odoo.ai.appointment.conversation"
@@ -159,7 +183,7 @@ class OdooAIAppointmentConversation(models.AbstractModel):
         # máquina de estados de reserva para que "mis citas" funcione aunque
         # el usuario tenga una conversación de reserva abierta.
         if self._is_today_appointments_intent(normalized):
-            return self._handle_today_appointments(session)
+            return self._handle_today_appointments(session, normalized)
 
         if self._matches_any(normalized, THANKS_WORDS):
             return self._handled(
@@ -201,36 +225,96 @@ class OdooAIAppointmentConversation(models.AbstractModel):
 
     @api.model
     def _is_today_appointments_intent(self, normalized):
-        """Detecta consultas sobre las citas del empleado conectado para hoy.
+        """Detecta consultas de agenda del empleado autenticado.
 
-        No se interpreta "cita" a secas como esta intención porque forma parte
-        del flujo de reserva. La consulta de agenda es explícita: "mis citas",
-        "citas de hoy", "qué citas tengo", etc.
+        Además de "mis citas"/"mis citas de hoy", acepta una fecha concreta
+        o un día de la semana, por ejemplo: "mis citas del lunes",
+        "mis citas de mañana" o "mis citas del 28 de agosto".
         """
         normalized = (normalized or "").strip()
         if normalized in TODAY_APPOINTMENTS_WORDS:
             return True
-        patterns = (
-            r"\bmis citas\b",
-            r"\bcitas de hoy\b",
-            r"\bque citas tengo\b",
-            r"\bcuales son mis citas\b",
-            r"\bcuales son las citas que tengo\b",
-            r"\bmi agenda\b",
-        )
-        return any(re.search(pattern, normalized) for pattern in patterns)
+
+        if not re.search(r"\bmis citas\b|\bmi agenda\b|\bque citas tengo\b|\bcuales son mis citas\b", normalized):
+            return False
+
+        return self._parse_appointment_query_date(normalized) is not None
 
     @api.model
-    def _handle_today_appointments(self, session):
-        """Devuelve solo las citas futuras de hoy del empleado autenticado.
+    def _parse_appointment_query_date(self, normalized):
+        """Devuelve el día local solicitado para una consulta de agenda."""
+        normalized = self._normalize(normalized or "")
+        user = self.env.user
+        tz_name = user.tz or "UTC"
+        try:
+            tz = pytz.timezone(tz_name)
+        except Exception:
+            tz = pytz.UTC
 
-        La identidad se toma de request.env.user (usuario de Odoo), no del
-        texto escrito por el empleado ni de la sesión del navegador. Esto evita
-        que un empleado pueda consultar por accidente la agenda de otro.
+        now_utc = fields.Datetime.to_datetime(fields.Datetime.now())
+        if not now_utc.tzinfo:
+            now_utc = pytz.UTC.localize(now_utc)
+        today = now_utc.astimezone(tz).date()
 
-        Las fechas se calculan en la zona horaria del usuario. Se excluyen las
-        citas cuyo inicio ya ha pasado hoy; por ejemplo, si son las 12:00 y una
-        cita terminó a las 12:00, no aparece en el listado.
+        if re.search(r"\bpasado manana\b", normalized):
+            return today + timedelta(days=2)
+        if re.search(r"\bmanana\b", normalized):
+            return today + timedelta(days=1)
+        if re.search(r"\bhoy\b", normalized):
+            return today
+
+        # "el lunes", "mis citas del lunes", etc. -> próxima aparición
+        # de ese día de la semana (si hoy coincide, se interpreta como hoy).
+        for weekday_name, weekday in WEEKDAYS_ES.items():
+            if re.search(r"\b(?:el|del|de|para)\s+%s\b" % re.escape(weekday_name), normalized) or re.search(r"\bmis citas %s\b" % re.escape(weekday_name), normalized):
+                days_ahead = (weekday - today.weekday()) % 7
+                return today + timedelta(days=days_ahead)
+
+        # Fechas numéricas: 28/08, 28-08-2026, 28.08.2026, etc.
+        match = re.search(r"\b(\d{1,2})[\/\-\.](\d{1,2})(?:[\/\-\.](\d{4}))?\b", normalized)
+        if match:
+            day = int(match.group(1))
+            month = int(match.group(2))
+            year = int(match.group(3) or today.year)
+            try:
+                result = datetime(year, month, day).date()
+            except ValueError:
+                return None
+            # Si no se indicó año y la fecha ya pasó, normalmente se refiere
+            # a la siguiente aparición de esa fecha.
+            if not match.group(3) and result < today:
+                try:
+                    result = datetime(today.year + 1, month, day).date()
+                except ValueError:
+                    return None
+            return result
+
+        # "28 de agosto" / "28 agosto".
+        match = re.search(r"\b(\d{1,2})\s+(?:de\s+)?([a-z]+)(?:\s+(?:de\s+)?(\d{4}))?\b", normalized)
+        if match and match.group(2) in MONTHS_ES:
+            day = int(match.group(1))
+            month = MONTHS_ES[match.group(2)]
+            year = int(match.group(3) or today.year)
+            try:
+                result = datetime(year, month, day).date()
+            except ValueError:
+                return None
+            if not match.group(3) and result < today:
+                try:
+                    result = datetime(today.year + 1, month, day).date()
+                except ValueError:
+                    return None
+            return result
+
+        return None
+
+    @api.model
+    def _handle_today_appointments(self, session, normalized=None):
+        """Devuelve las citas del día solicitado del empleado autenticado.
+
+        La identidad se toma del usuario de Odoo. Para hoy solo se muestran
+        citas cuyo inicio todavía no ha pasado; para mañana, un día de la
+        semana o una fecha futura/pasada se muestran todas las citas de ese día.
         """
         user = self.env.user
         Employee = self.env["hr.employee"].sudo()
@@ -239,8 +323,8 @@ class OdooAIAppointmentConversation(models.AbstractModel):
         if not user or user._is_public():
             return self._handled(
                 session,
-                _("Para consultar tus citas de hoy necesitas estar conectado con tu usuario de Odoo."),
-                action="today_appointments_requires_login",
+                _("Para consultar tus citas necesitas estar conectado con tu usuario de Odoo."),
+                action="appointments_requires_login",
             )
 
         employees = Employee.search([
@@ -251,8 +335,12 @@ class OdooAIAppointmentConversation(models.AbstractModel):
             return self._handled(
                 session,
                 _("No encuentro un empleado asociado a tu usuario de Odoo, así que no puedo consultar tus citas."),
-                action="today_appointments_no_employee",
+                action="appointments_no_employee",
             )
+
+        target_date = self._parse_appointment_query_date(normalized or "")
+        if target_date is None:
+            target_date = self._local_today_for_user(user)
 
         tz_name = user.tz or "UTC"
         try:
@@ -266,7 +354,7 @@ class OdooAIAppointmentConversation(models.AbstractModel):
         local_now = now_utc.astimezone(tz)
         local_today = local_now.date()
 
-        local_day_start = tz.localize(datetime.combine(local_today, datetime.min.time()))
+        local_day_start = tz.localize(datetime.combine(target_date, datetime.min.time()))
         local_day_end = local_day_start + timedelta(days=1)
         utc_day_start = local_day_start.astimezone(pytz.UTC).replace(tzinfo=None)
         utc_day_end = local_day_end.astimezone(pytz.UTC).replace(tzinfo=None)
@@ -277,25 +365,32 @@ class OdooAIAppointmentConversation(models.AbstractModel):
             ("check_in", "<", fields.Datetime.to_string(utc_day_end)),
         ], order="check_in asc, id asc")
 
-        # "Mis citas" significa lo que queda por venir desde este momento.
-        # Una cita en curso cuyo inicio ya pasó tampoco se presenta como futura.
-        future_appointments = appointments.filtered(
-            lambda appointment: (
-                appointment.check_in
-                and fields.Datetime.to_datetime(appointment.check_in) >= now_utc.replace(tzinfo=None)
+        if target_date == local_today:
+            current_utc_naive = local_now.astimezone(pytz.UTC).replace(tzinfo=None)
+            appointments = appointments.filtered(
+                lambda appointment: (
+                    appointment.check_in
+                    and fields.Datetime.to_datetime(appointment.check_in) >= current_utc_naive
+                )
             )
-        )
 
-        if not future_appointments:
+        if not appointments:
+            if target_date == local_today:
+                reply = _("Hoy no tienes más citas pendientes.")
+            else:
+                reply = _("No tienes citas para el %(date)s.") % {
+                    "date": target_date.strftime("%d/%m/%Y"),
+                }
             return self._handled(
                 session,
-                _("Hoy no tienes más citas pendientes."),
-                action="today_appointments",
+                reply,
+                action="appointments",
                 appointment_count=0,
+                appointment_date=target_date.isoformat(),
             )
 
         lines = []
-        for appointment in future_appointments:
+        for appointment in appointments:
             start = fields.Datetime.to_datetime(appointment.check_in)
             if not start.tzinfo:
                 start = pytz.UTC.localize(start)
@@ -320,20 +415,36 @@ class OdooAIAppointmentConversation(models.AbstractModel):
             if service:
                 details.append(service)
             suffix = " — %s" % " · ".join(details) if details else ""
-
             lines.append("• %s%s" % (time_text, suffix))
 
         employee_names = ", ".join(employees.mapped("name"))
-        reply = _("Tus próximas citas de hoy, %(employee)s, son:\n%(lines)s") % {
+        if target_date == local_today:
+            title = _("Tus próximas citas de hoy, %(employee)s, son:")
+        else:
+            title = _("Tus citas del %(date)s, %(employee)s, son:")
+        reply = title % {
             "employee": employee_names,
-            "lines": "\n".join(lines),
-        }
+            "date": target_date.strftime("%d/%m/%Y"),
+        } + "\n" + "\n".join(lines)
         return self._handled(
             session,
             reply,
-            action="today_appointments",
-            appointment_count=len(future_appointments),
+            action="appointments",
+            appointment_count=len(appointments),
+            appointment_date=target_date.isoformat(),
         )
+
+    @api.model
+    def _local_today_for_user(self, user):
+        tz_name = user.tz or "UTC"
+        try:
+            tz = pytz.timezone(tz_name)
+        except Exception:
+            tz = pytz.UTC
+        now_utc = fields.Datetime.to_datetime(fields.Datetime.now())
+        if not now_utc.tzinfo:
+            now_utc = pytz.UTC.localize(now_utc)
+        return now_utc.astimezone(tz).date()
 
     @api.model
     def _is_simple_greeting(self, normalized):
