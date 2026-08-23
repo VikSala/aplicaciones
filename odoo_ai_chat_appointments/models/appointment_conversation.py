@@ -1,6 +1,6 @@
 import re
 import unicodedata
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import pytz
 
@@ -43,6 +43,22 @@ HELP_WORDS = {
 }
 THANKS_WORDS = {
     "gracias", "muchas gracias", "genial gracias", "perfecto gracias",
+}
+
+TODAY_APPOINTMENTS_WORDS = {
+    "mis citas",
+    "mis citas de hoy",
+    "citas de hoy",
+    "que citas tengo",
+    "que citas tengo hoy",
+    "cuales son mis citas",
+    "cuales son mis citas de hoy",
+    "cuales son las citas que tengo",
+    "cuales son las citas que tengo hoy",
+    "mi agenda",
+    "mi agenda de hoy",
+    "agenda de hoy",
+    "mis citas hoy",
 }
 
 
@@ -139,6 +155,12 @@ class OdooAIAppointmentConversation(models.AbstractModel):
                 self._help_reply(session),
                 action="help",
             )
+        # Consulta de agenda del empleado conectado. Se procesa antes de la
+        # máquina de estados de reserva para que "mis citas" funcione aunque
+        # el usuario tenga una conversación de reserva abierta.
+        if self._is_today_appointments_intent(normalized):
+            return self._handle_today_appointments(session)
+
         if self._matches_any(normalized, THANKS_WORDS):
             return self._handled(
                 session,
@@ -176,6 +198,142 @@ class OdooAIAppointmentConversation(models.AbstractModel):
                 return global_result
         return result
 
+
+    @api.model
+    def _is_today_appointments_intent(self, normalized):
+        """Detecta consultas sobre las citas del empleado conectado para hoy.
+
+        No se interpreta "cita" a secas como esta intención porque forma parte
+        del flujo de reserva. La consulta de agenda es explícita: "mis citas",
+        "citas de hoy", "qué citas tengo", etc.
+        """
+        normalized = (normalized or "").strip()
+        if normalized in TODAY_APPOINTMENTS_WORDS:
+            return True
+        patterns = (
+            r"\bmis citas\b",
+            r"\bcitas de hoy\b",
+            r"\bque citas tengo\b",
+            r"\bcuales son mis citas\b",
+            r"\bcuales son las citas que tengo\b",
+            r"\bmi agenda\b",
+        )
+        return any(re.search(pattern, normalized) for pattern in patterns)
+
+    @api.model
+    def _handle_today_appointments(self, session):
+        """Devuelve solo las citas futuras de hoy del empleado autenticado.
+
+        La identidad se toma de request.env.user (usuario de Odoo), no del
+        texto escrito por el empleado ni de la sesión del navegador. Esto evita
+        que un empleado pueda consultar por accidente la agenda de otro.
+
+        Las fechas se calculan en la zona horaria del usuario. Se excluyen las
+        citas cuyo inicio ya ha pasado hoy; por ejemplo, si son las 12:00 y una
+        cita terminó a las 12:00, no aparece en el listado.
+        """
+        user = self.env.user
+        Employee = self.env["hr.employee"].sudo()
+        Attendance = self.env["hr.attendance"].sudo()
+
+        if not user or user._is_public():
+            return self._handled(
+                session,
+                _("Para consultar tus citas de hoy necesitas estar conectado con tu usuario de Odoo."),
+                action="today_appointments_requires_login",
+            )
+
+        employees = Employee.search([
+            ("user_id", "=", user.id),
+            ("active", "=", True),
+        ])
+        if not employees:
+            return self._handled(
+                session,
+                _("No encuentro un empleado asociado a tu usuario de Odoo, así que no puedo consultar tus citas."),
+                action="today_appointments_no_employee",
+            )
+
+        tz_name = user.tz or "UTC"
+        try:
+            tz = pytz.timezone(tz_name)
+        except Exception:
+            tz = pytz.UTC
+
+        now_utc = fields.Datetime.to_datetime(fields.Datetime.now())
+        if not now_utc.tzinfo:
+            now_utc = pytz.UTC.localize(now_utc)
+        local_now = now_utc.astimezone(tz)
+        local_today = local_now.date()
+
+        local_day_start = tz.localize(datetime.combine(local_today, datetime.min.time()))
+        local_day_end = local_day_start + timedelta(days=1)
+        utc_day_start = local_day_start.astimezone(pytz.UTC).replace(tzinfo=None)
+        utc_day_end = local_day_end.astimezone(pytz.UTC).replace(tzinfo=None)
+
+        appointments = Attendance.search([
+            ("employee_id", "in", employees.ids),
+            ("check_in", ">=", fields.Datetime.to_string(utc_day_start)),
+            ("check_in", "<", fields.Datetime.to_string(utc_day_end)),
+        ], order="check_in asc, id asc")
+
+        # "Mis citas" significa lo que queda por venir desde este momento.
+        # Una cita en curso cuyo inicio ya pasó tampoco se presenta como futura.
+        future_appointments = appointments.filtered(
+            lambda appointment: (
+                appointment.check_in
+                and fields.Datetime.to_datetime(appointment.check_in) >= now_utc.replace(tzinfo=None)
+            )
+        )
+
+        if not future_appointments:
+            return self._handled(
+                session,
+                _("Hoy no tienes más citas pendientes."),
+                action="today_appointments",
+                appointment_count=0,
+            )
+
+        lines = []
+        for appointment in future_appointments:
+            start = fields.Datetime.to_datetime(appointment.check_in)
+            if not start.tzinfo:
+                start = pytz.UTC.localize(start)
+            start_local = start.astimezone(tz)
+
+            end_local = False
+            if appointment.check_out:
+                end = fields.Datetime.to_datetime(appointment.check_out)
+                if not end.tzinfo:
+                    end = pytz.UTC.localize(end)
+                end_local = end.astimezone(tz)
+
+            time_text = start_local.strftime("%H:%M")
+            if end_local:
+                time_text += "–%s" % end_local.strftime("%H:%M")
+
+            client = (appointment.cliente or "").strip()
+            service = appointment.appointment_service_id.display_name if appointment.appointment_service_id else ""
+            details = []
+            if client:
+                details.append(client)
+            if service:
+                details.append(service)
+            suffix = " — %s" % " · ".join(details) if details else ""
+
+            lines.append("• %s%s" % (time_text, suffix))
+
+        employee_names = ", ".join(employees.mapped("name"))
+        reply = _("Tus próximas citas de hoy, %(employee)s, son:\n%(lines)s") % {
+            "employee": employee_names,
+            "lines": "\n".join(lines),
+        }
+        return self._handled(
+            session,
+            reply,
+            action="today_appointments",
+            appointment_count=len(future_appointments),
+        )
 
     @api.model
     def _is_simple_greeting(self, normalized):
