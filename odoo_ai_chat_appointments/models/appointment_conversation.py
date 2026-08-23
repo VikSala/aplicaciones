@@ -227,17 +227,48 @@ class OdooAIAppointmentConversation(models.AbstractModel):
     def _is_today_appointments_intent(self, normalized):
         """Detecta consultas de agenda del empleado autenticado.
 
-        Además de "mis citas"/"mis citas de hoy", acepta una fecha concreta
-        o un día de la semana, por ejemplo: "mis citas del lunes",
-        "mis citas de mañana" o "mis citas del 28 de agosto".
+        El usuario no tiene que utilizar una frase exacta. Se aceptan formas
+        naturales como:
+        - "mis citas de hoy"
+        - "dime mis citas de mañana"
+        - "citas del lunes"
+        - "dime las citas de mañana"
+        - "qué citas tengo el miércoles"
+        - "mi agenda del viernes"
+        - "mis citas del 28 de agosto"
+
+        Es importante no confundir estas consultas con una petición de reserva
+        como "quiero una cita mañana". Las expresiones de reserva se excluyen
+        explícitamente para que el flujo de contratación siga funcionando.
         """
         normalized = (normalized or "").strip()
+        if not normalized:
+            return False
+
         if normalized in TODAY_APPOINTMENTS_WORDS:
             return True
 
-        if not re.search(r"\bmis citas\b|\bmi agenda\b|\bque citas tengo\b|\bcuales son mis citas\b", normalized):
+        # Palabras que indican que el usuario quiere CREAR/RESERVAR una cita,
+        # no consultar las que ya tiene. Esta comprobación evita que una frase
+        # como "quiero una cita mañana" se interprete como consulta de agenda.
+        booking_query = re.search(
+            r"\b(?:quiero|quisiera|necesito|busco|solicito|reservar|reserva|"
+            r"pedir|pido|agendar|crear|concertar|coger|"
+            r"sacar)\b",
+            normalized,
+        )
+        if booking_query and not re.search(
+            r"\b(?:mis|mi)\s+(?:citas?|agenda)\b", normalized
+        ):
             return False
 
+        has_appointment_word = bool(re.search(r"\b(?:citas?|agenda)\b", normalized))
+        if not has_appointment_word:
+            return False
+
+        # Una consulta de agenda con fecha debe contener una referencia
+        # temporal reconocible. Esto permite "citas del lunes" sin exigir la
+        # expresión literal "mis citas".
         return self._parse_appointment_query_date(normalized) is not None
 
     @api.model
@@ -266,7 +297,11 @@ class OdooAIAppointmentConversation(models.AbstractModel):
         # "el lunes", "mis citas del lunes", etc. -> próxima aparición
         # de ese día de la semana (si hoy coincide, se interpreta como hoy).
         for weekday_name, weekday in WEEKDAYS_ES.items():
-            if re.search(r"\b(?:el|del|de|para)\s+%s\b" % re.escape(weekday_name), normalized) or re.search(r"\bmis citas %s\b" % re.escape(weekday_name), normalized):
+            if (
+                re.search(r"\b(?:el|del|de|para)\s+%s\b" % re.escape(weekday_name), normalized)
+                or re.search(r"\b(?:mis|las|mis próximas|mis proximas)\s+(?:citas?|agenda)\s+(?:del?\s+)?%s\b" % re.escape(weekday_name), normalized)
+                or re.search(r"\b(?:citas?|agenda)\s+%s\b" % re.escape(weekday_name), normalized)
+            ):
                 days_ahead = (weekday - today.weekday()) % 7
                 return today + timedelta(days=days_ahead)
 
