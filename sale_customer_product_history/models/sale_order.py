@@ -29,9 +29,24 @@ class SaleOrder(models.Model):
                 self.partner_id,
                 line.product_id
             )
+
             if history_price:
-                line.sudo().write({
-                    'price_unit': history_price,
-                })
+                pricelist_price = line._get_current_pricelist_price_unit()
+
+                if history_price > pricelist_price:
+                    # El histórico es superior: se usa como precio mínimo.
+                    # Quitamos cualquier descuento de tarifa para que el precio
+                    # efectivo de la línea sea exactamente el histórico.
+                    line.write({
+                        'price_unit': history_price,
+                        'discount': 0.0,
+                    })
+                else:
+                    # La tarifa actual ya es igual o superior al histórico.
+                    # Restauramos el cálculo estándar de Odoo, incluso si la
+                    # línea tenía anteriormente un precio histórico manual.
+                    standard_line = line.with_context(force_price_recomputation=True)
+                    standard_line._compute_price_unit()
+                    standard_line._compute_discount()
 
         return res

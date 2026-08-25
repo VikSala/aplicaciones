@@ -54,6 +54,51 @@ class SaleOrderLine(models.Model):
         }
 
 
+    def _get_current_pricelist_price_unit(self):
+        """Return the current pricelist final unit price for this sale line.
+
+        The value is calculated independently from ``price_unit`` so a line
+        previously overwritten with a historical customer price can still be
+        compared against the current pricelist.
+        """
+        self.ensure_one()
+
+        if not self.product_id or not self.order_id.pricelist_id:
+            return self.price_unit
+
+        line = self.with_company(self.company_id)
+
+        # Precio de tarifa calculado sobre la variante real (flujo normal de venta).
+        variant_pricelist_price = line._get_pricelist_price()
+
+        # En website_sale el autocomplete puede calcular la tarifa sobre
+        # product.template mientras la ficha trabaja con product.product.
+        # Para mantener la misma regla conservadora también en el carrito,
+        # comprobamos el precio de tarifa a nivel template y nunca permitimos
+        # que una discrepancia template/variant rebaje el precio cobrado.
+        template_pricelist_price = line.order_id.pricelist_id._get_product_price(
+            line.product_id.product_tmpl_id,
+            line.product_uom_qty or 1.0,
+            uom=line.product_uom,
+            date=line.order_id.date_order,
+        )
+
+        pricelist_price = max(
+            variant_pricelist_price,
+            template_pricelist_price,
+        )
+
+        product_taxes = line.product_id.taxes_id._filter_taxes_by_company(
+            line.company_id
+        )
+
+        return line.product_id._get_tax_included_unit_price_from_price(
+            pricelist_price,
+            product_taxes=product_taxes,
+            fiscal_position=line.order_id.fiscal_position_id,
+        )
+
+
     def _get_last_customer_history_price(self, partner, product):
         if not partner or not product:
             return False

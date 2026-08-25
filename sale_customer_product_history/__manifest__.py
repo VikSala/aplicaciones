@@ -21,7 +21,7 @@
 ##############################################################################
 {
     'name': "Sales History Of Products",
-    'version': '18.0.1.0.0',
+    'version': '18.0.1.2.0',
     'category': 'Sales',
     'summary': """Sales history of products from Sales Order Lines.""",
     'description': """This module enable the users to view the Sales history of
