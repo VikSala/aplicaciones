@@ -2,10 +2,10 @@ from werkzeug.exceptions import Forbidden
 
 from odoo.http import request, route
 
-from odoo.addons.website_sale.controllers.delivery import Delivery
+from odoo.addons.website_sale_collect.controllers.delivery import InStoreDelivery
 
 
-class DeliveryB2B(Delivery):
+class DeliveryB2B(InStoreDelivery):
     """Prevent delivery/express-checkout calls on a blocked B2B cart."""
 
     @staticmethod
@@ -37,6 +37,11 @@ class DeliveryB2B(Delivery):
     def website_sale_get_pickup_locations(self, *args, **kwargs):
         self._b2b_ensure_purchase_allowed()
         return super().website_sale_get_pickup_locations(*args, **kwargs)
+
+    @route()
+    def shop_set_click_and_collect_location(self, *args, **kwargs):
+        self._b2b_ensure_purchase_allowed()
+        return super().shop_set_click_and_collect_location(*args, **kwargs)
 
     @route()
     def express_checkout_process_delivery_address(self, *args, **kwargs):

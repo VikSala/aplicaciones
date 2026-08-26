@@ -79,3 +79,14 @@ Final defense-in-depth additions:
   `sim_prod.list_price` directly.
 
 No third-party theme dependency is introduced.
+
+
+## Phase 6.0.1 - Click & Collect privacy
+
+- Adds `website_sale_collect` as an explicit dependency now that Click & Collect is enabled.
+- Public visitors and registered-but-unverified B2B users do not render the
+  **Recogida en la tienda / Comprobar la disponibilidad** OWL component.
+- Removes `in_store_stock` and forces `show_click_and_collect_availability=False`
+  in blocked combination responses so store stock does not reach the browser.
+- Blocks pickup-location JSON routes for blocked sessions.
+- Verified customers and internal users keep the standard Odoo Click & Collect flow.

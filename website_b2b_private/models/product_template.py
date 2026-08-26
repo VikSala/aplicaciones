@@ -49,13 +49,19 @@ class ProductTemplate(models.Model):
             "out_of_stock_message": "",
             "has_stock_notification": False,
             "stock_notification_email": "",
+            # Click & Collect is also stock/availability information. Keep its
+            # OWL component disabled and never send in-store quantities to a
+            # blocked visitor or pending B2B account.
+            "show_click_and_collect_availability": False,
+            "b2b_click_collect_hidden": True,
             # Make the stock frontend skip quantity/availability logic. The
             # Phase 3 backend cart guards still prevent purchasing.
             "is_storable": False,
             "allow_out_of_stock_order": True,
         })
-        # A combo max quantity is itself stock-derived information.
+        # Stock-derived values must not remain in the response.
         values.pop("max_combo_quantity", None)
+        values.pop("in_store_stock", None)
         return values
 
     def _get_additionnal_combination_info(
@@ -71,6 +77,7 @@ class ProductTemplate(models.Model):
         # Always provide flags so frontend/custom code can reference them safely.
         values["b2b_stock_hidden"] = False
         values["b2b_price_hidden"] = False
+        values["b2b_click_collect_hidden"] = False
 
         if website and website.b2b_is_blocked(user=self.env.user):
             # Force Odoo's native contact CTA mode for every blocked B2B

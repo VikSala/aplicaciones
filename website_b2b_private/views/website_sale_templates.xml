@@ -236,4 +236,16 @@
         </xpath>
     </template>
 
+    <!-- Click & Collect contains store availability and may include an in-store
+         quantity in its OWL props. Do not render the component at all until the
+         B2B customer is verified. The model layer also removes its stock data. -->
+    <template id="product_click_collect_b2b_hide"
+              inherit_id="website_sale_collect.product_page_click_and_collect"
+              name="B2B hide Click and Collect availability"
+              priority="130">
+        <xpath expr="//owl-component[@name='website_sale_collect.ClickAndCollectAvailability']" position="attributes">
+            <attribute name="t-if">website.b2b_can_purchase() and combination_info.get('show_click_and_collect_availability')</attribute>
+        </xpath>
+    </template>
+
 </odoo>

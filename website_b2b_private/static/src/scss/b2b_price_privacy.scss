@@ -73,7 +73,9 @@ body[data-b2b-stock-hidden="1"] {
     #stock_notification_success_message,
     #box_europeo,
     #box_nacional,
-    #box_alicante {
+    #box_alicante,
+    owl-component[name="website_sale_collect.ClickAndCollectAvailability"],
+    .o_click_and_collect_availability {
         display: none !important;
     }
 }
