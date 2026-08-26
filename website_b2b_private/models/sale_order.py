@@ -7,13 +7,7 @@ class SaleOrder(models.Model):
     _inherit = "sale.order"
 
     def _cart_update(self, product_id, line_id=None, add_qty=0, set_qty=0, **kwargs):
-        """Hard backend guard for every website cart mutation.
-
-        Odoo's JSON route also uses ``set_qty`` to edit existing lines. The
-        product-level add-to-cart check alone is therefore not enough: this
-        model guard prevents adding, increasing, decreasing or removing lines
-        while the current website user is not B2B-approved.
-        """
+        """Hard backend guard for blocked B2B and price-unavailable products."""
         self.ensure_one()
         if self.website_id:
             user = request.env.user if request else self.env.user
@@ -22,6 +16,17 @@ class SaleOrder(models.Model):
                 raise UserError(_(
                     "Tu cuenta B2B todavía no está autorizada para utilizar el carrito."
                 ))
+
+            product = self.env["product.product"].browse(product_id).exists()
+            if (
+                product
+                and website.b2b_is_price_unavailable(product_variant=product)
+                and (add_qty > 0 or set_qty > 0)
+            ):
+                raise UserError(_(
+                    "Este producto no tiene un precio disponible. Contacta con nosotros para solicitar información."
+                ))
+
         return super()._cart_update(
             product_id,
             line_id=line_id,

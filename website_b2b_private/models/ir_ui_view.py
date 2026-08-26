@@ -182,3 +182,97 @@ class IrUiView(models.Model):
                 })
 
         return runtime_view.id
+
+    @api.model
+    def b2b_ensure_legacy_vz_price_cleanup_view(self):
+        """Neutralize the old manual VZ-only product-page condition.
+
+        Some databases contain a direct product-page customization such as::
+
+            <div t-if="not 'VZ' in (product.name or '')"> ... </div>
+            <div t-else="">PRECIO NO DISPONIBLE</div>
+
+        The module now owns that business rule and additionally checks that the
+        current variant cost is zero.  This runtime child view removes the old
+        VZ-only decision without requiring a hard XML-ID for the custom view.
+        If the customization is later restored to standard Odoo, this runtime
+        view simply deactivates itself.
+        """
+        View = self.sudo()
+        Data = self.env["ir.model.data"].sudo()
+
+        xmlid_module = "website_b2b_private"
+        xmlid_name = "legacy_vz_price_cleanup_runtime"
+
+        model_data = Data.search([
+            ("module", "=", xmlid_module),
+            ("name", "=", xmlid_name),
+            ("model", "=", "ir.ui.view"),
+        ], limit=1)
+        runtime_view = View.browse(model_data.res_id).exists() if model_data else View
+
+        candidates = View.search([
+            ("active", "=", True),
+            ("arch_db", "ilike", "PRECIO NO DISPONIBLE"),
+            ("arch_db", "ilike", "VZ"),
+            ("arch_db", "ilike", "website_sale.product_price"),
+        ], order="priority asc, id asc")
+
+        target = View
+        for candidate in candidates:
+            if runtime_view and candidate.id == runtime_view.id:
+                continue
+            try:
+                root = etree.fromstring(candidate.arch_db.encode("utf-8"))
+            except (etree.XMLSyntaxError, AttributeError):
+                continue
+
+            legacy_wrappers = root.xpath(
+                ".//div[contains(@t-if, 'VZ') and .//t[@t-call='website_sale.product_price']]"
+            )
+            legacy_else = root.xpath(
+                ".//div[@t-else and .//span[contains(normalize-space(.), 'PRECIO NO DISPONIBLE')]]"
+            )
+            if legacy_wrappers and legacy_else:
+                target = candidate
+                break
+
+        if not target:
+            if runtime_view:
+                runtime_view.write({"active": False})
+            return False
+
+        arch = """
+<data>
+    <xpath expr="//div[contains(@t-if, 'VZ') and .//t[@t-call='website_sale.product_price']]" position="attributes">
+        <attribute name="t-if">True</attribute>
+    </xpath>
+    <xpath expr="//div[@t-else and .//span[contains(normalize-space(.), 'PRECIO NO DISPONIBLE')]]" position="replace"/>
+</data>
+""".strip()
+
+        vals = {
+            "name": "B2B remove legacy VZ-only price condition",
+            "type": "qweb",
+            "inherit_id": target.id,
+            "priority": 240,
+            "arch_db": arch,
+            "active": True,
+        }
+
+        if runtime_view:
+            runtime_view.write(vals)
+        else:
+            runtime_view = View.create(vals)
+            if model_data:
+                model_data.write({"res_id": runtime_view.id})
+            else:
+                Data.create({
+                    "module": xmlid_module,
+                    "name": xmlid_name,
+                    "model": "ir.ui.view",
+                    "res_id": runtime_view.id,
+                    "noupdate": False,
+                })
+
+        return runtime_view.id

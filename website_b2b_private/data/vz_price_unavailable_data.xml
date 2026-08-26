@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <function model="ir.ui.view" name="b2b_ensure_legacy_vz_price_cleanup_view"/>
+</odoo>

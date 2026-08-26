@@ -90,3 +90,36 @@ No third-party theme dependency is introduced.
   in blocked combination responses so store stock does not reach the browser.
 - Blocks pickup-location JSON routes for blocked sessions.
 - Verified customers and internal users keep the standard Odoo Click & Collect flow.
+
+
+## Phase 6.0.2 - VZ zero-cost products
+
+- Product-specific **PRECIO NO DISPONIBLE** rule is now owned by this module.
+- The rule applies only when the template name contains `VZ` **and** the current
+  variant `standard_price` is zero. The cost is checked server-side with `sudo`
+  and is never disclosed to website users.
+- Such products cannot be quick-added or added to cart, including manual cart
+  calls, even for an otherwise verified B2B customer.
+- Click & Collect is disabled for those products.
+- A **Contáctenos** button to `/#contacto` is shown directly below
+  **PRECIO NO DISPONIBLE**.
+- A runtime compatibility view neutralizes the old manual `VZ`-only QWeb
+  condition if it is still present in the database.
+
+## 18.0.6.0.4 - VZ zero-cost duplicate CTA fix
+
+Odoo's client-side `VariantMixin` re-applies the native zero-price Contact Us
+wrapper after combination information is loaded.  For verified customers on a
+VZ product with zero cost, the module now hides that native wrapper again in
+the same combination callback, leaving only the dedicated CTA directly below
+`PRECIO NO DISPONIBLE`. Public and unverified B2B users keep the warehouse
+Contact Us CTA from the existing B2B flow.
+
+### 18.0.6.0.5 - native Contact Us async fix
+
+The VZ zero-cost rule now extends the active `WebsiteSale` legacy widget itself,
+rather than patching `VariantMixin` after its methods have already been copied
+into `WebsiteSale`. This prevents Odoo's asynchronous combination refresh from
+re-showing the native `#contact_us_wrapper` for verified customers. A scoped
+CSS safety net also keeps that native wrapper hidden whenever the dedicated
+`#b2b_product_price_unavailable` CTA is present.

@@ -21,7 +21,11 @@
               name="B2B hide shop product prices"
               priority="90">
         <xpath expr="//div[hasclass('product_price')]" position="attributes">
-            <attribute name="t-if">website.b2b_can_purchase()</attribute>
+            <attribute name="t-if">website.b2b_can_purchase() and not website.b2b_is_price_unavailable(product=product)</attribute>
+        </xpath>
+        <xpath expr="//div[hasclass('product_price')]" position="after">
+            <div t-if="website.b2b_can_purchase() and website.b2b_is_price_unavailable(product=product)"
+                 class="text-danger fw-bold small">PRECIO NO DISPONIBLE</div>
         </xpath>
     </template>
 
@@ -49,7 +53,7 @@
               name="B2B hide base unit price"
               priority="90">
         <xpath expr="//small[hasclass('o_base_unit_price_wrapper')]" position="attributes">
-            <attribute name="t-if">website.b2b_can_purchase() and 'base_unit_price' in combination_info</attribute>
+            <attribute name="t-if">website.b2b_can_purchase() and not combination_info.get('b2b_price_unavailable') and 'base_unit_price' in combination_info</attribute>
         </xpath>
     </template>
 
@@ -244,7 +248,36 @@
               name="B2B hide Click and Collect availability"
               priority="130">
         <xpath expr="//owl-component[@name='website_sale_collect.ClickAndCollectAvailability']" position="attributes">
-            <attribute name="t-if">website.b2b_can_purchase() and combination_info.get('show_click_and_collect_availability')</attribute>
+            <attribute name="t-if">website.b2b_can_purchase() and not combination_info.get('b2b_price_unavailable') and combination_info.get('show_click_and_collect_availability')</attribute>
+        </xpath>
+    </template>
+
+
+    <!-- Product-specific no-price rule:
+         VZ in the template name + zero current variant cost.  The cost is
+         checked server-side with sudo by website.b2b_is_price_unavailable();
+         standard_price is never exposed to Portal/Public QWeb. -->
+    <template id="product_vz_zero_cost_price_unavailable"
+              inherit_id="website_sale.product"
+              name="VZ zero-cost product price unavailable"
+              priority="135">
+        <xpath expr="//div[@id='product_details']//t[@t-call='website_sale.product_price']" position="attributes">
+            <attribute name="t-if">not website.b2b_is_price_unavailable(product=product, product_variant=product_variant)</attribute>
+        </xpath>
+        <xpath expr="//div[@id='product_details']//t[@t-call='website_sale.product_price']" position="after">
+            <div t-if="website.b2b_is_price_unavailable(product=product, product_variant=product_variant)"
+                 id="b2b_product_price_unavailable"
+                 class="fw-bold mb-2">
+                <span style="color: red">PRECIO NO DISPONIBLE</span>
+                <div class="mt-2">
+                    <a href="/#contacto" class="btn btn-primary btn_cta">Contáctenos</a>
+                </div>
+            </div>
+        </xpath>
+        <!-- Keep Odoo's native contact wrapper for blocked B2B users, but do
+             not duplicate it when this product-specific no-price CTA is used. -->
+        <xpath expr="//div[@id='contact_us_wrapper']" position="attributes">
+            <attribute name="t-attf-class">{{'d-flex' if combination_info['prevent_zero_price_sale'] and not website.b2b_is_price_unavailable(product=product, product_variant=product_variant) else 'd-none'}} oe_structure oe_structure_solo #{_div_classes}</attribute>
         </xpath>
     </template>
 

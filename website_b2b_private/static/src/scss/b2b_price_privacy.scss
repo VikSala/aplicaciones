@@ -87,3 +87,21 @@ body[data-b2b-stock-hidden="1"] {
         text-align: center;
     }
 }
+
+/*
+ * VZ + zero-cost, verified customer: Odoo's VariantMixin can add d-flex to
+ * #contact_us_wrapper after the initial QWeb render. The dedicated CTA above
+ * the product form is the only Contact button in this case. This CSS is a
+ * safety net in addition to the WebsiteSale JS extension.
+ */
+body:not([data-b2b-cart-disabled="1"])
+    #product_details:has(#b2b_product_price_unavailable)
+    #contact_us_wrapper {
+    display: none !important;
+}
+
+body:not([data-b2b-cart-disabled="1"])
+    #product_details:has(#b2b_product_price_unavailable)
+    #o_wsale_cta_wrapper {
+    display: none !important;
+}
