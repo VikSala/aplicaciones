@@ -1,0 +1,694 @@
+$login-popup-green: #00d27a;
+$login-popup-navy: #0E273B;
+$login-popup-hover: #23c979;
+
+body.o_login_popup_open {
+    overflow: hidden;
+}
+
+.o_login_popup_overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(24, 27, 35, 0.38);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.18s ease, visibility 0.18s ease;
+
+    &.is-open {
+        opacity: 1;
+        visibility: visible;
+    }
+}
+
+.o_login_popup {
+    position: relative;
+    width: 100%;
+    max-width: 505px;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+    padding: 31px 28px 34px;
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.18);
+    transform: translateY(10px) scale(0.99);
+    transition: transform 0.18s ease, max-width 0.18s ease;
+
+    &.is-signup {
+        max-width: 745px;
+    }
+
+    .o_login_popup_overlay.is-open & {
+        transform: translateY(0) scale(1);
+    }
+}
+
+.o_login_popup_view[hidden] {
+    display: none !important;
+}
+
+.o_login_popup_close {
+    position: absolute;
+    top: 13px;
+    right: 20px;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #24242a;
+    font-size: 31px;
+    font-weight: 300;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+        color: $login-popup-green;
+    }
+}
+
+.o_login_popup_tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin: 0 0 28px;
+    border-bottom: 2px solid #e3e4e8;
+}
+
+.o_login_popup_tab {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 39px;
+    padding: 0 8px 11px;
+    border: 0;
+    background: transparent;
+    color: #84889a;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1.2;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+        color: $login-popup-green;
+        text-decoration: none;
+    }
+
+    &.active {
+        color: #111218;
+
+        &::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -2px;
+            height: 2px;
+            background: $login-popup-green;
+        }
+    }
+}
+
+.o_login_popup_form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.o_login_popup_field {
+    position: relative;
+
+    .form-control {
+        height: 57px;
+        padding: 0 13px;
+        border: 1px solid #dfe1e6;
+        border-radius: 4px;
+        background: #fff;
+        color: #22232a;
+        font-size: 17px;
+        box-shadow: none;
+
+        &::placeholder {
+            color: #858a9b;
+            opacity: 1;
+        }
+
+        &:focus {
+            border-color: $login-popup-green;
+            box-shadow: 0 0 0 3px rgba(0, 210, 122, 0.14);
+        }
+    }
+}
+
+/* Indicadores de campos obligatorios en registro */
+.o_login_popup_required_field {
+    &::after {
+        content: "*";
+        position: absolute;
+        top: 50%;
+        right: 14px;
+        z-index: 2;
+        color: $login-popup-green;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1;
+        transform: translateY(-50%);
+        pointer-events: none;
+    }
+
+    .form-control {
+        padding-right: 34px;
+    }
+}
+
+.o_login_popup_password_field.o_login_popup_required_field {
+    &::after {
+        right: 46px;
+    }
+
+    .form-control {
+        padding-right: 66px;
+    }
+}
+
+.o_login_popup_required_note {
+    margin: -18px 0 20px;
+    color: #858a92;
+    text-align: center;
+    font-size: 13px;
+
+    span {
+        color: $login-popup-green;
+        font-size: 16px;
+        font-weight: 700;
+    }
+}
+
+.o_login_popup_required_mark {
+    color: $login-popup-green;
+    font-weight: 700;
+}
+
+.o_login_popup_password_field .form-control {
+    padding-right: 48px;
+}
+
+.o_login_popup_password_toggle {
+    position: absolute;
+    top: 50%;
+    right: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #c4c7cf;
+    font-size: 19px;
+    transform: translateY(-50%);
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+        color: $login-popup-green;
+    }
+}
+
+.o_login_popup_forgot_wrap {
+    margin-top: 8px;
+}
+
+.o_login_popup_forgot {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: $login-popup-green;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 400;
+    cursor: pointer;
+
+    &:hover {
+        color: $login-popup-hover;
+        text-decoration: underline;
+    }
+}
+
+.o_login_popup_error,
+.o_login_popup_signup_error {
+    margin: 3px 0 0;
+    padding: 10px 12px;
+    font-size: 14px;
+}
+
+.o_login_popup_submit,
+.o_login_popup_signup_submit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 58px;
+    margin-top: 7px;
+    border: 1px solid $login-popup-navy;
+    border-radius: 4px;
+    background: $login-popup-navy;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    transition: background-color 0.16s ease, border-color 0.16s ease;
+
+    &:hover,
+    &:focus,
+    &:active {
+        border-color: $login-popup-hover !important;
+        background-color: $login-popup-hover !important;
+        color: #fff !important;
+    }
+
+    &:disabled {
+        opacity: 0.72;
+        cursor: wait;
+    }
+}
+
+/* Restablecer contraseña */
+.o_login_popup_reset_header {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    min-height: 62px;
+    margin-bottom: 2px;
+}
+
+.o_login_popup_reset_icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(0, 210, 122, 0.13);
+    color: $login-popup-navy;
+    font-size: 20px;
+}
+
+.o_login_popup_reset_title {
+    margin: 4px 0 10px;
+    color: #25262b;
+    text-align: center;
+    font-size: 21px;
+    font-weight: 600;
+}
+
+.o_login_popup_reset_intro {
+    max-width: 420px;
+    margin: 0 auto 24px;
+    color: #666a76;
+    text-align: center;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.o_login_popup_reset_form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.o_login_popup_reset_success {
+    padding: 8px 4px 0;
+    text-align: center;
+
+    h3 {
+        margin: 14px 0 8px;
+        color: #25262b;
+        font-size: 21px;
+        font-weight: 600;
+    }
+
+    p {
+        margin: 0 0 22px;
+        color: #666a76;
+        font-size: 15px;
+        line-height: 1.5;
+    }
+}
+
+.o_login_popup_reset_success_icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: rgba(0, 210, 122, 0.15);
+    color: $login-popup-green;
+    font-size: 24px;
+}
+
+/* Selector de tipo de cuenta */
+.o_login_popup_signup_intro {
+    margin: 3px auto 24px;
+    max-width: 610px;
+    text-align: center;
+
+    h2 {
+        margin: 0 0 13px;
+        color: #25262b;
+        font-size: 22px;
+        font-weight: 500;
+    }
+
+    p {
+        margin: 0;
+        color: #505158;
+        font-size: 15px;
+    }
+}
+
+.o_login_popup_signup_cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 18px;
+}
+
+.o_login_popup_signup_card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 250px;
+    padding: 28px 20px 24px;
+    overflow: hidden;
+    border: 1px solid #d9dce1;
+    border-radius: 4px;
+    background: #fff;
+    color: #2d2e34;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+
+    &::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: $login-popup-green;
+        opacity: 0;
+        transition: opacity 0.16s ease;
+    }
+
+    &:hover,
+    &:focus-visible {
+        border-color: $login-popup-green;
+        box-shadow: 0 10px 28px rgba(14, 39, 59, 0.10);
+        transform: translateY(-2px);
+        outline: none;
+
+        &::before {
+            opacity: 1;
+        }
+
+        .o_login_popup_signup_icon {
+            background: rgba(0, 210, 122, 0.15);
+            color: $login-popup-navy;
+        }
+    }
+
+    strong {
+        margin-top: 20px;
+        color: #28292e;
+        font-size: 19px;
+        font-weight: 600;
+    }
+
+    > span:last-child {
+        margin-top: 6px;
+        color: #8a8e9b;
+        font-size: 14px;
+    }
+}
+
+.o_login_popup_signup_icon,
+.o_login_popup_signup_header_icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: #f4f5f6;
+    color: $login-popup-navy;
+    font-size: 24px;
+}
+
+.o_login_popup_signup_card_professional .o_login_popup_signup_icon,
+.o_login_popup_signup_header_icon_professional {
+    background: rgba(0, 210, 122, 0.13);
+}
+
+.o_login_popup_signup_badge {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 28px;
+    background: $login-popup-green;
+    color: $login-popup-navy;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+/* Formularios de registro */
+.o_login_popup_signup_form_header {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    min-height: 62px;
+    margin-bottom: 2px;
+}
+
+.o_login_popup_back {
+    position: absolute;
+    top: 0;
+    left: -3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border: 0;
+    border-radius: 50%;
+    background: #f4f5f6;
+    color: #33363d;
+    font-size: 25px;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+        background: rgba(0, 210, 122, 0.15);
+        color: $login-popup-navy;
+    }
+}
+
+.o_login_popup_signup_header_icon {
+    width: 50px;
+    height: 50px;
+    font-size: 19px;
+}
+
+.o_login_popup_signup_title {
+    margin: 4px 0 28px;
+    color: #25262b;
+    text-align: center;
+    font-size: 21px;
+    font-weight: 600;
+}
+
+.o_login_popup_signup_form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.o_login_popup_signup_grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+}
+
+.o_login_popup_signup_grid_full {
+    grid-column: 1 / -1;
+}
+
+.o_login_popup_checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin: 0;
+    color: #3d3f45;
+    font-size: 15px;
+    font-weight: 400;
+    cursor: pointer;
+
+    input[type="checkbox"] {
+        flex: 0 0 auto;
+        width: 18px;
+        height: 18px;
+        margin-top: 1px;
+        accent-color: $login-popup-green;
+    }
+
+    a {
+        color: #34363b;
+        text-decoration: underline;
+
+        &:hover {
+            color: $login-popup-hover;
+        }
+    }
+}
+
+.o_login_popup_professional_type {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 13px 28px;
+    margin: 4px 0 2px;
+    padding: 0;
+    border: 0;
+
+    legend {
+        width: 100%;
+        margin: 0;
+        color: #2f3035;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        color: #46484f;
+        font-size: 15px;
+        cursor: pointer;
+    }
+
+    input[type="radio"] {
+        width: 19px;
+        height: 19px;
+        accent-color: $login-popup-green;
+    }
+}
+
+.o_login_popup_professional_extra {
+    margin-top: 4px;
+    padding-top: 14px;
+    border-top: 1px solid #eceef1;
+
+    &[hidden] {
+        display: none !important;
+    }
+}
+
+.o_login_popup_optional_heading {
+    margin: 0 0 11px;
+    color: #2f3035;
+    font-size: 15px;
+    font-weight: 600;
+
+    span {
+        color: #9195a0;
+        font-size: 13px;
+        font-weight: 400;
+    }
+}
+
+.o_login_popup_signup_submit {
+    margin-top: 12px;
+}
+
+.o_login_popup_spinner {
+    width: 18px;
+    height: 18px;
+    margin-left: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: o-login-popup-spin 0.7s linear infinite;
+}
+
+@keyframes o-login-popup-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 767.98px) {
+    .o_login_popup {
+        &.is-signup {
+            max-width: 560px;
+        }
+    }
+
+    .o_login_popup_signup_cards,
+    .o_login_popup_signup_grid {
+        grid-template-columns: 1fr;
+    }
+
+    .o_login_popup_signup_grid_full {
+        grid-column: auto;
+    }
+
+    .o_login_popup_signup_card {
+        min-height: 190px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .o_login_popup_overlay {
+        align-items: flex-start;
+        padding: 18px 14px;
+    }
+
+    .o_login_popup {
+        width: 100%;
+        max-height: calc(100vh - 36px);
+        margin-top: 4vh;
+        padding: 29px 20px 26px;
+    }
+
+    .o_login_popup_tab {
+        font-size: 16px;
+    }
+
+    .o_login_popup_signup_title {
+        padding: 0 42px;
+        font-size: 19px;
+    }
+
+    .o_login_popup_signup_card {
+        min-height: 165px;
+    }
+}

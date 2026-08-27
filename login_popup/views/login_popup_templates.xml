@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="login_popup_website_layout" inherit_id="website.layout" name="Website Login Popup">
+        <xpath expr="//body" position="inside">
+            <t t-if="request.env.user._is_public()">
+                <div id="o_login_popup_overlay" class="o_login_popup_overlay" hidden="hidden">
+                    <section id="o_login_popup"
+                             class="o_login_popup"
+                             role="dialog"
+                             aria-modal="true"
+                             aria-labelledby="o_login_popup_title">
+
+                        <button type="button"
+                                class="o_login_popup_close"
+                                aria-label="Cerrar">
+                            <span aria-hidden="true">&#215;</span>
+                        </button>
+
+                        <!-- LOGIN -->
+                        <div id="o_login_popup_login_view" class="o_login_popup_view">
+                            <div class="o_login_popup_tabs" role="tablist" aria-label="Acceso de usuario">
+                                <button id="o_login_popup_title"
+                                        type="button"
+                                        class="o_login_popup_tab active"
+                                        data-login-popup-view="login"
+                                        role="tab"
+                                        aria-selected="true">
+                                    Iniciar sesión
+                                </button>
+                                <button type="button"
+                                        class="o_login_popup_tab"
+                                        data-login-popup-view="signup-choice"
+                                        role="tab"
+                                        aria-selected="false">
+                                    Registrarme
+                                </button>
+                            </div>
+
+                            <form id="o_login_popup_form"
+                                  class="o_login_popup_form"
+                                  action="/web/login"
+                                  method="post"
+                                  autocomplete="on">
+
+                                <input type="hidden"
+                                       name="csrf_token"
+                                       t-att-value="request.csrf_token()"/>
+                                <input id="o_login_popup_redirect"
+                                       type="hidden"
+                                       name="redirect"
+                                       value="/"/>
+
+                                <div class="o_login_popup_field">
+                                    <label class="visually-hidden" for="o_login_popup_login">Correo electrónico</label>
+                                    <input id="o_login_popup_login"
+                                           class="form-control"
+                                           type="text"
+                                           name="login"
+                                           placeholder="Correo electrónico"
+                                           autocomplete="username"
+                                           required="required"/>
+                                </div>
+
+                                <div class="o_login_popup_field o_login_popup_password_field">
+                                    <label class="visually-hidden" for="o_login_popup_password">Contraseña</label>
+                                    <input id="o_login_popup_password"
+                                           class="form-control"
+                                           type="password"
+                                           name="password"
+                                           placeholder="Contraseña"
+                                           autocomplete="current-password"
+                                           required="required"/>
+                                    <button type="button"
+                                            class="o_login_popup_password_toggle"
+                                            aria-label="Mostrar contraseña"
+                                            aria-pressed="false">
+                                        <i class="fa fa-eye-slash" aria-hidden="true"/>
+                                    </button>
+                                </div>
+
+                                <div class="o_login_popup_forgot_wrap">
+                                    <button type="button"
+                                            class="o_login_popup_forgot"
+                                            data-login-popup-view="reset-password">
+                                        ¿Has olvidado tu contraseña?
+                                    </button>
+                                </div>
+
+                                <div id="o_login_popup_error"
+                                     class="o_login_popup_error alert alert-danger"
+                                     role="alert"
+                                     hidden="hidden"/>
+
+                                <button id="o_login_popup_submit"
+                                        type="submit"
+                                        class="btn o_login_popup_submit">
+                                    <span class="o_login_popup_submit_text">Iniciar sesión</span>
+                                    <span class="o_login_popup_spinner" aria-hidden="true" hidden="hidden"/>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- RESTABLECER CONTRASEÑA -->
+                        <div id="o_login_popup_reset_password_view" class="o_login_popup_view" hidden="hidden">
+                            <div class="o_login_popup_reset_header">
+                                <button type="button"
+                                        class="o_login_popup_back"
+                                        data-login-popup-view="login"
+                                        aria-label="Volver a iniciar sesión">
+                                    <i class="fa fa-angle-left" aria-hidden="true"/>
+                                </button>
+                                <span class="o_login_popup_reset_icon" aria-hidden="true">
+                                    <i class="fa fa-lock"/>
+                                </span>
+                            </div>
+
+                            <h2 class="o_login_popup_reset_title">Restablecer contraseña</h2>
+                            <p class="o_login_popup_reset_intro">
+                                Introduce tu correo electrónico y te enviaremos las instrucciones para crear una nueva contraseña.
+                            </p>
+
+                            <form id="o_login_popup_reset_form"
+                                  class="o_login_popup_reset_form"
+                                  action="/web/reset_password"
+                                  method="post"
+                                  autocomplete="on">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <input type="hidden" name="redirect" class="o_login_popup_reset_redirect" value="/"/>
+                                <input type="hidden" name="token" value=""/>
+
+                                <div class="o_login_popup_field">
+                                    <label class="visually-hidden" for="o_login_popup_reset_email">Correo electrónico</label>
+                                    <input id="o_login_popup_reset_email"
+                                           class="form-control"
+                                           type="email"
+                                           name="login"
+                                           placeholder="Correo electrónico"
+                                           autocomplete="email"
+                                           autocapitalize="off"
+                                           required="required"/>
+                                </div>
+
+                                <div id="o_login_popup_reset_error"
+                                     class="o_login_popup_error alert alert-danger"
+                                     role="alert"
+                                     hidden="hidden"/>
+
+                                <button id="o_login_popup_reset_submit"
+                                        type="submit"
+                                        class="btn o_login_popup_submit">
+                                    <span class="o_login_popup_reset_submit_text">Restablecer contraseña</span>
+                                    <span class="o_login_popup_spinner" aria-hidden="true" hidden="hidden"/>
+                                </button>
+                            </form>
+
+                            <div id="o_login_popup_reset_success" class="o_login_popup_reset_success" hidden="hidden">
+                                <span class="o_login_popup_reset_success_icon" aria-hidden="true">
+                                    <i class="fa fa-check"/>
+                                </span>
+                                <h3>Revisa tu correo</h3>
+                                <p id="o_login_popup_reset_success_message">
+                                    Te hemos enviado las instrucciones para restablecer tu contraseña.
+                                </p>
+                                <button type="button"
+                                        class="btn o_login_popup_submit"
+                                        data-login-popup-view="login">
+                                    Volver a iniciar sesión
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- SELECTOR DE REGISTRO -->
+                        <div id="o_login_popup_signup_choice_view" class="o_login_popup_view" hidden="hidden">
+                            <div class="o_login_popup_tabs" role="tablist" aria-label="Acceso de usuario">
+                                <button type="button"
+                                        class="o_login_popup_tab"
+                                        data-login-popup-view="login"
+                                        role="tab"
+                                        aria-selected="false">
+                                    Iniciar sesión
+                                </button>
+                                <button type="button"
+                                        class="o_login_popup_tab active"
+                                        data-login-popup-view="signup-choice"
+                                        role="tab"
+                                        aria-selected="true">
+                                    Registrarme
+                                </button>
+                            </div>
+
+                            <div class="o_login_popup_signup_intro">
+                                <h2>¿Qué tipo de cliente eres?</h2>
+                                <p>Selecciona el tipo de cuenta que mejor se ajuste a ti.</p>
+                            </div>
+
+                            <div class="o_login_popup_signup_cards">
+                                <button type="button"
+                                        class="o_login_popup_signup_card"
+                                        data-signup-type="particular">
+                                    <span class="o_login_popup_signup_icon" aria-hidden="true">
+                                        <i class="fa fa-home"/>
+                                    </span>
+                                    <strong>Particular</strong>
+                                    <span>Crear una cuenta personal</span>
+                                </button>
+
+                                <button type="button"
+                                        class="o_login_popup_signup_card o_login_popup_signup_card_professional"
+                                        data-signup-type="professional">
+                                    <span class="o_login_popup_signup_badge">PRO</span>
+                                    <span class="o_login_popup_signup_icon" aria-hidden="true">
+                                        <i class="fa fa-lightbulb-o"/>
+                                    </span>
+                                    <strong>Profesional</strong>
+                                    <span>Crear una cuenta profesional</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- REGISTRO PARTICULAR -->
+                        <div id="o_login_popup_signup_particular_view" class="o_login_popup_view o_login_popup_signup_form_view" hidden="hidden">
+                            <div class="o_login_popup_signup_form_header">
+                                <button type="button" class="o_login_popup_back" data-signup-back="true" aria-label="Volver">
+                                    <i class="fa fa-angle-left" aria-hidden="true"/>
+                                </button>
+                                <span class="o_login_popup_signup_header_icon" aria-hidden="true">
+                                    <i class="fa fa-home"/>
+                                </span>
+                            </div>
+
+                            <h2 class="o_login_popup_signup_title">Registro cuenta particular</h2>
+
+                            <form id="o_login_popup_signup_particular_form"
+                                  class="o_login_popup_signup_form"
+                                  action="/web/signup"
+                                  method="post"
+                                  autocomplete="on">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <input type="hidden" name="redirect" class="o_login_popup_signup_redirect" value="/"/>
+                                <input type="hidden" name="name" class="o_login_popup_signup_fullname"/>
+                                <input type="hidden" name="signup_account_type" value="particular"/>
+
+                                <div class="o_login_popup_signup_grid">
+                                    <div class="o_login_popup_field o_login_popup_required_field">
+                                        <label class="visually-hidden" for="o_signup_particular_firstname">Nombre (obligatorio)</label>
+                                        <input id="o_signup_particular_firstname" class="form-control o_login_popup_firstname" type="text" placeholder="Nombre" autocomplete="given-name" required="required"/>
+                                    </div>
+                                    <div class="o_login_popup_field">
+                                        <label class="visually-hidden" for="o_signup_particular_lastname">Apellidos (opcional)</label>
+                                        <input id="o_signup_particular_lastname" class="form-control o_login_popup_lastname" type="text" placeholder="Apellidos" autocomplete="family-name"/>
+                                    </div>
+                                    <div class="o_login_popup_field o_login_popup_required_field">
+                                        <label class="visually-hidden" for="o_signup_particular_email">Correo electrónico (obligatorio)</label>
+                                        <input id="o_signup_particular_email" class="form-control" type="email" name="login" placeholder="Correo electrónico" autocomplete="email" required="required"/>
+                                    </div>
+                                    <div class="o_login_popup_field o_login_popup_required_field">
+                                        <label class="visually-hidden" for="o_signup_particular_vat">NIF (obligatorio)</label>
+                                        <input id="o_signup_particular_vat" class="form-control" type="text" name="partner_vat" placeholder="NIF" autocomplete="off" required="required"/>
+                                    </div>
+                                    <div class="o_login_popup_field o_login_popup_password_field o_login_popup_required_field">
+                                        <label class="visually-hidden" for="o_signup_particular_password">Contraseña (obligatoria)</label>
+                                        <input id="o_signup_particular_password" class="form-control" type="password" name="password" placeholder="Contraseña" autocomplete="new-password" required="required"/>
+                                        <button type="button" class="o_login_popup_password_toggle" aria-label="Mostrar contraseña" aria-pressed="false">
+                                            <i class="fa fa-eye-slash" aria-hidden="true"/>
+                                        </button>
+                                    </div>
+                                    <div class="o_login_popup_field o_login_popup_password_field o_login_popup_required_field">
+                                        <label class="visually-hidden" for="o_signup_particular_confirm">Confirmar contraseña (obligatorio)</label>
+                                        <input id="o_signup_particular_confirm" class="form-control" type="password" name="confirm_password" placeholder="Confirmar contraseña" autocomplete="new-password" required="required"/>
+                                        <button type="button" class="o_login_popup_password_toggle" aria-label="Mostrar contraseña" aria-pressed="false">
+                                            <i class="fa fa-eye-slash" aria-hidden="true"/>
+                                        </button>
+                                    </div>
+                                </div>
+
+
+                                <div class="o_login_popup_signup_error alert alert-danger" role="alert" hidden="hidden"/>
+
+                                <button type="submit" class="btn o_login_popup_signup_submit">
+                                    <span class="o_login_popup_signup_submit_text">Crear una cuenta particular</span>
+                                    <span class="o_login_popup_spinner" aria-hidden="true" hidden="hidden"/>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- REGISTRO PROFESIONAL -->
+                        <div id="o_login_popup_signup_professional_view" class="o_login_popup_view o_login_popup_signup_form_view" hidden="hidden">
+                            <div class="o_login_popup_signup_form_header">
+                                <button type="button" class="o_login_popup_back" data-signup-back="true" aria-label="Volver">
+                                    <i class="fa fa-angle-left" aria-hidden="true"/>
+                                </button>
+                                <span class="o_login_popup_signup_header_icon o_login_popup_signup_header_icon_professional" aria-hidden="true">
+                                    <i class="fa fa-lightbulb-o"/>
+                                </span>
+                            </div>
+
+                            <h2 class="o_login_popup_signup_title">Registro profesional</h2>
+
+                            <form id="o_login_popup_signup_professional_form"
+                                  class="o_login_popup_signup_form"
+                                  action="/web/signup"
+                                  method="post"
+                                  autocomplete="on">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <input type="hidden" name="redirect" class="o_login_popup_signup_redirect" value="/"/>
+                                <input type="hidden" name="name" class="o_login_popup_signup_fullname"/>
+                                <input type="hidden" name="signup_account_type" value="professional"/>
+
+                                <div class="o_login_popup_signup_grid">
+                                    <div class="o_login_popup_field o_login_popup_required_field">
+                                        <label class="visually-hidden" for="o_signup_professional_firstname">Nombre (obligatorio)</label>
+                                        <input id="o_signup_professional_firstname" class="form-control o_login_popup_firstname" type="text" placeholder="Nombre" autocomplete="given-name" required="required"/>
+                                    </div>
+                                    <div class="o_login_popup_field">
+                                        <label class="visually-hidden" for="o_signup_professional_lastname">Apellidos (opcional)</label>
+                                        <input id="o_signup_professional_lastname" class="form-control o_login_popup_lastname" type="text" placeholder="Apellidos" autocomplete="family-name"/>
+                                    </div>
+                                    <div class="o_login_popup_field o_login_popup_required_field o_login_popup_signup_grid_full">
+                                        <label class="visually-hidden" for="o_signup_professional_email">Correo electrónico (obligatorio)</label>
+                                        <input id="o_signup_professional_email" class="form-control" type="email" name="login" placeholder="Correo electrónico" autocomplete="email" required="required"/>
+                                    </div>
+                                    <div class="o_login_popup_field o_login_popup_password_field o_login_popup_required_field">
+                                        <label class="visually-hidden" for="o_signup_professional_password">Contraseña (obligatoria)</label>
+                                        <input id="o_signup_professional_password" class="form-control" type="password" name="password" placeholder="Contraseña" autocomplete="new-password" required="required"/>
+                                        <button type="button" class="o_login_popup_password_toggle" aria-label="Mostrar contraseña" aria-pressed="false">
+                                            <i class="fa fa-eye-slash" aria-hidden="true"/>
+                                        </button>
+                                    </div>
+                                    <div class="o_login_popup_field o_login_popup_password_field o_login_popup_required_field">
+                                        <label class="visually-hidden" for="o_signup_professional_confirm">Confirmar contraseña (obligatorio)</label>
+                                        <input id="o_signup_professional_confirm" class="form-control" type="password" name="confirm_password" placeholder="Confirmar contraseña" autocomplete="new-password" required="required"/>
+                                        <button type="button" class="o_login_popup_password_toggle" aria-label="Mostrar contraseña" aria-pressed="false">
+                                            <i class="fa fa-eye-slash" aria-hidden="true"/>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <fieldset class="o_login_popup_professional_type">
+                                    <legend>Tipo de profesional <span class="o_login_popup_required_mark" aria-hidden="true">*</span></legend>
+                                    <label><input type="radio" name="professional_type" value="company" required="required"/> <span>Empresa</span></label>
+                                    <label><input type="radio" name="professional_type" value="self_employed" required="required"/> <span>Autónomo</span></label>
+                                </fieldset>
+
+                                <div id="o_login_popup_professional_extra_fields"
+                                     class="o_login_popup_professional_extra"
+                                     hidden="hidden">
+                                    <div class="o_login_popup_signup_grid">
+                                        <div class="o_login_popup_field o_login_popup_signup_grid_full">
+                                            <label class="visually-hidden" for="o_signup_professional_street">Calle y número (opcional)</label>
+                                            <input id="o_signup_professional_street" class="form-control" type="text" name="partner_street" placeholder="Calle y número" autocomplete="street-address" disabled="disabled"/>
+                                        </div>
+                                        <div class="o_login_popup_field">
+                                            <label class="visually-hidden" for="o_signup_professional_zip">CP (opcional)</label>
+                                            <input id="o_signup_professional_zip" class="form-control" type="text" name="partner_zip" placeholder="CP" autocomplete="postal-code" disabled="disabled"/>
+                                        </div>
+                                        <div class="o_login_popup_field">
+                                            <label class="visually-hidden" for="o_signup_professional_city">Ciudad (opcional)</label>
+                                            <input id="o_signup_professional_city" class="form-control" type="text" name="partner_city" placeholder="Ciudad" autocomplete="address-level2" disabled="disabled"/>
+                                        </div>
+                                        <div class="o_login_popup_field o_login_popup_required_field">
+                                            <label id="o_signup_professional_vat_label" class="visually-hidden" for="o_signup_professional_vat">NIF / CIF (obligatorio)</label>
+                                            <input id="o_signup_professional_vat" class="form-control" type="text" name="partner_vat" placeholder="NIF / CIF" autocomplete="off" required="required" disabled="disabled"/>
+                                        </div>
+                                        <div class="o_login_popup_field o_login_popup_required_field">
+                                            <label class="visually-hidden" for="o_signup_professional_phone">Tlf/Móvil (obligatorio)</label>
+                                            <input id="o_signup_professional_phone" class="form-control" type="tel" name="partner_phone" placeholder="Tlf/Móvil" autocomplete="tel" required="required" disabled="disabled"/>
+                                        </div>
+                                        <div class="o_login_popup_field o_login_popup_signup_grid_full">
+                                            <label class="visually-hidden" for="o_signup_professional_website">Sitio Web (opcional)</label>
+                                            <input id="o_signup_professional_website" class="form-control" type="text" inputmode="url" name="partner_website" placeholder="Sitio Web" autocomplete="url" disabled="disabled"/>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="o_login_popup_signup_error alert alert-danger" role="alert" hidden="hidden"/>
+
+                                <button type="submit" class="btn o_login_popup_signup_submit">
+                                    <span class="o_login_popup_signup_submit_text">Crear una cuenta profesional</span>
+                                    <span class="o_login_popup_spinner" aria-hidden="true" hidden="hidden"/>
+                                </button>
+                            </form>
+                        </div>
+                    </section>
+                </div>
+            </t>
+        </xpath>
+    </template>
+</odoo>
