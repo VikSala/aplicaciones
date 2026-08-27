@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="portal_layout_cabrera" inherit_id="portal.portal_layout" priority="80">
+        <xpath expr="//div[@id='wrap' and hasclass('o_portal_wrap')]" position="attributes">
+            <attribute name="class" add="cabrera-portal-shell" separator=" "/>
+        </xpath>
+
+        <!-- Odoo muestra "Mi cuenta" encima del home por el modo my_details. Nuestra cabecera ya lo sustituye. -->
+        <xpath expr="//div[hasclass('wrapper')]/h3[hasclass('my-3')]" position="replace"/>
+
+        <xpath expr="//div[@id='wrap' and hasclass('o_portal_wrap')]/div[hasclass('container')][1]" position="before">
+            <aside class="cabrera-portal-sidebar d-print-none">
+                <nav class="cabrera-portal-nav" aria-label="Navegación de mi cuenta">
+                    <a href="/my/home" t-attf-class="cabrera-nav-item #{'active' if request.httprequest.path in ['/my', '/my/home'] else ''}">
+                        <i class="fa fa-home"/><span>Inicio</span><i class="fa fa-angle-right cabrera-nav-arrow"/>
+                    </a>
+                    <a href="/my/orders" t-attf-class="cabrera-nav-item #{'active' if request.httprequest.path.startswith('/my/orders') else ''}">
+                        <i class="fa fa-shopping-cart"/><span>Mis pedidos</span><i class="fa fa-angle-right cabrera-nav-arrow"/>
+                    </a>
+                    <a href="/my/invoices" t-attf-class="cabrera-nav-item #{'active' if request.httprequest.path.startswith('/my/invoices') else ''}">
+                        <i class="fa fa-file-text-o"/><span>Mis facturas</span><i class="fa fa-angle-right cabrera-nav-arrow"/>
+                    </a>
+                    <a href="/my/returns" t-attf-class="cabrera-nav-item #{'active' if request.httprequest.path.startswith('/my/returns') else ''}">
+                        <i class="fa fa-reply"/><span>Mis devoluciones</span><i class="fa fa-angle-right cabrera-nav-arrow"/>
+                    </a>
+                    <a href="/my/quotes" t-attf-class="cabrera-nav-item #{'active' if request.httprequest.path.startswith('/my/quotes') else ''}">
+                        <i class="fa fa-calculator"/><span>Mis presupuestos</span><i class="fa fa-angle-right cabrera-nav-arrow"/>
+                    </a>
+                    <a href="/my/account" t-attf-class="cabrera-nav-item #{'active' if request.httprequest.path.startswith('/my/account') else ''}">
+                        <i class="fa fa-user-o"/><span>Mis datos personales</span><i class="fa fa-angle-right cabrera-nav-arrow"/>
+                    </a>
+                    <a href="/my/security" t-attf-class="cabrera-nav-item #{'active' if request.httprequest.path.startswith('/my/security') else ''}">
+                        <i class="fa fa-lock"/><span>Cambiar contraseña</span><i class="fa fa-angle-right cabrera-nav-arrow"/>
+                    </a>
+                    <a href="/shop" class="cabrera-nav-item">
+                        <i class="fa fa-building-o"/><span>Mi tienda profesional</span><i class="fa fa-angle-right cabrera-nav-arrow"/>
+                    </a>
+                    <a href="/contactus" class="cabrera-nav-item">
+                        <i class="fa fa-comments-o"/><span>Atención al Cliente</span><i class="fa fa-angle-right cabrera-nav-arrow"/>
+                    </a>
+                </nav>
+            </aside>
+        </xpath>
+    </template>
+</odoo>

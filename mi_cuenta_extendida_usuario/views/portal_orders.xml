@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="portal_my_orders_cabrera" inherit_id="sale.portal_my_orders" priority="90">
+        <xpath expr="//t[@t-call='portal.portal_layout']" position="replace">
+            <t t-call="portal.portal_layout">
+                <t t-set="no_breadcrumbs" t-value="True"/>
+
+                <section class="cabrera-orders-page">
+                    <div class="cabrera-page-hero cabrera-page-hero-orders">
+                        <div>
+                            <span class="cabrera-eyebrow">Área profesional</span>
+                            <h1>Mis pedidos</h1>
+                            <p>Revisa el estado de tus pedidos y accede rápidamente a toda la información asociada.</p>
+                        </div>
+                    </div>
+
+                    <div class="cabrera-orders-toolbar">
+                        <div class="cabrera-status-tabs" role="navigation" aria-label="Estado de pedidos">
+                            <a t-attf-href="/my/orders?status=ongoing&amp;sortby=#{sortby}" t-attf-class="cabrera-status-tab #{'active' if status_filter == 'ongoing' else ''}">
+                                En curso <span t-out="status_counts['ongoing']"/>
+                            </a>
+                            <a t-attf-href="/my/orders?status=done&amp;sortby=#{sortby}" t-attf-class="cabrera-status-tab #{'active' if status_filter == 'done' else ''}">
+                                Finalizados <span t-out="status_counts['done']"/>
+                            </a>
+                            <a t-attf-href="/my/orders?status=cancel&amp;sortby=#{sortby}" t-attf-class="cabrera-status-tab #{'active' if status_filter == 'cancel' else ''}">
+                                Cancelados <span t-out="status_counts['cancel']"/>
+                            </a>
+                            <a t-attf-href="/my/orders?status=all&amp;sortby=#{sortby}" t-attf-class="cabrera-status-tab #{'active' if status_filter == 'all' else ''}">
+                                Todos <span t-out="status_counts['all']"/>
+                            </a>
+                        </div>
+
+                        <form action="/my/orders" method="get" class="cabrera-order-tools">
+                            <input type="hidden" name="status" t-att-value="status_filter"/>
+                            <div class="cabrera-search-box">
+                                <input type="search" name="search" t-att-value="search" placeholder="Buscar pedido, referencia o producto"/>
+                                <button type="submit" title="Buscar"><i class="fa fa-search"/></button>
+                            </div>
+
+                            <details class="cabrera-filter-dropdown">
+                                <summary><i class="fa fa-calendar"/> Filtrar periodo</summary>
+                                <div class="cabrera-filter-popover">
+                                    <label>Desde<input type="date" name="date_from" t-att-value="date_from"/></label>
+                                    <label>Hasta<input type="date" name="date_to" t-att-value="date_to"/></label>
+                                    <button type="submit" class="btn btn-primary btn-sm">Aplicar</button>
+                                </div>
+                            </details>
+
+                            <div class="cabrera-sort-control">
+                                <i class="fa fa-sort-amount-desc"/>
+                                <select name="sortby" onchange="this.form.submit()" aria-label="Ordenar pedidos">
+                                    <t t-foreach="cabrera_sortings.items()" t-as="sorting_item">
+                                        <option t-att-value="sorting_item[0]" t-att-selected="sorting_item[0] == sortby and 'selected' or None" t-out="sorting_item[1]['label']"/>
+                                    </t>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div t-if="not orders" class="cabrera-empty-state">
+                        <i class="fa fa-shopping-bag"/>
+                        <h3>No hay pedidos para este filtro</h3>
+                        <p>Prueba con otro estado, cambia el periodo o limpia la búsqueda.</p>
+                        <a href="/my/orders" class="btn btn-primary">Ver todos los pedidos</a>
+                    </div>
+
+                    <div t-if="orders" class="cabrera-order-list">
+                        <t t-foreach="orders" t-as="order">
+                            <t t-set="product_lines" t-value="order.order_line.filtered(lambda line: not line.display_type and line.product_id)"/>
+                            <t t-set="first_line" t-value="product_lines[:1]"/>
+                            <t t-set="active_pickings" t-value="order.picking_ids.filtered(lambda picking: picking.state != 'cancel')"/>
+                            <t t-set="posted_invoices" t-value="order.invoice_ids.filtered(lambda inv: inv.state == 'posted' and inv.move_type == 'out_invoice')"/>
+                            <t t-set="all_invoices_paid" t-value="bool(posted_invoices) and all(inv.payment_state in ('paid', 'in_payment') for inv in posted_invoices)"/>
+
+                            <article class="cabrera-order-card">
+                                <div class="cabrera-order-main">
+                                    <div class="cabrera-order-product">
+                                        <div class="cabrera-product-image">
+                                            <img t-if="first_line" t-att-src="'/web/image/product.product/%s/image_256' % first_line.product_id.id" t-att-alt="first_line.product_id.display_name" loading="lazy"/>
+                                            <i t-else="" class="fa fa-cube"/>
+                                        </div>
+
+                                        <div class="cabrera-order-reference">
+                                            <div class="cabrera-state-date-row">
+                                                <span t-if="order.state == 'cancel'" class="cabrera-state-badge is-cancelled">Cancelado</span>
+                                                <span t-elif="order.delivery_status == 'full'" class="cabrera-state-badge is-done">Finalizado</span>
+                                                <span t-else="" class="cabrera-state-badge is-progress">En curso</span>
+                                                <span class="cabrera-created-date"><i class="fa fa-calendar-o"/> <span t-field="order.date_order" t-options="{'widget': 'date'}"/></span>
+                                            </div>
+
+                                            <span>Pedido <strong class="cabrera-reference-name" t-out="order.name"/></span>
+                                            <small><t t-out="len(product_lines)"/> <t t-if="len(product_lines) == 1">producto</t><t t-else="">productos</t></small>
+                                            <div class="cabrera-card-actions"><a t-attf-href="/my/orders/#{order.id}/detail" class="cabrera-details-link">Ver detalles</a><a t-att-href="order.get_portal_url(report_type='pdf')" target="_blank" rel="noopener" class="cabrera-document-link" title="Abrir documento PDF en una pestaña nueva"><i class="fa fa-external-link"/> Abrir documento</a></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="cabrera-order-financial">
+                                        <span>Total <strong t-field="order.amount_total"/></span>
+                                        <small t-if="order.payment_term_id" t-field="order.payment_term_id.name"/>
+                                        <small t-else="">Condiciones de pago no especificadas</small>
+                                    </div>
+
+                                    <div class="cabrera-order-payment">
+                                        <span t-if="all_invoices_paid" class="is-paid">Pago completado</span>
+                                        <span t-else="" class="is-pending">Pago pendiente</span>
+                                        <small t-if="not posted_invoices and order.invoice_status == 'to invoice'">La factura se emitirá próximamente</small>
+                                        <small t-elif="posted_invoices and not all_invoices_paid">Hay facturas pendientes de pago</small>
+                                        <small t-elif="all_invoices_paid">Facturación al día</small>
+                                        <small t-else="">Consulta el detalle del pedido</small>
+                                    </div>
+
+                                    <a t-attf-href="/my/orders/#{order.id}/detail" class="cabrera-round-action" title="Ver pedido" aria-label="Ver pedido">
+                                        <i class="fa fa-eye"/>
+                                    </a>
+                                </div>
+
+                                <div t-if="order.state != 'cancel'" class="cabrera-order-progress">
+                                    <div class="cabrera-progress-step is-complete">
+                                        <span class="cabrera-progress-dot"><i class="fa fa-file-text-o"/></span>
+                                        <strong>Pedido generado</strong>
+                                        <small>Registrado</small>
+                                    </div>
+                                    <div t-attf-class="cabrera-progress-step #{'is-complete' if active_pickings and order.delivery_status in ('pending', 'started', 'partial', 'full') else ''}">
+                                        <span class="cabrera-progress-dot"><i class="fa fa-cubes"/></span>
+                                        <strong>Preparación</strong>
+                                        <small t-if="order.expected_date" t-field="order.expected_date" t-options="{'widget': 'date'}"/>
+                                    </div>
+                                    <div t-attf-class="cabrera-progress-step #{'is-complete' if order.delivery_status in ('started', 'partial', 'full') else ''}">
+                                        <span class="cabrera-progress-dot"><i class="fa fa-truck"/></span>
+                                        <strong>En reparto</strong>
+                                        <small t-if="order.delivery_status == 'partial'">Entrega parcial</small>
+                                    </div>
+                                    <div t-attf-class="cabrera-progress-step #{'is-complete' if order.delivery_status == 'full' else ''}">
+                                        <span class="cabrera-progress-dot"><i class="fa fa-flag-checkered"/></span>
+                                        <strong>Entregado</strong>
+                                        <small t-if="order.effective_date" t-field="order.effective_date" t-options="{'widget': 'date'}"/>
+                                    </div>
+                                </div>
+                            </article>
+                        </t>
+                    </div>
+
+                    <div t-if="pager" class="cabrera-pager">
+                        <t t-call="portal.pager"/>
+                    </div>
+                </section>
+            </t>
+        </xpath>
+    </template>
+
+    <template id="portal_order_custom_detail" name="Detalle de pedido personalizado">
+        <t t-call="portal.portal_layout">
+            <t t-set="no_breadcrumbs" t-value="True"/>
+            <section class="cabrera-document-detail-page">
+                <div class="cabrera-page-hero cabrera-page-hero-orders">
+                    <div>
+                        <span class="cabrera-eyebrow">Área profesional</span>
+                        <h1>Pedido <t t-out="sale_order.name"/></h1>
+                        <p>Consulta el detalle del pedido, sus productos, importes y el estado de preparación y entrega.</p>
+                    </div>
+                </div>
+
+                <div class="cabrera-detail-toolbar">
+                    <a href="/my/orders" class="cabrera-back-link"><i class="fa fa-angle-left"/> Volver a Mis pedidos</a>
+                    <div class="cabrera-detail-toolbar-actions">
+                        <a t-att-href="sale_order.get_portal_url(report_type='pdf')" target="_blank" rel="noopener" class="btn btn-primary">
+                            <i class="fa fa-file-pdf-o me-1"/> Abrir documento
+                        </a>
+                    </div>
+                </div>
+
+                <div class="cabrera-document-detail-grid">
+                    <article class="cabrera-detail-card">
+                        <span class="cabrera-card-kicker">Resumen</span>
+                        <div class="cabrera-detail-title-row">
+                            <h2>Estado del pedido</h2>
+                            <span t-if="sale_order.state == 'cancel'" class="cabrera-state-badge is-cancelled">Cancelado</span>
+                            <span t-elif="sale_order.delivery_status == 'full'" class="cabrera-state-badge is-done">Finalizado</span>
+                            <span t-else="" class="cabrera-state-badge is-progress">En curso</span>
+                        </div>
+                        <dl class="cabrera-detail-data">
+                            <dt>Referencia</dt><dd class="cabrera-reference-name" t-out="sale_order.name"/>
+                            <dt>Fecha de creación</dt><dd><span t-field="sale_order.date_order" t-options="{'widget': 'date'}"/></dd>
+                            <dt t-if="sale_order.expected_date">Fecha prevista</dt><dd t-if="sale_order.expected_date"><span t-field="sale_order.expected_date" t-options="{'widget': 'date'}"/></dd>
+                            <dt t-if="sale_order.effective_date">Fecha de entrega</dt><dd t-if="sale_order.effective_date"><span t-field="sale_order.effective_date" t-options="{'widget': 'date'}"/></dd>
+                            <dt>Condiciones de pago</dt><dd t-out="sale_order.payment_term_id.name or 'No especificadas'"/>
+                            <dt>Pago</dt><dd><span t-if="all_invoices_paid" class="cabrera-inline-status is-success">Completado</span><span t-else="" class="cabrera-inline-status is-warning">Pendiente</span></dd>
+                        </dl>
+                    </article>
+
+                    <article class="cabrera-detail-card">
+                        <span class="cabrera-card-kicker">Direcciones</span>
+                        <h2>Entrega y facturación</h2>
+                        <div class="cabrera-address-detail-grid">
+                            <div>
+                                <strong>Dirección de entrega</strong>
+                                <t t-call="mi_cuenta_extendida_usuario.portal_compact_address">
+                                    <t t-set="address_partner" t-value="sale_order.partner_shipping_id"/>
+                                </t>
+                            </div>
+                            <div>
+                                <strong>Dirección de facturación</strong>
+                                <t t-call="mi_cuenta_extendida_usuario.portal_compact_address">
+                                    <t t-set="address_partner" t-value="sale_order.partner_invoice_id"/>
+                                </t>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+
+                <article class="cabrera-detail-card cabrera-detail-products cabrera-document-lines-card">
+                    <div class="cabrera-detail-title-row">
+                        <div>
+                            <span class="cabrera-card-kicker">Contenido</span>
+                            <h2>Productos del pedido</h2>
+                        </div>
+                        <strong class="cabrera-detail-grand-total" t-field="sale_order.amount_total"/>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table cabrera-return-table cabrera-document-lines-table">
+                            <thead>
+                                <tr><th>Producto</th><th class="text-end">Cantidad</th><th class="text-end">Precio</th><th class="text-end">Subtotal</th></tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="product_lines" t-as="line">
+                                    <tr>
+                                        <td>
+                                            <div class="cabrera-return-product-cell">
+                                                <img t-att-src="'/web/image/product.product/%s/image_128' % line.product_id.id" t-att-alt="line.product_id.display_name" loading="lazy"/>
+                                                <div>
+                                                    <strong t-out="line.product_id.display_name"/>
+                                                    <small t-if="line.product_id.default_code" t-out="line.product_id.default_code"/>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-end"><span t-field="line.product_uom_qty"/> <span t-field="line.product_uom"/></td>
+                                        <td class="text-end"><span t-field="line.price_unit" t-options="{'widget': 'monetary', 'display_currency': sale_order.currency_id}"/></td>
+                                        <td class="text-end"><strong t-field="line.price_subtotal" t-options="{'widget': 'monetary', 'display_currency': sale_order.currency_id}"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="cabrera-document-totals">
+                        <div><span>Base imponible</span><strong t-field="sale_order.amount_untaxed"/></div>
+                        <div><span>Impuestos</span><strong t-field="sale_order.amount_tax"/></div>
+                        <div class="is-total"><span>Total</span><strong t-field="sale_order.amount_total"/></div>
+                    </div>
+                </article>
+            </section>
+        </t>
+    </template>
+
+    <template id="portal_compact_address" name="Dirección compacta">
+        <div class="cabrera-compact-address" t-if="address_partner">
+            <span class="cabrera-address-icon"><i class="fa fa-map-marker"/></span>
+            <div>
+                <strong t-out="address_partner.name"/>
+                <p>
+                    <t t-if="address_partner.street"><t t-out="address_partner.street"/><br/></t>
+                    <t t-if="address_partner.street2"><t t-out="address_partner.street2"/><br/></t>
+                    <t t-if="address_partner.zip or address_partner.city"><t t-out="address_partner.zip or ''"/> <t t-out="address_partner.city or ''"/><br/></t>
+                    <t t-if="address_partner.state_id"><t t-out="address_partner.state_id.name"/><t t-if="address_partner.country_id">, </t></t>
+                    <t t-if="address_partner.country_id" t-out="address_partner.country_id.name"/>
+                </p>
+                <small t-if="address_partner.phone"><i class="fa fa-phone"/> <t t-out="address_partner.phone"/></small>
+                <small t-if="address_partner.email"><i class="fa fa-envelope-o"/> <t t-out="address_partner.email"/></small>
+            </div>
+        </div>
+    </template>
+
+</odoo>

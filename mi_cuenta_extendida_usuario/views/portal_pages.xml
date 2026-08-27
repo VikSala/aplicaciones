@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Facturas -->
+    <template id="portal_my_invoices_cabrera" inherit_id="account.portal_my_invoices" priority="90">
+        <xpath expr="//t[@t-call='portal.portal_searchbar']" position="before">
+            <div class="cabrera-page-hero cabrera-page-hero-invoices">
+                <div>
+                    <span class="cabrera-eyebrow">Área profesional</span>
+                    <h1>Mis facturas</h1>
+                    <p>Consulta tus facturas, revisa su estado de pago y accede a los documentos disponibles.</p>
+                </div>
+            </div>
+        </xpath>
+        <xpath expr="//t[@t-call='portal.portal_searchbar']/t[@t-set='title']" position="replace">
+            <t t-set="title">Mis facturas</t>
+        </xpath>
+        <!-- Las facturas abren directamente el PDF generado por Odoo en una pestaña nueva. -->
+        <xpath expr="//a[@t-att-href='invoice.get_portal_url()']" position="attributes">
+            <attribute name="t-att-href">invoice.get_portal_url(report_type='pdf')</attribute>
+            <attribute name="target">_blank</attribute>
+            <attribute name="rel">noopener</attribute>
+        </xpath>
+    </template>
+
+    <!-- Presupuestos: se conserva el comportamiento de la V3 -->
+    <template id="portal_my_quotations_cabrera" inherit_id="sale.portal_my_quotations" priority="90">
+        <xpath expr="//t[@t-call='portal.portal_searchbar']" position="before">
+            <div class="cabrera-page-hero cabrera-page-hero-quotes">
+                <div>
+                    <span class="cabrera-eyebrow">Área profesional</span>
+                    <h1>Mis presupuestos</h1>
+                    <p>Revisa los presupuestos preparados para tu cuenta, tanto los borradores como los ya enviados.</p>
+                </div>
+            </div>
+        </xpath>
+        <xpath expr="//t[@t-call='portal.portal_searchbar']/t[@t-set='title']" position="replace">
+            <t t-set="title">Mis presupuestos</t>
+        </xpath>
+        <xpath expr="//div[@t-if='not quotations']" position="replace">
+            <div t-if="not quotations" class="cabrera-empty-state cabrera-simple-empty-state">
+                <i class="fa fa-calculator"/>
+                <h3>Actualmente no hay presupuestos para su cuenta</h3>
+                <p>Cuando preparemos un nuevo presupuesto podrás consultarlo desde esta sección.</p>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- Datos personales + dirección de facturación -->
+    <template id="portal_my_details_cabrera" inherit_id="portal.portal_my_details" priority="90">
+        <xpath expr="//form[@action='/my/account']" position="before">
+            <t t-set="no_breadcrumbs" t-value="True"/>
+            <div class="cabrera-page-hero cabrera-page-hero-account">
+                <div>
+                    <span class="cabrera-eyebrow">Área profesional</span>
+                    <h1>Mis datos personales</h1>
+                    <p>Actualiza tus datos de contacto y decide si quieres utilizar esos mismos datos para facturación.</p>
+                </div>
+            </div>
+
+            <div t-if="request.params.get('personal_saved')" class="alert alert-success cabrera-account-alert" role="alert">
+                <i class="fa fa-check-circle me-1"/> Datos personales actualizados correctamente.
+            </div>
+            <div t-if="request.params.get('billing_saved')" class="alert alert-success cabrera-account-alert" role="alert">
+                <i class="fa fa-check-circle me-1"/> Dirección de facturación actualizada correctamente.
+            </div>
+        </xpath>
+
+        <xpath expr="//form[@action='/my/account']" position="replace">
+            <section class="cabrera-billing-panel cabrera-personal-panel">
+                <div class="cabrera-section-heading">
+                    <div>
+                        <span class="cabrera-card-kicker">Cuenta</span>
+                        <h2>Datos personales</h2>
+                    </div>
+                    <span class="cabrera-section-note">Información principal de tu cuenta profesional.</span>
+                </div>
+
+                <form action="/my/account" method="post" class="cabrera-personal-form">
+                    <input type="hidden" name="cabrera_account_form" value="1"/>
+                    <div class="row cabrera-native-details-grid">
+                        <t t-call="portal.portal_my_details_fields"/>
+                        <input type="hidden" name="redirect" t-att-value="redirect"/>
+                    </div>
+
+                    <div class="cabrera-same-billing-control">
+                        <div class="form-check form-switch">
+                            <input id="cabrera_same_billing" class="form-check-input" type="checkbox" name="same_billing" value="1" t-att-checked="portal_same_billing and 'checked' or None"/>
+                            <label class="form-check-label" for="cabrera_same_billing">
+                                <strong>Mismos datos de facturación</strong>
+                                <small>Utilizar los datos personales anteriores también como dirección de facturación.</small>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="cabrera-billing-actions">
+                        <button type="submit" class="btn btn-primary"><i class="fa fa-save me-1"/> Guardar datos personales</button>
+                    </div>
+                </form>
+            </section>
+
+            <section id="cabrera_billing_panel" t-attf-class="cabrera-billing-panel #{'d-none' if portal_same_billing else ''}" t-att-aria-hidden="portal_same_billing and 'true' or 'false'">
+                <div class="cabrera-section-heading">
+                    <div>
+                        <span class="cabrera-card-kicker">Facturación</span>
+                        <h2>Dirección de facturación</h2>
+                    </div>
+                    <span class="cabrera-section-note">Solo se utilizará cuando sea distinta de tus datos personales.</span>
+                </div>
+
+                <form action="/my/account/billing" method="post" class="cabrera-billing-form">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <div class="cabrera-form-grid">
+                        <div class="cabrera-field cabrera-field-wide">
+                            <label for="billing_name">Nombre / Razón social</label>
+                            <input id="billing_name" type="text" name="billing_name" class="form-control" t-att-value="portal_billing_partner.name or ''" required="required"/>
+                        </div>
+                        <div class="cabrera-field cabrera-field-wide">
+                            <label for="billing_street">Calle y número</label>
+                            <input id="billing_street" type="text" name="billing_street" class="form-control" t-att-value="portal_billing_partner.street or ''" required="required"/>
+                        </div>
+                        <div class="cabrera-field cabrera-field-wide">
+                            <label for="billing_street2">Dirección adicional</label>
+                            <input id="billing_street2" type="text" name="billing_street2" class="form-control" t-att-value="portal_billing_partner.street2 or ''"/>
+                        </div>
+                        <div class="cabrera-field">
+                            <label for="billing_zip">Código postal</label>
+                            <input id="billing_zip" type="text" name="billing_zip" class="form-control" t-att-value="portal_billing_partner.zip or ''"/>
+                        </div>
+                        <div class="cabrera-field">
+                            <label for="billing_city">Ciudad</label>
+                            <input id="billing_city" type="text" name="billing_city" class="form-control" t-att-value="portal_billing_partner.city or ''" required="required"/>
+                        </div>
+                        <div class="cabrera-field">
+                            <label for="billing_state_id">Provincia</label>
+                            <select id="billing_state_id" name="billing_state_id" class="form-select">
+                                <option value="">Seleccionar...</option>
+                                <t t-foreach="states or []" t-as="state">
+                                    <option t-att-value="state.id" t-att-selected="state.id == portal_billing_partner.state_id.id and 'selected' or None" t-out="state.name"/>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="cabrera-field">
+                            <label for="billing_country_id">País</label>
+                            <select id="billing_country_id" name="billing_country_id" class="form-select" required="required">
+                                <option value="">Seleccionar...</option>
+                                <t t-foreach="countries or []" t-as="country">
+                                    <option t-att-value="country.id" t-att-selected="country.id == portal_billing_partner.country_id.id and 'selected' or None" t-out="country.name"/>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="cabrera-field">
+                            <label for="billing_phone">Teléfono</label>
+                            <input id="billing_phone" type="tel" name="billing_phone" class="form-control" t-att-value="portal_billing_partner.phone or ''"/>
+                        </div>
+                        <div class="cabrera-field">
+                            <label for="billing_email">Correo electrónico</label>
+                            <input id="billing_email" type="email" name="billing_email" class="form-control" t-att-value="portal_billing_partner.email or ''"/>
+                        </div>
+                    </div>
+                    <div class="cabrera-billing-actions">
+                        <button type="submit" class="btn btn-primary"><i class="fa fa-save me-1"/> Guardar dirección de facturación</button>
+                    </div>
+                </form>
+            </section>
+        </xpath>
+    </template>
+
+    <!-- Seguridad / contraseña -->
+    <template id="portal_my_security_cabrera" inherit_id="portal.portal_my_security" priority="90">
+        <xpath expr="//div[hasclass('o_portal_security_body')]" position="before">
+            <div class="cabrera-page-hero cabrera-page-hero-security">
+                <div>
+                    <span class="cabrera-eyebrow">Área profesional</span>
+                    <h1>Cambiar contraseña</h1>
+                    <p>Actualiza la contraseña con la que accedes a tu área profesional.</p>
+                </div>
+            </div>
+        </xpath>
+        <xpath expr="//div[hasclass('o_portal_security_body')]" position="attributes">
+            <attribute name="class" add="cabrera-security-body" separator=" "/>
+        </xpath>
+        <xpath expr="//div[hasclass('o_portal_security_body')]/div[hasclass('d-flex') and hasclass('gap-2')][1]" position="replace"/>
+        <xpath expr="//section[@name='portal_change_password']/h4" position="replace">
+            <h2 class="cabrera-security-title">Cambiar contraseña</h2>
+        </xpath>
+        <xpath expr="//section[@name='portal_change_password']//form[contains(@class, 'oe_reset_password_form')]/button[@type='submit']" position="attributes">
+            <attribute name="class">btn cabrera-password-submit</attribute>
+        </xpath>
+        <xpath expr="//section[@name='portal_revoke_all_devices_popup']/button[@id='portal_revoke_all_sessions_popup']" position="attributes">
+            <attribute name="class">btn cabrera-revoke-sessions-submit</attribute>
+        </xpath>
+    </template>
+
+</odoo>

@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="portal_my_returns" name="Mis devoluciones">
+        <t t-call="portal.portal_layout">
+            <t t-set="no_breadcrumbs" t-value="True"/>
+
+            <section class="cabrera-orders-page cabrera-returns-page">
+                <div class="cabrera-page-hero cabrera-page-hero-returns">
+                    <div>
+                        <span class="cabrera-eyebrow">Área profesional</span>
+                        <h1>Mis devoluciones</h1>
+                        <p>Consulta el estado de tus devoluciones y revisa los productos asociados a cada una.</p>
+                    </div>
+                </div>
+
+                <div class="cabrera-orders-toolbar">
+                    <div class="cabrera-status-tabs" role="navigation" aria-label="Estado de devoluciones">
+                        <a t-attf-href="/my/returns?status=ongoing&amp;sortby=#{sortby}" t-attf-class="cabrera-status-tab #{'active' if status_filter == 'ongoing' else ''}">
+                            En curso <span t-out="status_counts['ongoing']"/>
+                        </a>
+                        <a t-attf-href="/my/returns?status=done&amp;sortby=#{sortby}" t-attf-class="cabrera-status-tab #{'active' if status_filter == 'done' else ''}">
+                            Finalizadas <span t-out="status_counts['done']"/>
+                        </a>
+                        <a t-attf-href="/my/returns?status=cancel&amp;sortby=#{sortby}" t-attf-class="cabrera-status-tab #{'active' if status_filter == 'cancel' else ''}">
+                            Canceladas <span t-out="status_counts['cancel']"/>
+                        </a>
+                        <a t-attf-href="/my/returns?status=all&amp;sortby=#{sortby}" t-attf-class="cabrera-status-tab #{'active' if status_filter == 'all' else ''}">
+                            Todas <span t-out="status_counts['all']"/>
+                        </a>
+                    </div>
+
+                    <form action="/my/returns" method="get" class="cabrera-order-tools">
+                        <input type="hidden" name="status" t-att-value="status_filter"/>
+                        <div class="cabrera-search-box">
+                            <input type="search" name="search" t-att-value="search" placeholder="Buscar devolución, pedido o producto"/>
+                            <button type="submit" title="Buscar"><i class="fa fa-search"/></button>
+                        </div>
+
+                        <details class="cabrera-filter-dropdown">
+                            <summary><i class="fa fa-calendar"/> Filtrar periodo</summary>
+                            <div class="cabrera-filter-popover">
+                                <label>Desde<input type="date" name="date_from" t-att-value="date_from"/></label>
+                                <label>Hasta<input type="date" name="date_to" t-att-value="date_to"/></label>
+                                <button type="submit" class="btn btn-primary btn-sm">Aplicar</button>
+                            </div>
+                        </details>
+
+                        <div class="cabrera-sort-control">
+                            <i class="fa fa-sort-amount-desc"/>
+                            <select name="sortby" onchange="this.form.submit()" aria-label="Ordenar devoluciones">
+                                <t t-foreach="cabrera_sortings.items()" t-as="sorting_item">
+                                    <option t-att-value="sorting_item[0]" t-att-selected="sorting_item[0] == sortby and 'selected' or None" t-out="sorting_item[1]['label']"/>
+                                </t>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+
+                <div t-if="not returns" class="cabrera-empty-state">
+                    <i class="fa fa-reply"/>
+                    <h3>No hay devoluciones para este filtro</h3>
+                    <p>Cuando se genere una devolución vinculada a tu cuenta aparecerá aquí.</p>
+                    <a href="/my/returns" class="btn btn-primary">Ver todas las devoluciones</a>
+                </div>
+
+                <div t-if="returns" class="cabrera-order-list">
+                    <t t-foreach="returns" t-as="return_picking">
+                        <t t-set="return_moves" t-value="return_picking.move_ids.filtered(lambda move: move.state != 'cancel' and move.product_id)"/>
+                        <t t-set="first_move" t-value="return_moves[:1]"/>
+
+                        <article class="cabrera-order-card cabrera-return-card">
+                            <div class="cabrera-order-main">
+                                <div class="cabrera-order-product">
+                                    <div class="cabrera-product-image">
+                                        <img t-if="first_move" t-att-src="'/web/image/product.product/%s/image_256' % first_move.product_id.id" t-att-alt="first_move.product_id.display_name" loading="lazy"/>
+                                        <i t-else="" class="fa fa-reply"/>
+                                    </div>
+
+                                    <div class="cabrera-order-reference">
+                                        <div class="cabrera-state-date-row">
+                                            <span t-if="return_picking.state == 'cancel'" class="cabrera-state-badge is-cancelled">Cancelada</span>
+                                            <span t-elif="return_picking.state == 'done'" class="cabrera-state-badge is-done">Finalizada</span>
+                                            <span t-else="" class="cabrera-state-badge is-progress">En curso</span>
+                                            <span class="cabrera-created-date"><i class="fa fa-calendar-o"/> <span t-field="return_picking.create_date" t-options="{'widget': 'date'}"/></span>
+                                        </div>
+
+                                        <span>Devolución <strong class="cabrera-reference-name" t-out="return_picking.name"/></span>
+                                        <small><t t-out="len(return_moves)"/> <t t-if="len(return_moves) == 1">producto</t><t t-else="">productos</t></small>
+                                        <a t-attf-href="/my/returns/#{return_picking.id}" class="cabrera-details-link">Ver detalles</a>
+                                    </div>
+                                </div>
+
+                                <div class="cabrera-order-financial cabrera-return-origin">
+                                    <span>Pedido original</span>
+                                    <strong t-if="return_picking.sale_id" class="cabrera-reference-name" t-out="return_picking.sale_id.name"/>
+                                    <small t-elif="return_picking.origin" class="cabrera-reference-name" t-out="return_picking.origin"/>
+                                    <small t-else="">Sin referencia de pedido</small>
+                                    <a t-if="return_picking.sale_id" t-att-href="return_picking.sale_id.get_portal_url(report_type='pdf')" target="_blank" rel="noopener" class="cabrera-document-link cabrera-return-document-link"><i class="fa fa-file-pdf-o"/> Abrir documento</a>
+                                </div>
+
+                                <div class="cabrera-order-payment cabrera-return-status">
+                                    <span t-if="return_picking.state == 'done'" class="is-paid">Devolución recibida</span>
+                                    <span t-elif="return_picking.state == 'cancel'" class="is-cancelled-text">Devolución cancelada</span>
+                                    <span t-else="" class="is-pending">Devolución en proceso</span>
+                                    <small t-if="return_picking.scheduled_date">Prevista: <span t-field="return_picking.scheduled_date" t-options="{'widget': 'date'}"/></small>
+                                    <small t-else="">Consulta el detalle de la devolución</small>
+                                </div>
+
+                                <a t-attf-href="/my/returns/#{return_picking.id}" class="cabrera-round-action" title="Ver devolución" aria-label="Ver devolución">
+                                    <i class="fa fa-eye"/>
+                                </a>
+                            </div>
+
+                            <div t-if="return_picking.state != 'cancel'" class="cabrera-order-progress cabrera-return-progress">
+                                <div class="cabrera-progress-step is-complete">
+                                    <span class="cabrera-progress-dot"><i class="fa fa-file-text-o"/></span>
+                                    <strong>Devolución generada</strong>
+                                    <small>Registrada</small>
+                                </div>
+                                <div t-attf-class="cabrera-progress-step #{'is-complete' if return_picking.state in ('confirmed', 'assigned', 'done') else ''}">
+                                    <span class="cabrera-progress-dot"><i class="fa fa-cubes"/></span>
+                                    <strong>Preparada</strong>
+                                    <small t-if="return_picking.state in ('confirmed', 'assigned', 'done')">En proceso</small>
+                                </div>
+                                <div t-attf-class="cabrera-progress-step #{'is-complete' if return_picking.state in ('assigned', 'done') else ''}">
+                                    <span class="cabrera-progress-dot"><i class="fa fa-truck"/></span>
+                                    <strong>En tránsito</strong>
+                                    <small t-if="return_picking.state == 'assigned'">Pendiente de recepción</small>
+                                </div>
+                                <div t-attf-class="cabrera-progress-step #{'is-complete' if return_picking.state == 'done' else ''}">
+                                    <span class="cabrera-progress-dot"><i class="fa fa-check"/></span>
+                                    <strong>Recibida</strong>
+                                    <small t-if="return_picking.date_done" t-field="return_picking.date_done" t-options="{'widget': 'date'}"/>
+                                </div>
+                            </div>
+                        </article>
+                    </t>
+                </div>
+
+                <div t-if="pager" class="cabrera-pager">
+                    <t t-call="portal.pager"/>
+                </div>
+            </section>
+        </t>
+    </template>
+
+    <template id="portal_return_detail" name="Detalle de devolución">
+        <t t-call="portal.portal_layout">
+            <t t-set="no_breadcrumbs" t-value="True"/>
+            <section class="cabrera-return-detail-page">
+                <div class="cabrera-page-hero cabrera-page-hero-returns">
+                    <div>
+                        <span class="cabrera-eyebrow">Área profesional</span>
+                        <h1>Devolución <t t-out="return_picking.name"/></h1>
+                        <p>Consulta los productos y el estado actual de esta devolución.</p>
+                    </div>
+                </div>
+
+                <div class="cabrera-detail-toolbar">
+                    <a href="/my/returns" class="cabrera-back-link"><i class="fa fa-angle-left"/> Volver a Mis devoluciones</a>
+                    <a t-if="return_picking.sale_id" t-att-href="return_picking.sale_id.get_portal_url(report_type='pdf')" target="_blank" rel="noopener" class="btn btn-primary"><i class="fa fa-file-pdf-o me-1"/> Abrir documento</a>
+                </div>
+
+                <div class="cabrera-return-detail-grid">
+                    <article class="cabrera-detail-card">
+                        <span class="cabrera-card-kicker">Estado</span>
+                        <h2>
+                            <span t-if="return_picking.state == 'cancel'" class="cabrera-state-badge is-cancelled">Cancelada</span>
+                            <span t-elif="return_picking.state == 'done'" class="cabrera-state-badge is-done">Finalizada</span>
+                            <span t-else="" class="cabrera-state-badge is-progress">En curso</span>
+                        </h2>
+                        <dl class="cabrera-detail-data">
+                            <dt>Fecha de creación</dt><dd><span t-field="return_picking.create_date" t-options="{'widget': 'date'}"/></dd>
+                            <dt t-if="return_picking.scheduled_date">Fecha prevista</dt><dd t-if="return_picking.scheduled_date"><span t-field="return_picking.scheduled_date" t-options="{'widget': 'date'}"/></dd>
+                            <dt t-if="return_picking.date_done">Fecha de recepción</dt><dd t-if="return_picking.date_done"><span t-field="return_picking.date_done" t-options="{'widget': 'date'}"/></dd>
+                            <dt t-if="return_picking.sale_id">Pedido original</dt><dd t-if="return_picking.sale_id" class="cabrera-reference-name" t-out="return_picking.sale_id.name"/>
+                        </dl>
+                    </article>
+
+                    <article class="cabrera-detail-card cabrera-detail-products">
+                        <span class="cabrera-card-kicker">Contenido</span>
+                        <h2>Productos devueltos</h2>
+                        <div class="table-responsive">
+                            <table class="table cabrera-return-table">
+                                <thead><tr><th>Producto</th><th class="text-end">Cantidad</th></tr></thead>
+                                <tbody>
+                                    <t t-foreach="return_picking.move_ids.filtered(lambda move: move.state != 'cancel' and move.product_id)" t-as="move">
+                                        <tr>
+                                            <td>
+                                                <div class="cabrera-return-product-cell">
+                                                    <img t-att-src="'/web/image/product.product/%s/image_128' % move.product_id.id" t-att-alt="move.product_id.display_name" loading="lazy"/>
+                                                    <div>
+                                                        <strong t-out="move.product_id.display_name"/>
+                                                        <small t-if="move.product_id.default_code" t-out="move.product_id.default_code"/>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-end">
+                                                <span t-out="move.quantity if return_picking.state == 'done' else move.product_uom_qty"/>
+                                                <span t-field="move.product_uom"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+                </div>
+            </section>
+        </t>
+    </template>
+</odoo>

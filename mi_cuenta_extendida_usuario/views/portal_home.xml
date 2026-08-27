@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="portal_my_home_custom" inherit_id="portal.portal_my_home" priority="90">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+            <section class="cabrera-home-dashboard">
+                <div class="cabrera-page-hero cabrera-page-hero-home">
+                    <div>
+                        <span class="cabrera-eyebrow">Área profesional</span>
+                        <h1>Inicio</h1>
+                        <p>Consulta de un vistazo tus datos de facturación, tu comercial y los pedidos que siguen en curso.</p>
+                    </div>
+                </div>
+
+                <div class="cabrera-home-summary-grid">
+                    <article class="cabrera-summary-card cabrera-address-card">
+                        <div class="cabrera-card-heading">
+                            <div>
+                                <span class="cabrera-card-kicker">Datos de cuenta</span>
+                                <h2>Dirección de facturación</h2>
+                            </div>
+                            <a href="/my/account" class="cabrera-card-edit"><i class="fa fa-pencil"/> Editar</a>
+                        </div>
+                        <div class="cabrera-address-content" t-if="portal_billing_partner">
+                            <span class="cabrera-address-icon"><i class="fa fa-map-marker"/></span>
+                            <div>
+                                <strong t-out="portal_billing_partner.name"/>
+                                <p>
+                                    <t t-if="portal_billing_partner.street"><t t-out="portal_billing_partner.street"/><br/></t>
+                                    <t t-if="portal_billing_partner.street2"><t t-out="portal_billing_partner.street2"/><br/></t>
+                                    <t t-if="portal_billing_partner.zip or portal_billing_partner.city">
+                                        <t t-out="portal_billing_partner.zip or ''"/> <t t-out="portal_billing_partner.city or ''"/><br/>
+                                    </t>
+                                    <t t-if="portal_billing_partner.state_id"><t t-out="portal_billing_partner.state_id.name"/>, </t>
+                                    <t t-if="portal_billing_partner.country_id"><t t-out="portal_billing_partner.country_id.name"/></t>
+                                </p>
+                                <small t-if="portal_billing_partner.email"><i class="fa fa-envelope-o"/> <t t-out="portal_billing_partner.email"/></small>
+                                <small t-if="portal_billing_partner.phone"><i class="fa fa-phone"/> <t t-out="portal_billing_partner.phone"/></small>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="cabrera-commercial-card">
+                        <div class="cabrera-commercial-photo">
+                            <img t-if="sales_user" t-att-src="image_data_uri(sales_user.avatar_512)" t-att-alt="sales_user.name" loading="lazy"/>
+                            <div t-else="" class="cabrera-commercial-placeholder"><i class="fa fa-headphones"/></div>
+                        </div>
+                        <div class="cabrera-commercial-body">
+                            <span class="cabrera-card-kicker">Tu comercial</span>
+                            <h2 t-if="sales_user" t-out="sales_user.name"/>
+                            <h2 t-else="">Equipo comercial</h2>
+                            <p t-if="sales_user and sales_user.partner_id.function" t-out="sales_user.partner_id.function"/>
+                            <p t-else="">Tu contacto de referencia para consultas comerciales y pedidos.</p>
+
+                            <div class="cabrera-commercial-actions">
+                                <a t-if="sales_user and (sales_user.partner_id.phone or sales_user.partner_id.mobile)"
+                                   t-att-href="'tel:%s' % (sales_user.partner_id.phone or sales_user.partner_id.mobile)">
+                                    <i class="fa fa-phone"/>
+                                    <span t-out="sales_user.partner_id.phone or sales_user.partner_id.mobile"/>
+                                </a>
+                                <a t-if="sales_user and sales_user.email" t-att-href="'mailto:%s' % sales_user.email">
+                                    <i class="fa fa-envelope-o"/>
+                                    <span t-out="sales_user.email"/>
+                                </a>
+                                <a t-if="not sales_user" href="/contactus">
+                                    <i class="fa fa-comments-o"/><span>Contactar con Atención al Cliente</span>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+
+                <section class="cabrera-home-orders-section">
+                    <div class="cabrera-section-heading">
+                        <div>
+                            <span class="cabrera-card-kicker">Actividad reciente</span>
+                            <h2>Pedidos en curso</h2>
+                        </div>
+                        <a href="/my/orders" class="cabrera-section-link">Ver todos los pedidos <i class="fa fa-angle-right"/></a>
+                    </div>
+
+                    <div t-if="cabrera_home_orders" class="cabrera-home-order-list">
+                        <t t-foreach="cabrera_home_orders" t-as="order">
+                            <t t-set="product_lines" t-value="order.order_line.filtered(lambda line: not line.display_type and line.product_id)"/>
+                            <t t-set="first_line" t-value="product_lines[:1]"/>
+                            <a t-attf-href="/my/orders/#{order.id}/detail" class="cabrera-home-order-row">
+                                <div class="cabrera-home-order-image">
+                                    <img t-if="first_line" t-att-src="'/web/image/product.product/%s/image_256' % first_line.product_id.id" t-att-alt="first_line.product_id.display_name" loading="lazy"/>
+                                    <i t-else="" class="fa fa-cube"/>
+                                </div>
+                                <div class="cabrera-home-order-info">
+                                    <div class="cabrera-state-date-row">
+                                        <span class="cabrera-state-badge is-progress">En curso</span>
+                                        <span class="cabrera-created-date"><i class="fa fa-calendar-o"/> <span t-field="order.date_order" t-options="{'widget': 'date'}"/></span>
+                                    </div>
+                                    <strong>Pedido <t t-out="order.name"/></strong>
+                                    <small><t t-out="len(product_lines)"/> <t t-if="len(product_lines) == 1">producto</t><t t-else="">productos</t></small>
+                                </div>
+                                <div class="cabrera-home-order-total">
+                                    <small>Total</small>
+                                    <strong t-field="order.amount_total"/>
+                                </div>
+                                <i class="fa fa-angle-right cabrera-home-order-arrow"/>
+                            </a>
+                        </t>
+                    </div>
+
+                    <div t-else="" class="cabrera-home-empty-orders">
+                        <span class="cabrera-empty-icon"><i class="fa fa-shopping-bag"/></span>
+                        <div>
+                            <h3>No tienes pedidos en curso</h3>
+                            <p>Cuando realices una compra podrás seguir aquí su preparación y entrega.</p>
+                        </div>
+                        <a href="/shop" class="btn btn-primary">Explorar Mi tienda profesional</a>
+                    </div>
+                </section>
+            </section>
+        </xpath>
+
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="attributes">
+            <attribute name="class" add="d-none" separator=" "/>
+        </xpath>
+    </template>
+</odoo>
