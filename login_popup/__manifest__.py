@@ -2,7 +2,7 @@
 {
     "name": "Website Login Popup",
     "summary": "Abre el inicio de sesión del website en un popup sin abandonar la página actual",
-    "version": "18.0.1.6.0",
+    "version": "18.0.1.6.1",
     "category": "Website/Website",
     "author": "Custom",
     "license": "LGPL-3",
