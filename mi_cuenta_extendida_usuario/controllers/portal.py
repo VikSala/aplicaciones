@@ -47,6 +47,20 @@ class CustomerPortalExtended(CustomerPortal):
 
     def _prepare_home_portal_values(self, counters):
         values = super()._prepare_home_portal_values(counters)
+
+        # IMPORTANTE: /my/counters llama también a este método y espera que la
+        # respuesta contenga ÚNICAMENTE los contadores solicitados. Si añadimos
+        # aquí claves propias como ``cabrera_home_orders_count``, el JS nativo
+        # de Odoo intenta buscar un elemento [data-placeholder_count] para esa
+        # clave y, al no existir, termina haciendo ``null.textContent = ...``.
+        #
+        # Esto se manifiesta especialmente con usuarios internos porque suelen
+        # tener más tarjetas/contadores de portal activos que un usuario portal.
+        if counters:
+            return values
+
+        # En la carga HTML de /my y /my/home Odoo llama con counters=[]; ahí sí
+        # añadimos los datos específicos de nuestro dashboard personalizado.
         partner = request.env.user.partner_id
         SaleOrder = request.env["sale.order"]
 
