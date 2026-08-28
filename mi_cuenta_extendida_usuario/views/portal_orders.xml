@@ -95,9 +95,20 @@
                                     </div>
 
                                     <div class="cabrera-order-financial">
-                                        <span>Total <strong t-field="order.amount_total"/></span>
-                                        <small t-if="order.payment_term_id" t-field="order.payment_term_id.name"/>
-                                        <small t-else="">Condiciones de pago no especificadas</small>
+                                        <div class="cabrera-order-amount-line">
+                                            <span>Base imponible</span>
+                                            <strong t-field="order.amount_untaxed"/>
+                                        </div>
+                                        <div class="cabrera-order-amount-line">
+                                            <span>Impuestos</span>
+                                            <strong t-field="order.amount_tax"/>
+                                        </div>
+                                        <div class="cabrera-order-amount-line is-total">
+                                            <span>Total</span>
+                                            <strong t-field="order.amount_total"/>
+                                        </div>
+                                        <small class="cabrera-order-payment-term" t-if="order.payment_term_id" t-field="order.payment_term_id.name"/>
+                                        <small class="cabrera-order-payment-term" t-else="">Condiciones de pago no especificadas</small>
                                     </div>
 
                                     <div class="cabrera-order-payment">

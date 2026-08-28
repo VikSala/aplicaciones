@@ -382,6 +382,47 @@ $lp-green-soft-hover: rgba(0, 210, 122, .16);
     .is-paid { color: $lp-green-dark; }
 }
 
+.cabrera-order-financial {
+    min-width: 155px;
+    gap: 2px;
+}
+
+.cabrera-order-amount-line {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    white-space: nowrap;
+
+    span {
+        color: #6b7280;
+        font-size: 10px;
+    }
+
+    strong {
+        color: #374151;
+        font-size: 10px;
+        font-weight: 600;
+    }
+
+    &.is-total {
+        margin-top: 2px;
+        padding-top: 3px;
+        border-top: 1px solid #e5e7eb;
+
+        span,
+        strong {
+            color: #263442;
+            font-size: 11px;
+            font-weight: 700;
+        }
+    }
+}
+
+.cabrera-order-payment-term {
+    margin-top: 2px;
+}
+
 .cabrera-round-action {
     width: 36px;
     height: 36px;

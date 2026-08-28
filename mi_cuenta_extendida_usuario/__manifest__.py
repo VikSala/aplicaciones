@@ -1,6 +1,6 @@
 {
     "name": "Menú de Usuario Personalizado",
-    "version": "18.0.4.0.5",
+    "version": "18.0.4.0.6",
     "category": "Website",
     "summary": "Portal B2B moderno con navegación lateral y panel de pedidos avanzado",
     "depends": [
