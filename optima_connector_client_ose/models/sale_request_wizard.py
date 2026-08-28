@@ -21,12 +21,19 @@ class SaleOrderRequestOptimaWizard(models.TransientModel):
     # AUXILIAR: PARTNER ÓPTIMA
     # -------------------------
     def _get_optima_partner(self):
-        partner = self.env["res.partner"].search([
-            ("name", "ilike", "Óptima Soluciones Eficientes, S.L.")
+        self.ensure_one()
+
+        company = self.sale_id.company_id
+
+        partner = self.env["res.partner"].with_company(company).search([
+            ("name", "ilike", "Óptima Soluciones Eficientes, S.L."),
+            ("company_id", "in", [False, company.id]),
         ], limit=1)
 
         if not partner:
-            raise UserError("No se encontró el partner Óptima")
+            raise UserError(
+                f"No se encontró el partner Óptima para la compañía {company.display_name}"
+            )
 
         return partner
 
@@ -92,12 +99,17 @@ class SaleOrderRequestOptimaWizard(models.TransientModel):
             # -------------------------
             # YA PEDIDO (ACUMULADO)
             # -------------------------
-            ya_pedido = sum(PurchaseLine.search([
-                ("x_sale_line_id", "=", sale_line.id),
-                ("product_id", "=", line.product_id.id),
-                ("order_id.origin", "=", self.sale_id.name),
-                ("order_id.state", "in", ["purchase", "done"])
-            ]).mapped("product_qty"))
+            company = self.sale_id.company_id
+
+            ya_pedido = sum(
+                PurchaseLine.with_company(company).search([
+                    ("company_id", "=", company.id),
+                    ("x_sale_line_id", "=", sale_line.id),
+                    ("product_id", "=", line.product_id.id),
+                    ("order_id.origin", "=", self.sale_id.name),
+                    ("order_id.state", "in", ["purchase", "done"]),
+                ]).mapped("product_qty")
+            )
 
             # -------------------------
             # VALIDACIÓN TOTAL
@@ -122,7 +134,10 @@ class SaleOrderRequestOptimaWizard(models.TransientModel):
                 "name": line.product_id.display_name,
             }))
 
-        purchase = self.env["purchase.order"].create({
+        company = self.sale_id.company_id
+
+        purchase = self.env["purchase.order"].with_company(company).create({
+            "company_id": company.id,
             "partner_id": partner.id,
             "origin": self.sale_id.name,
             "order_line": purchase_lines,
