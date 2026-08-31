@@ -23,6 +23,9 @@
                     <a href="/my/returns" t-attf-class="cabrera-nav-item #{'active' if request.httprequest.path.startswith('/my/returns') else ''}">
                         <i class="fa fa-reply"/><span>Mis devoluciones</span><i class="fa fa-angle-right cabrera-nav-arrow"/>
                     </a>
+                    <a href="/my/product-lists" t-attf-class="cabrera-nav-item #{'active' if request.httprequest.path.startswith('/my/product-lists') else ''}">
+                        <i class="fa fa-heart-o"/><span>Mis listas de productos</span><i class="fa fa-angle-right cabrera-nav-arrow"/>
+                    </a>
                     <a href="/my/quotes" t-attf-class="cabrera-nav-item #{'active' if request.httprequest.path.startswith('/my/quotes') else ''}">
                         <i class="fa fa-calculator"/><span>Mis presupuestos</span><i class="fa fa-angle-right cabrera-nav-arrow"/>
                     </a>
@@ -35,7 +38,7 @@
                     <a href="/shop" class="cabrera-nav-item">
                         <i class="fa fa-building-o"/><span>Mi tienda profesional</span><i class="fa fa-angle-right cabrera-nav-arrow"/>
                     </a>
-                    <a href="/#contacto" class="cabrera-nav-item">
+                    <a href="/contactus" class="cabrera-nav-item">
                         <i class="fa fa-comments-o"/><span>Atención al Cliente</span><i class="fa fa-angle-right cabrera-nav-arrow"/>
                     </a>
                 </nav>

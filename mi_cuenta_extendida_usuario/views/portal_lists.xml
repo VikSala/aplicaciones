@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Marca global para que el fallback del header sepa que debe llevar al área profesional. -->
+    <template id="website_authenticated_marker" inherit_id="website.layout" priority="95">
+        <xpath expr="//body" position="inside">
+            <span t-if="not request.website.is_public_user()" id="cabrera_authenticated_website_user" class="d-none" aria-hidden="true"/>
+        </xpath>
+    </template>
+
+    <template id="portal_product_lists" name="Mis listas de productos">
+        <t t-call="portal.portal_layout">
+            <section class="cabrera-product-lists-page">
+                <div class="cabrera-page-hero">
+                    <div>
+                        <span class="cabrera-eyebrow">Área profesional</span>
+                        <h1>Mis listas de productos</h1>
+                        <p>Guarda tus favoritos y organízalos en listas para encontrar rápidamente los productos que utilizas o consultas con más frecuencia.</p>
+                    </div>
+                </div>
+
+                <div t-if="request.params.get('list_error') == 'empty'" class="alert alert-warning cabrera-list-alert" role="alert">
+                    Escribe un nombre para crear la lista.
+                </div>
+                <div t-if="request.params.get('list_error') == 'duplicate'" class="alert alert-warning cabrera-list-alert" role="alert">
+                    Ya tienes una lista con ese nombre.
+                </div>
+                <div t-if="request.params.get('deleted')" class="alert alert-success cabrera-list-alert" role="alert">
+                    La lista se ha eliminado. Tus productos siguen guardados en Favoritos.
+                </div>
+
+                <section class="cabrera-lists-toolbar-card">
+                    <div>
+                        <span class="cabrera-card-kicker">Organiza tus favoritos</span>
+                        <h2>Mis listas</h2>
+                        <p>“Favoritos” es tu lista principal. Puedes crear tantas listas adicionales como necesites.</p>
+                    </div>
+                    <form action="/my/product-lists/create" method="post" class="cabrera-create-list-form">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <label for="cabrera_new_list_name" class="visually-hidden">Nombre de la nueva lista</label>
+                        <input id="cabrera_new_list_name" type="text" name="name" maxlength="80" required="required" placeholder="Ej. Proyecto vivienda, Reposición..."/>
+                        <button type="submit" class="btn cabrera-btn-primary"><i class="fa fa-plus"/> Crear lista</button>
+                    </form>
+                </section>
+
+                <div class="cabrera-product-list-grid">
+                    <a href="/my/product-lists/favorites" class="cabrera-product-list-card is-primary">
+                        <div class="cabrera-list-card-head">
+                            <span class="cabrera-list-card-title"><i class="fa fa-heart"/> Favoritos</span>
+                            <span class="cabrera-list-primary-badge">Principal</span>
+                        </div>
+                        <div class="cabrera-list-card-count">
+                            <strong t-out="len(cabrera_wishes)"/>
+                            <span t-if="len(cabrera_wishes) == 1">producto</span>
+                            <span t-else="">productos</span>
+                        </div>
+                        <div t-if="cabrera_wishes" class="cabrera-list-preview-grid">
+                            <t t-foreach="cabrera_wishes[:4]" t-as="wish">
+                                <span class="cabrera-list-preview-image">
+                                    <img t-att-src="'/web/image/product.product/%s/image_256' % wish.product_id.id" t-att-alt="wish.product_id.name" loading="lazy"/>
+                                </span>
+                            </t>
+                        </div>
+                        <div t-else="" class="cabrera-list-preview-empty">
+                            <i class="fa fa-heart-o"/>
+                            <span>Aún no has guardado productos</span>
+                        </div>
+                        <span class="cabrera-list-open">Ver lista <i class="fa fa-angle-right"/></span>
+                    </a>
+
+                    <t t-foreach="cabrera_product_lists" t-as="product_list">
+                        <t t-set="list_wishes" t-value="cabrera_list_wishes.get(product_list.id)"/>
+                        <a t-att-href="'/my/product-lists/%s' % product_list.id" class="cabrera-product-list-card">
+                            <div class="cabrera-list-card-head">
+                                <span class="cabrera-list-card-title"><i class="fa fa-folder-o"/> <t t-out="product_list.name"/></span>
+                            </div>
+                            <div class="cabrera-list-card-count">
+                                <strong t-out="len(list_wishes)"/>
+                                <span t-if="len(list_wishes) == 1">producto</span>
+                                <span t-else="">productos</span>
+                            </div>
+                            <div t-if="list_wishes" class="cabrera-list-preview-grid">
+                                <t t-foreach="list_wishes[:4]" t-as="wish">
+                                    <span class="cabrera-list-preview-image">
+                                        <img t-att-src="'/web/image/product.product/%s/image_256' % wish.product_id.id" t-att-alt="wish.product_id.name" loading="lazy"/>
+                                    </span>
+                                </t>
+                            </div>
+                            <div t-else="" class="cabrera-list-preview-empty">
+                                <i class="fa fa-folder-open-o"/>
+                                <span>Lista vacía</span>
+                            </div>
+                            <span class="cabrera-list-open">Ver lista <i class="fa fa-angle-right"/></span>
+                        </a>
+                    </t>
+                </div>
+
+                <div t-if="not cabrera_wishes" class="cabrera-lists-shop-cta">
+                    <span class="cabrera-empty-icon"><i class="fa fa-heart-o"/></span>
+                    <div>
+                        <h3>Empieza guardando tus productos habituales</h3>
+                        <p>Pulsa el corazón de cualquier producto de la tienda. Aparecerá automáticamente en tu lista principal de Favoritos.</p>
+                    </div>
+                    <a href="/shop" class="btn cabrera-btn-primary">Explorar Mi tienda profesional</a>
+                </div>
+            </section>
+        </t>
+    </template>
+
+    <template id="portal_product_list_detail" name="Detalle de lista de productos">
+        <t t-call="portal.portal_layout">
+            <section class="cabrera-product-lists-page cabrera-product-list-detail-page">
+                <div class="cabrera-list-back-row">
+                    <a href="/my/product-lists"><i class="fa fa-angle-left"/> Volver a Mis listas</a>
+                </div>
+
+                <div class="cabrera-page-hero cabrera-list-detail-hero">
+                    <div>
+                        <span class="cabrera-eyebrow">Área profesional</span>
+                        <h1 t-out="cabrera_active_list_name"/>
+                        <p t-if="cabrera_list_is_favorites">Tu lista principal reúne todos los productos que marcas con el corazón en la tienda.</p>
+                        <p t-else="">Organiza aquí los productos de esta lista sin perderlos de tus Favoritos.</p>
+                    </div>
+                </div>
+
+                <div t-if="request.params.get('assigned') or request.params.get('products_added')" class="alert alert-success cabrera-list-alert" role="alert">
+                    Producto añadido a la lista.
+                </div>
+                <div t-if="request.params.get('favorite_removed')" class="alert alert-success cabrera-list-alert" role="alert">
+                    Producto eliminado de Favoritos.
+                </div>
+                <div t-if="request.params.get('product_removed')" class="alert alert-success cabrera-list-alert" role="alert">
+                    Producto retirado de esta lista. Sigue disponible en Favoritos.
+                </div>
+                <div t-if="request.params.get('list_error') == 'duplicate'" class="alert alert-warning cabrera-list-alert" role="alert">
+                    Ya tienes otra lista con ese nombre.
+                </div>
+                <div t-if="request.params.get('cart_added')" class="alert alert-success cabrera-list-alert" role="alert">
+                    Producto añadido al carrito.
+                </div>
+                <div t-if="request.params.get('cart_all_added')" class="alert alert-success cabrera-list-alert" role="alert">
+                    <t t-out="request.params.get('cart_all_added')"/>
+                    <t t-if="request.params.get('cart_all_added') == '1'"> producto añadido al carrito.</t>
+                    <t t-else=""> productos añadidos al carrito.</t>
+                </div>
+                <div t-if="request.params.get('cart_error')" class="alert alert-warning cabrera-list-alert" role="alert">
+                    No se ha podido añadir uno o varios productos al carrito. Revisa su disponibilidad o configuración.
+                </div>
+
+                <section class="cabrera-list-detail-toolbar">
+                    <div class="cabrera-list-summary">
+                        <span class="cabrera-card-kicker">Contenido de la lista</span>
+                        <h2>
+                            <t t-out="len(cabrera_active_wishes)"/>
+                            <t t-if="len(cabrera_active_wishes) == 1"> producto</t>
+                            <t t-else=""> productos</t>
+                        </h2>
+                        <div t-if="cabrera_cart_wishes_count" class="cabrera-list-total-line">
+                            <span>Total de la lista</span>
+                            <strong t-out="cabrera_active_list_total" t-options="{'widget': 'monetary', 'display_currency': cabrera_website.currency_id}"/>
+                        </div>
+                    </div>
+
+                    <div class="cabrera-list-toolbar-actions">
+                        <form t-if="cabrera_cart_wishes_count" action="/my/product-lists/cart/add-all" method="post" class="cabrera-add-all-cart-form">
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                            <input type="hidden" name="list_ref" t-att-value="cabrera_list_ref"/>
+                            <button type="submit" class="btn cabrera-btn-primary cabrera-add-all-cart-btn">
+                                <i class="fa fa-shopping-cart"/> Añadir todo al carrito
+                            </button>
+                        </form>
+
+                        <div t-if="not cabrera_list_is_favorites" class="cabrera-list-management-actions">
+                            <details class="cabrera-list-action-popover">
+                                <summary class="btn cabrera-btn-outline"><i class="fa fa-pencil"/> Renombrar</summary>
+                                <form t-att-action="'/my/product-lists/%s/rename' % cabrera_active_list.id" method="post" class="cabrera-list-popover-form">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    <input type="text" name="name" maxlength="80" required="required" t-att-value="cabrera_active_list.name"/>
+                                    <button type="submit" class="btn cabrera-btn-primary">Guardar</button>
+                                </form>
+                            </details>
+                            <form t-att-action="'/my/product-lists/%s/delete' % cabrera_active_list.id" method="post" class="cabrera-delete-list-form" onsubmit="return confirm('¿Eliminar esta lista? Los productos seguirán guardados en Favoritos.');">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <button type="submit" class="btn cabrera-btn-danger-soft"><i class="fa fa-trash-o"/> Eliminar lista</button>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <section t-if="not cabrera_list_is_favorites" class="cabrera-add-favorites-panel">
+                    <div class="cabrera-add-favorites-copy">
+                        <span class="cabrera-card-kicker">Añadir desde Favoritos</span>
+                        <h3>Completa esta lista</h3>
+                        <p t-if="cabrera_assignable_wishes">Selecciona uno o varios productos que ya tienes guardados como favoritos.</p>
+                        <p t-else="">Todos tus favoritos ya están incluidos en esta lista.</p>
+                    </div>
+                    <form t-if="cabrera_assignable_wishes" t-att-action="'/my/product-lists/%s/add' % cabrera_active_list.id" method="post" class="cabrera-add-favorites-form">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <div class="cabrera-assignable-products">
+                            <label t-foreach="cabrera_assignable_wishes" t-as="wish" class="cabrera-assignable-product">
+                                <input type="checkbox" name="wish_ids" t-att-value="wish.id"/>
+                                <img t-att-src="'/web/image/product.product/%s/image_128' % wish.product_id.id" t-att-alt="wish.product_id.name" loading="lazy"/>
+                                <span t-out="wish.product_id.name"/>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn cabrera-btn-primary"><i class="fa fa-plus"/> Añadir seleccionados</button>
+                    </form>
+                </section>
+
+                <div t-if="cabrera_active_wishes" class="cabrera-favorite-product-grid">
+                    <t t-foreach="cabrera_active_wishes" t-as="wish">
+                        <t t-set="wish_info" t-value="cabrera_active_wish_infos.get(wish.id, {})"/>
+                        <article class="cabrera-favorite-product-card">
+                            <a t-att-href="wish.product_id.website_url" class="cabrera-favorite-image-wrap">
+                                <img t-att-src="'/web/image/product.product/%s/image_512' % wish.product_id.id" t-att-alt="wish.product_id.name" loading="lazy"/>
+                            </a>
+                            <div class="cabrera-favorite-card-body">
+                                <div class="cabrera-favorite-name-row">
+                                    <a t-att-href="wish.product_id.website_url" class="cabrera-favorite-name"><t t-out="wish.product_id.name"/></a>
+                                    <span class="cabrera-favorite-heart"><i class="fa fa-heart"/></span>
+                                </div>
+                                <small t-if="wish.product_id.default_code" class="cabrera-favorite-code" t-out="wish.product_id.default_code"/>
+
+                                <div class="cabrera-favorite-price" t-if="not wish_info.get('prevent_zero_price_sale')">
+                                    <span class="cabrera-favorite-price-label">Precio unidad</span>
+                                    <strong t-out="wish_info.get('price', 0.0)" t-options="{'widget': 'monetary', 'display_currency': cabrera_website.currency_id}"/>
+                                </div>
+
+                                <form t-if="wish_info.get('can_add_to_cart')" action="/my/product-lists/cart/add" method="post"
+                                      class="cabrera-product-cart-form"
+                                      t-att-data-unit-price="wish_info.get('price', 0.0)"
+                                      t-att-data-currency="cabrera_website.currency_id.name">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    <input type="hidden" name="wish_id" t-att-value="wish.id"/>
+                                    <input type="hidden" name="list_ref" t-att-value="cabrera_list_ref"/>
+
+                                    <div class="cabrera-product-purchase-row">
+                                        <div class="cabrera-product-qty-block">
+                                            <span class="cabrera-product-purchase-label">Cantidad</span>
+                                            <div class="cabrera-qty-control">
+                                                <button type="button" class="cabrera-qty-btn" data-cabrera-qty-action="decrease" aria-label="Reducir cantidad">−</button>
+                                                <input type="number" name="quantity" value="1" min="1" max="9999" step="1" inputmode="numeric" class="cabrera-qty-input" aria-label="Cantidad"/>
+                                                <button type="button" class="cabrera-qty-btn" data-cabrera-qty-action="increase" aria-label="Aumentar cantidad">+</button>
+                                            </div>
+                                        </div>
+                                        <div class="cabrera-product-total-block">
+                                            <span class="cabrera-product-purchase-label">Total</span>
+                                            <strong class="cabrera-product-line-total"
+                                                    t-out="wish_info.get('price', 0.0)"
+                                                    t-options="{'widget': 'monetary', 'display_currency': cabrera_website.currency_id}"/>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="btn cabrera-btn-primary cabrera-add-cart-btn">
+                                        <i class="fa fa-shopping-cart"/> Añadir al carrito
+                                    </button>
+                                </form>
+
+                                <div t-elif="wish_info.get('prevent_zero_price_sale')" class="cabrera-product-cart-unavailable">
+                                    Consulta el producto para ver las condiciones de compra.
+                                </div>
+
+                                <div class="cabrera-favorite-card-actions">
+                                    <a t-att-href="wish.product_id.website_url" class="btn cabrera-btn-outline">Ver producto</a>
+                                    <form t-if="cabrera_list_is_favorites" t-att-action="'/my/product-lists/favorites/remove/%s' % wish.id" method="post" onsubmit="return confirm('¿Eliminar este producto de Favoritos? También dejará de aparecer en tus otras listas.');">
+                                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                        <button type="submit" class="btn cabrera-btn-link-danger"><i class="fa fa-trash-o"/> Eliminar</button>
+                                    </form>
+                                    <form t-else="" t-att-action="'/my/product-lists/%s/remove/%s' % (cabrera_active_list.id, wish.id)" method="post">
+                                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                        <button type="submit" class="btn cabrera-btn-link-danger"><i class="fa fa-times"/> Quitar de la lista</button>
+                                    </form>
+                                </div>
+
+                                <form t-if="cabrera_list_is_favorites and cabrera_product_lists" action="/my/product-lists/assign" method="post" class="cabrera-assign-one-form">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    <input type="hidden" name="wish_id" t-att-value="wish.id"/>
+                                    <label>Organizar en otra lista</label>
+                                    <div>
+                                        <select name="list_id" required="required">
+                                            <option value="">Seleccionar lista</option>
+                                            <t t-foreach="cabrera_product_lists" t-as="product_list">
+                                                <option t-att-value="product_list.id" t-out="product_list.name"/>
+                                            </t>
+                                        </select>
+                                        <button type="submit" class="btn cabrera-btn-outline">Añadir</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </article>
+                    </t>
+                </div>
+
+                <div t-else="" class="cabrera-list-empty-detail">
+                    <span class="cabrera-empty-icon"><i class="fa fa-heart-o"/></span>
+                    <div>
+                        <h3 t-if="cabrera_list_is_favorites">Todavía no tienes productos favoritos</h3>
+                        <h3 t-else="">Esta lista todavía está vacía</h3>
+                        <p t-if="cabrera_list_is_favorites">Pulsa el corazón de los productos que quieras guardar y aparecerán aquí automáticamente.</p>
+                        <p t-else="">Añade productos desde tus Favoritos o sigue explorando la tienda.</p>
+                    </div>
+                    <a href="/shop" class="btn cabrera-btn-primary">Explorar Mi tienda profesional</a>
+                </div>
+            </section>
+        </t>
+    </template>
+</odoo>

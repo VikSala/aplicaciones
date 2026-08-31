@@ -1,9 +1,11 @@
 from odoo import _, fields, http
 from odoo.http import request
 from odoo.osv import expression
+from odoo.exceptions import UserError
 
 from odoo.addons.portal.controllers.portal import pager as portal_pager
 from odoo.addons.sale.controllers.portal import CustomerPortal
+from odoo.addons.website_sale_wishlist.controllers.main import WebsiteSaleWishlist
 
 
 class CustomerPortalExtended(CustomerPortal):
@@ -605,3 +607,400 @@ class CustomerPortalExtended(CustomerPortal):
 
         partner.portal_separate_billing = True
         return request.redirect("/my/account?billing_saved=1")
+
+    # -------------------------------------------------------------------------
+    # Listas de productos / favoritos
+    # -------------------------------------------------------------------------
+
+    def _cabrera_wishlist_context(self):
+        partner = request.env.user.partner_id.sudo()
+        website = request.website.sudo()
+        return partner, website
+
+    def _cabrera_current_wishes(self):
+        """Favoritos visibles del usuario actual, manteniendo el criterio de Odoo."""
+        partner, website = self._cabrera_wishlist_context()
+        wishes = request.env["product.wishlist"].sudo().search([
+            ("partner_id", "=", partner.id),
+            ("website_id", "=", website.id),
+            ("active", "=", True),
+        ], order="create_date desc, id desc")
+        return wishes.filtered(
+            lambda wish: wish.product_id.product_tmpl_id.website_published
+            and wish.product_id.product_tmpl_id._can_be_added_to_cart()
+        )
+
+    def _cabrera_product_lists(self):
+        partner, website = self._cabrera_wishlist_context()
+        return request.env["product.wishlist.list"].sudo().search([
+            ("partner_id", "=", partner.id),
+            ("website_id", "=", website.id),
+        ], order="sequence, id")
+
+    def _cabrera_get_product_list(self, list_id):
+        partner, website = self._cabrera_wishlist_context()
+        return request.env["product.wishlist.list"].sudo().search([
+            ("id", "=", list_id),
+            ("partner_id", "=", partner.id),
+            ("website_id", "=", website.id),
+        ], limit=1)
+
+    def _cabrera_prepare_lists_values(self):
+        values = self._prepare_portal_layout_values()
+        wishes = self._cabrera_current_wishes()
+        product_lists = self._cabrera_product_lists()
+        current_ids = set(wishes.ids)
+        list_wishes = {
+            product_list.id: product_list.wish_ids.filtered(lambda wish: wish.id in current_ids)
+            for product_list in product_lists
+        }
+        values.update({
+            "page_name": "product_lists",
+            # Estas páginas ya tienen su propia navegación (sidebar + volver a listas).
+            # Desactivar breadcrumbs evita el bloque superior vacío con solo el icono Home.
+            "no_breadcrumbs": True,
+            "cabrera_wishes": wishes,
+            "cabrera_product_lists": product_lists,
+            "cabrera_list_wishes": list_wishes,
+            "cabrera_website": request.website.sudo(),
+        })
+        return values
+
+    def _cabrera_prepare_active_list_sale_values(self, values, active_wishes, list_ref):
+        """Prepara precios y disponibilidad de compra para una lista concreta."""
+        wish_infos = {}
+        list_total = 0.0
+        cart_wish_ids = []
+
+        for wish in active_wishes:
+            combination_info = wish.product_id._get_combination_info_variant()
+            price = float(combination_info.get("price") or 0.0)
+            prevent_zero_price_sale = bool(combination_info.get("prevent_zero_price_sale"))
+            can_add_to_cart = (
+                not prevent_zero_price_sale
+                and wish.product_id._is_add_to_cart_allowed()
+            )
+            wish_infos[wish.id] = {
+                "price": price,
+                "prevent_zero_price_sale": prevent_zero_price_sale,
+                "can_add_to_cart": can_add_to_cart,
+            }
+            if can_add_to_cart:
+                cart_wish_ids.append(wish.id)
+                list_total += price
+
+        values.update({
+            "cabrera_active_wish_infos": wish_infos,
+            "cabrera_active_list_total": list_total,
+            "cabrera_cart_wishes_count": len(cart_wish_ids),
+            "cabrera_list_ref": str(list_ref),
+        })
+        return values
+
+    def _cabrera_wishes_from_list_ref(self, list_ref):
+        current_wishes = self._cabrera_current_wishes()
+        if list_ref == "favorites":
+            return current_wishes
+        if str(list_ref or "").isdigit():
+            product_list = self._cabrera_get_product_list(int(list_ref))
+            if product_list:
+                allowed_ids = set(current_wishes.ids)
+                return product_list.wish_ids.filtered(lambda wish: wish.id in allowed_ids)
+        return request.env["product.wishlist"]
+
+    def _cabrera_list_return_url(self, list_ref):
+        if list_ref == "favorites":
+            return "/my/product-lists/favorites"
+        if str(list_ref or "").isdigit() and self._cabrera_get_product_list(int(list_ref)):
+            return f"/my/product-lists/{int(list_ref)}"
+        return "/my/product-lists"
+
+    def _cabrera_cart_order(self):
+        order = request.website.sale_get_order(force_create=True)
+        if order.state != "draft":
+            request.website.sale_reset()
+            order = request.website.sale_get_order(force_create=True)
+        return order
+
+    @http.route(
+        ["/my/product-lists"],
+        type="http",
+        auth="user",
+        website=True,
+    )
+    def portal_product_lists(self, **kwargs):
+        values = self._cabrera_prepare_lists_values()
+        return request.render("mi_cuenta_extendida_usuario.portal_product_lists", values)
+
+    @http.route(
+        ["/my/product-lists/favorites"],
+        type="http",
+        auth="user",
+        website=True,
+    )
+    def portal_product_list_favorites(self, **kwargs):
+        values = self._cabrera_prepare_lists_values()
+        wishes = values["cabrera_wishes"]
+        values.update({
+            "cabrera_list_is_favorites": True,
+            "cabrera_active_list": False,
+            "cabrera_active_list_name": _("Favoritos"),
+            "cabrera_active_wishes": wishes,
+            "cabrera_assignable_wishes": request.env["product.wishlist"],
+        })
+        self._cabrera_prepare_active_list_sale_values(values, wishes, "favorites")
+        return request.render("mi_cuenta_extendida_usuario.portal_product_list_detail", values)
+
+    @http.route(
+        ["/my/product-lists/<int:list_id>"],
+        type="http",
+        auth="user",
+        website=True,
+    )
+    def portal_product_list_detail(self, list_id, **kwargs):
+        product_list = self._cabrera_get_product_list(list_id)
+        if not product_list:
+            return request.redirect("/my/product-lists")
+
+        values = self._cabrera_prepare_lists_values()
+        current_wishes = values["cabrera_wishes"]
+        current_ids = set(current_wishes.ids)
+        list_wishes = product_list.wish_ids.filtered(lambda wish: wish.id in current_ids)
+        assignable_wishes = current_wishes.filtered(lambda wish: wish.id not in set(list_wishes.ids))
+        values.update({
+            "cabrera_list_is_favorites": False,
+            "cabrera_active_list": product_list,
+            "cabrera_active_list_name": product_list.name,
+            "cabrera_active_wishes": list_wishes,
+            "cabrera_assignable_wishes": assignable_wishes,
+        })
+        self._cabrera_prepare_active_list_sale_values(values, list_wishes, product_list.id)
+        return request.render("mi_cuenta_extendida_usuario.portal_product_list_detail", values)
+
+    @http.route(
+        "/my/product-lists/cart/add",
+        type="http",
+        auth="user",
+        website=True,
+        methods=["POST"],
+    )
+    def portal_product_list_cart_add(self, wish_id=None, quantity=1, list_ref="favorites", **post):
+        return_url = self._cabrera_list_return_url(list_ref)
+        if not str(wish_id or "").isdigit():
+            return request.redirect(f"{return_url}?cart_error=1")
+
+        try:
+            quantity = max(1, min(int(quantity or 1), 9999))
+        except (TypeError, ValueError):
+            quantity = 1
+
+        allowed_wishes = self._cabrera_wishes_from_list_ref(list_ref)
+        wish = allowed_wishes.filtered(lambda current: current.id == int(wish_id))[:1]
+        if not wish:
+            return request.redirect(f"{return_url}?cart_error=1")
+
+        try:
+            order = self._cabrera_cart_order()
+            cart_result = order._cart_update(product_id=wish.product_id.id, add_qty=quantity)
+            request.session["website_sale_cart_quantity"] = order.cart_quantity
+        except UserError:
+            return request.redirect(f"{return_url}?cart_error=1")
+
+        if not cart_result.get("quantity"):
+            return request.redirect(f"{return_url}?cart_error=1")
+        return request.redirect(f"{return_url}?cart_added={quantity}")
+
+    @http.route(
+        "/my/product-lists/cart/add-all",
+        type="http",
+        auth="user",
+        website=True,
+        methods=["POST"],
+    )
+    def portal_product_list_cart_add_all(self, list_ref="favorites", **post):
+        return_url = self._cabrera_list_return_url(list_ref)
+        wishes = self._cabrera_wishes_from_list_ref(list_ref)
+        if not wishes:
+            return request.redirect(f"{return_url}?cart_error=1")
+
+        order = self._cabrera_cart_order()
+        added = 0
+        for wish in wishes:
+            combination_info = wish.product_id._get_combination_info_variant()
+            if combination_info.get("prevent_zero_price_sale"):
+                continue
+            if not wish.product_id._is_add_to_cart_allowed():
+                continue
+            try:
+                cart_result = order._cart_update(product_id=wish.product_id.id, add_qty=1)
+                if cart_result.get("quantity"):
+                    added += 1
+            except UserError:
+                continue
+
+        request.session["website_sale_cart_quantity"] = order.cart_quantity
+        if not added:
+            return request.redirect(f"{return_url}?cart_error=1")
+        return request.redirect(f"{return_url}?cart_all_added={added}")
+
+    @http.route(
+        "/my/product-lists/create",
+        type="http",
+        auth="user",
+        website=True,
+        methods=["POST"],
+    )
+    def portal_product_list_create(self, name=None, **post):
+        name = (name or "").strip()[:80]
+        if not name:
+            return request.redirect("/my/product-lists?list_error=empty")
+
+        partner, website = self._cabrera_wishlist_context()
+        ListModel = request.env["product.wishlist.list"].sudo()
+        existing = ListModel.search([
+            ("partner_id", "=", partner.id),
+            ("website_id", "=", website.id),
+            ("name", "=ilike", name),
+        ], limit=1)
+        if existing:
+            return request.redirect("/my/product-lists?list_error=duplicate")
+
+        product_list = ListModel.create({
+            "name": name,
+            "partner_id": partner.id,
+            "website_id": website.id,
+        })
+        return request.redirect(f"/my/product-lists/{product_list.id}?created=1")
+
+    @http.route(
+        "/my/product-lists/<int:list_id>/rename",
+        type="http",
+        auth="user",
+        website=True,
+        methods=["POST"],
+    )
+    def portal_product_list_rename(self, list_id, name=None, **post):
+        product_list = self._cabrera_get_product_list(list_id)
+        if not product_list:
+            return request.redirect("/my/product-lists")
+
+        name = (name or "").strip()[:80]
+        if not name:
+            return request.redirect(f"/my/product-lists/{list_id}?list_error=empty")
+
+        partner, website = self._cabrera_wishlist_context()
+        duplicate = request.env["product.wishlist.list"].sudo().search([
+            ("id", "!=", product_list.id),
+            ("partner_id", "=", partner.id),
+            ("website_id", "=", website.id),
+            ("name", "=ilike", name),
+        ], limit=1)
+        if duplicate:
+            return request.redirect(f"/my/product-lists/{list_id}?list_error=duplicate")
+
+        product_list.name = name
+        return request.redirect(f"/my/product-lists/{list_id}?renamed=1")
+
+    @http.route(
+        "/my/product-lists/<int:list_id>/delete",
+        type="http",
+        auth="user",
+        website=True,
+        methods=["POST"],
+    )
+    def portal_product_list_delete(self, list_id, **post):
+        product_list = self._cabrera_get_product_list(list_id)
+        if product_list:
+            product_list.unlink()
+        return request.redirect("/my/product-lists?deleted=1")
+
+    @http.route(
+        "/my/product-lists/<int:list_id>/add",
+        type="http",
+        auth="user",
+        website=True,
+        methods=["POST"],
+    )
+    def portal_product_list_add(self, list_id, **post):
+        product_list = self._cabrera_get_product_list(list_id)
+        if not product_list:
+            return request.redirect("/my/product-lists")
+
+        raw_ids = request.httprequest.form.getlist("wish_ids")
+        wish_ids = [int(wish_id) for wish_id in raw_ids if str(wish_id).isdigit()]
+        current_wishes = self._cabrera_current_wishes()
+        allowed = current_wishes.filtered(lambda wish: wish.id in set(wish_ids))
+        if allowed:
+            product_list.write({"wish_ids": [(4, wish.id) for wish in allowed]})
+        return request.redirect(f"/my/product-lists/{list_id}?products_added=1")
+
+    @http.route(
+        "/my/product-lists/assign",
+        type="http",
+        auth="user",
+        website=True,
+        methods=["POST"],
+    )
+    def portal_product_list_assign(self, wish_id=None, list_id=None, **post):
+        if not (str(wish_id or "").isdigit() and str(list_id or "").isdigit()):
+            return request.redirect("/my/product-lists/favorites")
+        product_list = self._cabrera_get_product_list(int(list_id))
+        current_wishes = self._cabrera_current_wishes()
+        wish = current_wishes.filtered(lambda current: current.id == int(wish_id))[:1]
+        if product_list and wish:
+            product_list.write({"wish_ids": [(4, wish.id)]})
+        return request.redirect("/my/product-lists/favorites?assigned=1")
+
+    @http.route(
+        "/my/product-lists/<int:list_id>/add-one/<int:wish_id>",
+        type="http",
+        auth="user",
+        website=True,
+        methods=["POST"],
+    )
+    def portal_product_list_add_one(self, list_id, wish_id, **post):
+        product_list = self._cabrera_get_product_list(list_id)
+        current_wishes = self._cabrera_current_wishes()
+        wish = current_wishes.filtered(lambda current: current.id == wish_id)[:1]
+        if product_list and wish:
+            product_list.write({"wish_ids": [(4, wish.id)]})
+        return request.redirect("/my/product-lists/favorites?assigned=1")
+
+    @http.route(
+        "/my/product-lists/<int:list_id>/remove/<int:wish_id>",
+        type="http",
+        auth="user",
+        website=True,
+        methods=["POST"],
+    )
+    def portal_product_list_remove(self, list_id, wish_id, **post):
+        product_list = self._cabrera_get_product_list(list_id)
+        if product_list and wish_id in product_list.wish_ids.ids:
+            product_list.write({"wish_ids": [(3, wish_id)]})
+        return request.redirect(f"/my/product-lists/{list_id}?product_removed=1")
+
+    @http.route(
+        "/my/product-lists/favorites/remove/<int:wish_id>",
+        type="http",
+        auth="user",
+        website=True,
+        methods=["POST"],
+    )
+    def portal_product_list_remove_favorite(self, wish_id, **post):
+        current_wishes = self._cabrera_current_wishes()
+        wish = current_wishes.filtered(lambda current: current.id == wish_id)[:1]
+        if wish:
+            wish.unlink()
+        return request.redirect("/my/product-lists/favorites?favorite_removed=1")
+
+
+class WebsiteSaleWishlistExtended(WebsiteSaleWishlist):
+    """Lleva la wishlist estándar al área profesional para usuarios autenticados."""
+
+    @http.route()
+    def get_wishlist(self, count=False, **kw):
+        # La petición count=1 la usa el JS nativo para mantener el contador.
+        if count or request.website.is_public_user():
+            return super().get_wishlist(count=count, **kw)
+        return request.redirect("/my/product-lists/favorites")
+

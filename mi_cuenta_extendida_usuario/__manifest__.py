@@ -1,6 +1,6 @@
 {
     "name": "Menú de Usuario Personalizado",
-    "version": "18.0.4.0.6",
+    "version": "18.0.5.0.2",
     "category": "Website",
     "summary": "Portal B2B moderno con navegación lateral y panel de pedidos avanzado",
     "depends": [
@@ -9,6 +9,8 @@
         "sale_stock",
         "account",
         "stock",
+        "website_sale",
+        "website_sale_wishlist",
     ],
     "data": [
         "security/ir.model.access.csv",
@@ -17,11 +19,14 @@
         "views/portal_orders.xml",
         "views/portal_returns.xml",
         "views/portal_pages.xml",
+        "views/portal_lists.xml",
     ],
     "assets": {
         "web.assets_frontend": [
             "mi_cuenta_extendida_usuario/static/src/scss/portal.scss",
             "mi_cuenta_extendida_usuario/static/src/js/portal_account.js",
+            "mi_cuenta_extendida_usuario/static/src/js/wishlist_header.js",
+            "mi_cuenta_extendida_usuario/static/src/js/product_lists.js",
         ],
     },
     "installable": True,

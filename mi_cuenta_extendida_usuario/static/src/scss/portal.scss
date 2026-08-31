@@ -1517,3 +1517,753 @@ $lp-green-soft-hover: rgba(0, 210, 122, .16);
     border-color: $lp-green-hover !important;
     color: #fff !important;
 }
+
+// -----------------------------------------------------------------------------
+// Mis listas de productos / favoritos
+// -----------------------------------------------------------------------------
+
+.cabrera-product-lists-page {
+    .cabrera-page-hero { margin-bottom: 18px; }
+}
+
+.cabrera-list-alert {
+    margin: 14px 0;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.cabrera-lists-toolbar-card,
+.cabrera-list-detail-toolbar,
+.cabrera-add-favorites-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 22px;
+    padding: 20px 22px;
+    border: 1px solid #e1e5ea;
+    background: #fff;
+
+    h2,
+    h3 {
+        margin: 2px 0 4px;
+        color: $lp-navy;
+        font-size: 19px;
+        font-weight: 700;
+    }
+
+    p {
+        margin: 0;
+        color: #7b8190;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+}
+
+.cabrera-create-list-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    max-width: 480px;
+
+    input {
+        flex: 1 1 auto;
+        min-width: 0;
+        height: 38px;
+        padding: 0 12px;
+        border: 1px solid #d7dce2;
+        border-radius: 2px;
+        outline: 0;
+        font-size: 12px;
+
+        &:focus {
+            border-color: $lp-green-dark;
+            box-shadow: 0 0 0 .15rem $lp-green-soft;
+        }
+    }
+}
+
+.cabrera-btn-primary {
+    background: $lp-navy !important;
+    border: 1px solid $lp-navy !important;
+    color: #fff !important;
+    text-decoration: none !important;
+
+    &:hover,
+    &:focus,
+    &:active {
+        background: $lp-green-dark !important;
+        border-color: $lp-green-dark !important;
+        color: #fff !important;
+    }
+}
+
+.cabrera-btn-outline {
+    background: #fff !important;
+    border: 1px solid #cfd5dc !important;
+    color: $lp-navy !important;
+
+    &:hover,
+    &:focus {
+        border-color: $lp-green-dark !important;
+        color: $lp-green-dark !important;
+    }
+}
+
+.cabrera-btn-danger-soft {
+    background: #fff !important;
+    border: 1px solid #ead3d3 !important;
+    color: #a43d3d !important;
+
+    &:hover,
+    &:focus {
+        background: #fff5f5 !important;
+        border-color: #dbaaaa !important;
+        color: #8f2929 !important;
+    }
+}
+
+.cabrera-btn-link-danger {
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: #a45353 !important;
+    font-size: 11px !important;
+
+    &:hover { color: #8f2929 !important; }
+}
+
+.cabrera-product-list-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.cabrera-product-list-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 280px;
+    padding: 18px;
+    border: 1px solid #e0e4e9;
+    border-radius: 4px;
+    background: #fff;
+    color: #303642 !important;
+    text-decoration: none !important;
+    box-shadow: 0 2px 10px rgba(14, 39, 59, .03);
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+
+    &:hover {
+        transform: translateY(-2px);
+        border-color: rgba(23, 134, 81, .45);
+        box-shadow: 0 8px 22px rgba(14, 39, 59, .08);
+    }
+
+    &.is-primary {
+        border-top: 3px solid $lp-green;
+        padding-top: 16px;
+    }
+}
+
+.cabrera-list-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.cabrera-list-card-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    color: $lp-navy;
+    font-size: 15px;
+    font-weight: 700;
+
+    i { color: $lp-green-dark; }
+}
+
+.cabrera-list-primary-badge {
+    flex: 0 0 auto;
+    padding: 3px 8px;
+    border-radius: 20px;
+    background: $lp-green-soft;
+    color: $lp-green-dark;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.cabrera-list-card-count {
+    margin-top: 14px;
+    color: #7b8190;
+    font-size: 11px;
+
+    strong {
+        margin-right: 3px;
+        color: $lp-navy;
+        font-size: 18px;
+    }
+}
+
+.cabrera-list-preview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 78px 78px;
+    gap: 2px;
+    margin-top: 12px;
+    overflow: hidden;
+    border: 1px solid #edf0f2;
+    background: #f7f8f9;
+}
+
+.cabrera-list-preview-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 0;
+    background: #fff;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 7px;
+    }
+}
+
+.cabrera-list-preview-empty {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 158px;
+    margin-top: 12px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px dashed #dce1e6;
+    background: #fafbfc;
+    color: #9aa1aa;
+    font-size: 11px;
+
+    i { font-size: 26px; color: #c9ced4; }
+}
+
+.cabrera-list-open {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 13px;
+    color: $lp-green-dark;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.cabrera-lists-shop-cta,
+.cabrera-list-empty-detail {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-top: 16px;
+    padding: 22px;
+    border: 1px solid #e1e5ea;
+    background: #fff;
+
+    > div { flex: 1 1 auto; }
+    h3 { margin: 0 0 4px; color: $lp-navy; font-size: 16px; }
+    p { margin: 0; color: #7b8190; font-size: 12px; }
+}
+
+.cabrera-list-back-row {
+    margin-bottom: 10px;
+
+    a {
+        color: $lp-green-dark !important;
+        text-decoration: none !important;
+        font-size: 11px;
+        font-weight: 700;
+    }
+}
+
+.cabrera-list-detail-toolbar {
+    margin-bottom: 14px;
+}
+
+.cabrera-list-management-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cabrera-list-action-popover {
+    position: relative;
+
+    summary {
+        list-style: none;
+        cursor: pointer;
+
+        &::-webkit-details-marker { display: none; }
+    }
+
+    &[open] .cabrera-list-popover-form { display: flex; }
+}
+
+.cabrera-list-popover-form {
+    position: absolute;
+    z-index: 5;
+    top: 44px;
+    right: 0;
+    display: none;
+    width: 310px;
+    padding: 12px;
+    gap: 7px;
+    border: 1px solid #dce1e6;
+    background: #fff;
+    box-shadow: 0 10px 24px rgba(14, 39, 59, .12);
+
+    input {
+        flex: 1 1 auto;
+        min-width: 0;
+        border: 1px solid #d7dce2;
+        padding: 0 9px;
+        font-size: 11px;
+    }
+}
+
+.cabrera-add-favorites-panel {
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.cabrera-add-favorites-copy {
+    flex: 0 0 28%;
+}
+
+.cabrera-add-favorites-form {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.cabrera-assignable-products {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+    max-height: 210px;
+    margin-bottom: 10px;
+    overflow-y: auto;
+}
+
+.cabrera-assignable-product {
+    display: grid;
+    grid-template-columns: 18px 42px minmax(0, 1fr);
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    padding: 7px;
+    border: 1px solid #edf0f2;
+    cursor: pointer;
+    font-size: 10px;
+    color: #444b55;
+
+    &:hover { border-color: rgba(23, 134, 81, .4); background: #fbfdfc; }
+
+    input { margin: 0; accent-color: $lp-green-dark; }
+    img { width: 42px; height: 42px; object-fit: contain; }
+    span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+.cabrera-favorite-product-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.cabrera-favorite-product-card {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid #e1e5ea;
+    background: #fff;
+}
+
+.cabrera-favorite-image-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 190px;
+    padding: 12px;
+    border-bottom: 1px solid #f0f2f4;
+    background: #fff;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+}
+
+.cabrera-favorite-card-body {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    flex-direction: column;
+    padding: 14px;
+}
+
+.cabrera-favorite-name-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.cabrera-favorite-name {
+    flex: 1 1 auto;
+    color: $lp-navy !important;
+    text-decoration: none !important;
+    font-size: 12px;
+    line-height: 1.35;
+    font-weight: 700;
+}
+
+.cabrera-favorite-heart {
+    color: $lp-green-dark;
+    font-size: 13px;
+}
+
+.cabrera-favorite-code {
+    display: block;
+    margin-top: 6px;
+    color: #8a9098;
+    font-size: 9px;
+}
+
+.cabrera-favorite-price {
+    margin-top: 12px;
+    color: $lp-navy;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.cabrera-favorite-card-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 14px;
+
+    .btn { font-size: 10px; }
+    form { margin: 0; }
+}
+
+.cabrera-assign-one-form {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #edf0f2;
+
+    > label {
+        display: block;
+        margin-bottom: 5px;
+        color: #7b8190;
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    > div {
+        display: flex;
+        gap: 6px;
+    }
+
+    select {
+        flex: 1 1 auto;
+        min-width: 0;
+        height: 32px;
+        border: 1px solid #d7dce2;
+        background: #fff;
+        color: #4a515c;
+        font-size: 10px;
+    }
+
+    .btn { font-size: 10px; }
+}
+
+// El tema activo puede no llamar al template estándar de wishlist. El JS crea
+// un fallback clonando la posición del carrito y estas reglas igualan su aspecto.
+header .o_wsale_my_wish {
+    position: relative;
+
+    > a { position: relative; }
+
+    .fa-heart { color: inherit; }
+
+    // Conservamos el corazón como acceso visual, pero no mostramos la cifra.
+    // La visibilidad del icono completo se controla por JS según haya favoritos.
+    .my_wish_quantity {
+        display: none !important;
+    }
+}
+
+.cabrera-header-wishlist .my_wish_quantity {
+    position: absolute;
+    top: -5px;
+    right: -7px;
+    min-width: 17px;
+    padding: 3px 5px;
+    font-size: 9px;
+    line-height: 1;
+}
+
+@media (max-width: 991.98px) {
+    .cabrera-product-list-grid,
+    .cabrera-favorite-product-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .cabrera-lists-toolbar-card,
+    .cabrera-add-favorites-panel {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .cabrera-add-favorites-copy { flex-basis: auto; }
+    .cabrera-create-list-form { max-width: none; }
+}
+
+@media (max-width: 767.98px) {
+    .cabrera-product-list-grid,
+    .cabrera-favorite-product-grid,
+    .cabrera-assignable-products {
+        grid-template-columns: 1fr;
+    }
+
+    .cabrera-list-detail-toolbar,
+    .cabrera-lists-shop-cta,
+    .cabrera-list-empty-detail {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .cabrera-list-management-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .cabrera-list-action-popover .btn,
+    .cabrera-delete-list-form .btn { width: 100%; }
+
+    .cabrera-list-popover-form {
+        position: static;
+        width: 100%;
+        margin-top: 6px;
+        box-shadow: none;
+    }
+
+    .cabrera-create-list-form {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .cabrera-favorite-image-wrap { height: 220px; }
+}
+
+// -----------------------------------------------------------------------------
+// Listas de productos: compra directa desde Favoritos / listas
+// -----------------------------------------------------------------------------
+.cabrera-list-detail-toolbar {
+    gap: 18px;
+}
+
+.cabrera-list-summary {
+    flex: 1 1 auto;
+    min-width: 180px;
+}
+
+.cabrera-list-total-line {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-top: 5px;
+    color: #707883;
+    font-size: 11px;
+
+    strong {
+        color: $lp-navy;
+        font-size: 15px;
+        font-weight: 800;
+    }
+}
+
+.cabrera-list-toolbar-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.cabrera-add-all-cart-form {
+    margin: 0;
+}
+
+.cabrera-add-all-cart-btn {
+    min-height: 38px;
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+    white-space: nowrap;
+}
+
+.cabrera-favorite-price {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+
+    .cabrera-favorite-price-label {
+        color: #8a9098;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    strong {
+        color: $lp-navy;
+        font-size: 17px;
+        font-weight: 800;
+    }
+}
+
+.cabrera-product-cart-form {
+    margin-top: 13px;
+    padding: 12px;
+    border: 1px solid #e4e8ec;
+    background: #f8faf9;
+}
+
+.cabrera-product-purchase-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 12px;
+}
+
+.cabrera-product-qty-block,
+.cabrera-product-total-block {
+    min-width: 0;
+}
+
+.cabrera-product-total-block {
+    text-align: right;
+}
+
+.cabrera-product-purchase-label {
+    display: block;
+    margin-bottom: 5px;
+    color: #7b8190;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.cabrera-product-line-total {
+    display: block;
+    color: $lp-navy;
+    font-size: 17px;
+    line-height: 34px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.cabrera-qty-control {
+    display: inline-grid;
+    grid-template-columns: 34px 48px 34px;
+    height: 34px;
+    overflow: hidden;
+    border: 1px solid #d8dee3;
+    border-radius: 3px;
+    background: #fff;
+}
+
+.cabrera-qty-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: #f1f4f5;
+    color: $lp-navy;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover {
+        background: $lp-green-soft;
+        color: $lp-green-dark;
+    }
+}
+
+.cabrera-qty-input {
+    width: 48px;
+    min-width: 0;
+    border: 0;
+    border-right: 1px solid #e4e8ec;
+    border-left: 1px solid #e4e8ec;
+    background: #fff;
+    color: $lp-navy;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    appearance: textfield;
+
+    &:focus {
+        outline: 0;
+        box-shadow: inset 0 0 0 1px rgba(23, 134, 81, .45);
+    }
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+        margin: 0;
+        appearance: none;
+    }
+}
+
+.cabrera-add-cart-btn {
+    width: 100%;
+    margin-top: 10px;
+    min-height: 36px;
+}
+
+.cabrera-product-cart-unavailable {
+    margin-top: 13px;
+    padding: 10px 12px;
+    border: 1px solid #e5e8eb;
+    background: #fafbfc;
+    color: #777f89;
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+@media (max-width: 767.98px) {
+    .cabrera-list-toolbar-actions {
+        width: 100%;
+        align-items: stretch;
+        justify-content: stretch;
+        flex-direction: column;
+    }
+
+    .cabrera-add-all-cart-form,
+    .cabrera-add-all-cart-btn {
+        width: 100%;
+    }
+
+    .cabrera-product-purchase-row {
+        grid-template-columns: 1fr 1fr;
+    }
+}
