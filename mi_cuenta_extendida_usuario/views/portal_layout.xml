@@ -35,7 +35,7 @@
                     <a href="/shop" class="cabrera-nav-item">
                         <i class="fa fa-building-o"/><span>Mi tienda profesional</span><i class="fa fa-angle-right cabrera-nav-arrow"/>
                     </a>
-                    <a href="/contactus" class="cabrera-nav-item">
+                    <a href="/#contacto" class="cabrera-nav-item">
                         <i class="fa fa-comments-o"/><span>Atención al Cliente</span><i class="fa fa-angle-right cabrera-nav-arrow"/>
                     </a>
                 </nav>
