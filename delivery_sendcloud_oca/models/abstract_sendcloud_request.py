@@ -211,8 +211,13 @@ class SendcloudRequest(models.AbstractModel):
         return self._get_panel_request("/integrations")
 
     def get_shipping_methods(self, params):
-        response = self._get_panel_request("/shipping_methods", params)
-        return response.get("shipping_methods")
+        # Sendcloud API v2 paginates shipping methods.  Keep following the
+        # ``next`` cursor so synchronisation receives every available method
+        # instead of only the first page.  The same pagination helper is
+        # already used by parcels, brands and returns.
+        urlpath = "/shipping_methods"
+        response = self._get_panel_request(urlpath, params)
+        return self._iterate_pagination(response, urlpath, "shipping_methods")
 
     def get_shipping_method(self, code, params):
         response = self._get_panel_request(f"/shipping_methods/{code}", params)
