@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="payment_method_optima_credit" model="payment.method">
+        <field name="name">Pago a Crédito</field>
+        <field name="code">optima_credit</field>
+        <field name="sequence">900</field>
+        <field name="active">True</field>
+        <field name="image" type="base64" file="optima_ecommerce_credit/static/src/img/credit.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_refund">none</field>
+    </record>
+</odoo>

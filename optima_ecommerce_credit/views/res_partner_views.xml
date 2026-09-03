@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_optima_ecommerce_credit" model="ir.ui.view">
+        <field name="name">res.partner.form.optima.ecommerce.credit</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="priority" eval="40"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/notebook" position="inside">
+                <page string="Riesgo Ecommerce" name="optima_ecommerce_risk">
+                    <group>
+                        <group string="CONFIGURACIÓN">
+                            <field
+                                name="credit_limit"
+                                string="Crédito concedido"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                            />
+                            <field name="optima_credit_payment_enabled"/>
+                            <field name="optima_risk_alert_percentage"/>
+                        </group>
+                        <group string="INSTALACIONES">
+                            <field
+                                name="optima_installations_risk_synced"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                            />
+                            <field name="optima_installations_risk_exception"/>
+                            <field name="optima_installations_risk_sync_date" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <separator string="RIESGO ECOMMERCE"/>
+                    <group>
+                        <group>
+                            <field
+                                name="optima_ecommerce_sale_risk"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                                readonly="1"
+                            />
+                            <field
+                                name="optima_ecommerce_invoice_draft_risk"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                                readonly="1"
+                            />
+                            <field
+                                name="optima_ecommerce_invoice_open_risk"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                                readonly="1"
+                            />
+                            <field
+                                name="optima_ecommerce_invoice_unpaid_risk"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                                readonly="1"
+                            />
+                        </group>
+                        <group>
+                            <field
+                                name="optima_ecommerce_risk_total"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                                readonly="1"
+                                class="oe_subtotal_footer_separator"
+                            />
+                        </group>
+                    </group>
+
+                    <separator string="RIESGO GLOBAL"/>
+                    <group>
+                        <group>
+                            <field
+                                name="optima_installations_risk_synced"
+                                string="Riesgo Instalaciones"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                                readonly="1"
+                            />
+                            <field
+                                name="optima_ecommerce_risk_total"
+                                string="Riesgo Ecommerce"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                                readonly="1"
+                            />
+                            <field
+                                name="optima_risk_total"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                                readonly="1"
+                                class="oe_subtotal_footer_separator"
+                            />
+                        </group>
+                        <group>
+                            <field
+                                name="optima_risk_remaining_value"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                                readonly="1"
+                            />
+                            <field name="optima_risk_remaining_percentage" readonly="1"/>
+                            <field name="optima_risk_alert" readonly="1"/>
+                            <field name="optima_risk_exception" readonly="1"/>
+                            <field name="optima_credit_available" readonly="1"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

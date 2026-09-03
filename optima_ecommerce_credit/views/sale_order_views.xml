@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_order_form_optima_ecommerce_credit" model="ir.ui.view">
+        <field name="name">sale.order.form.optima.ecommerce.credit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="priority" eval="40"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="is_ecommerce" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

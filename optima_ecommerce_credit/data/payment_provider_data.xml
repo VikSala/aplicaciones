@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="payment_provider_optima_credit" model="payment.provider">
+        <field name="name">Pago a Crédito</field>
+        <field name="code">optima_credit</field>
+        <field name="sequence">25</field>
+        <field name="state">enabled</field>
+        <field name="is_published">True</field>
+        <field name="image_128" type="base64" file="optima_ecommerce_credit/static/src/img/credit.png"/>
+        <field name="redirect_form_view_id" ref="optima_ecommerce_credit.redirect_form"/>
+        <field name="payment_method_ids"
+               eval="[Command.set([ref('optima_ecommerce_credit.payment_method_optima_credit')])]"/>
+        <field name="pre_msg" type="html">
+            <p>El pedido se confirmará con cargo al crédito comercial disponible.</p>
+        </field>
+        <field name="pending_msg" type="html">
+            <p>
+                Su pedido ha sido <strong>confirmado</strong> con
+                <strong>Pago a Crédito</strong> y queda pendiente de facturación/cobro
+                según sus condiciones comerciales.
+            </p>
+        </field>
+    </record>
+</odoo>

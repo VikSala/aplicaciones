@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="redirect_form">
+        <form t-att-action="api_url" method="post">
+            <input type="hidden" name="reference" t-att-value="reference"/>
+        </form>
+    </template>
+
+    <!-- Ocultamos el texto "Secured by" para un pago interno a crédito. -->
+    <template id="payment_method_form_optima_credit" inherit_id="payment.method_form">
+        <xpath expr="//t[@t-set='hide_secured_by']" position="attributes">
+            <attribute name="t-value" separator=" " add="or provider_sudo.code == 'optima_credit'"/>
+        </xpath>
+
+        <!-- Información dinámica junto al nombre del medio de pago. -->
+        <xpath expr="//label[@t-out='pm_sudo.name']" position="after">
+            <t t-if="provider_sudo.code == 'optima_credit'">
+                <t t-set="optima_order_id"
+                   t-value="request.session.get('sale_order_id') or request.session.get('sale_last_order_id')"/>
+                <t t-set="optima_order"
+                   t-value="optima_order_id and request.env['sale.order'].sudo().browse(optima_order_id).exists()"/>
+                <span t-if="optima_order"
+                      class="badge rounded-pill text-bg-secondary fw-normal ms-1 optima_credit_badge">
+                    <i class="fa fa-credit-card me-1"/>
+                    Disponible
+                    <span t-out="optima_order._optima_get_available_credit_order_currency()"
+                          t-options="{'widget': 'monetary', 'display_currency': optima_order.currency_id}"/>
+                    <t t-if="optima_order.payment_term_id">
+                        <span class="mx-1">|</span>
+                        <span t-out="optima_order.payment_term_id.name"/>
+                    </t>
+                </span>
+            </t>
+        </xpath>
+    </template>
+</odoo>
