@@ -1,7 +1,7 @@
 {
     "name": "Optima Ecommerce Credit",
     "summary": "Riesgo financiero Ecommerce y pago a crédito controlado por crédito disponible",
-    "version": "18.0.2.1.0",
+    "version": "18.0.2.2.1",
     "category": "E-Commerce",
     "author": "Optima",
     "license": "AGPL-3",
@@ -11,6 +11,8 @@
         "website_sale",
     ],
     "data": [
+        "data/risk_sync_config.xml",
+        "data/risk_sync_cron.xml",
         "views/res_partner_views.xml",
         "views/sale_order_views.xml",
         "views/account_move_views.xml",

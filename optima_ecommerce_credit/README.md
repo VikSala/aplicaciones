@@ -89,3 +89,21 @@ Se reutiliza `res.partner.credit_limit` como crédito concedido.
 - Autocorrección de `is_ecommerce` al crear/publicar facturas ligadas a pedidos Ecommerce.
 - El riesgo pendiente de los PV se calcula en vivo desde las líneas de factura enlazadas, evitando que el pedido permanezca consumiendo riesgo por una recomputación/caché pendiente de `qty_invoiced`.
 - Una factura en borrador traslada el importe desde "Pedidos Ecommerce pendientes" a "Facturas Ecommerce borrador"; al publicarla pasa a abierta/vencida; al cobrarla y quedar su residual a cero deja de consumir riesgo.
+
+## 18.0.2.2.0 - Sincronización XML-RPC Ecommerce → Instalaciones
+
+- `optima_ecommerce_risk_total` se sincroniza automáticamente al contacto equivalente del Odoo Instalaciones.
+- El contacto remoto se identifica por NIF/VAT (`res.partner.vat`). Si no existe un único contacto comercial compatible, no se escribe ningún dato y se registra el error.
+- El campo remoto actualizado es `res.partner.ecommerce_risk_synced`, perteneciente al módulo `optima_ecommerce_financial_risk` de Instalaciones.
+- La sincronización se encola durante la transacción local y se ejecuta **después del commit**, de forma que una venta/factura no se revierte si el Odoo remoto está caído.
+- Confirmaciones/cancelaciones de PV Ecommerce, cambios en líneas confirmadas, creación/modificación de facturas Ecommerce y cobros/desconciliaciones provocan una nueva sincronización.
+- Una cola técnica deduplica cambios consecutivos y un cron reintenta cada 5 minutos las sincronizaciones fallidas.
+- En el contacto se muestra la fecha del último envío correcto y, si existe, el último error de sincronización.
+- Los parámetros de conexión se guardan en `ir.config_parameter` bajo el prefijo `optima_ecommerce_credit.risk_sync_*` para poder modificarlos sin tocar la lógica Python.
+
+
+## 18.0.2.2.1 - Fallback de identificación por nombre
+
+- La sincronización sigue priorizando NIF/VAT exacto.
+- Si no existe NIF/VAT o no resuelve a un único contacto comercial, se intenta un nombre exacto.
+- El fallback por nombre solo escribe si identifica un único contacto comercial; no utiliza coincidencias parciales (`ilike`).

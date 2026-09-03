@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="param_risk_sync_enabled" model="ir.config_parameter">
+        <field name="key">optima_ecommerce_credit.risk_sync_enabled</field>
+        <field name="value">True</field>
+    </record>
+    <record id="param_risk_sync_url" model="ir.config_parameter">
+        <field name="key">optima_ecommerce_credit.risk_sync_url</field>
+        <field name="value">https://optimaluz.com</field>
+    </record>
+    <record id="param_risk_sync_db" model="ir.config_parameter">
+        <field name="key">optima_ecommerce_credit.risk_sync_db</field>
+        <field name="value">odoo1</field>
+    </record>
+    <record id="param_risk_sync_username" model="ir.config_parameter">
+        <field name="key">optima_ecommerce_credit.risk_sync_username</field>
+        <field name="value">admin</field>
+    </record>
+    <record id="param_risk_sync_password" model="ir.config_parameter">
+        <field name="key">optima_ecommerce_credit.risk_sync_password</field>
+        <field name="value">1324</field>
+    </record>
+    <record id="param_risk_sync_timeout" model="ir.config_parameter">
+        <field name="key">optima_ecommerce_credit.risk_sync_timeout</field>
+        <field name="value">8</field>
+    </record>
+</odoo>

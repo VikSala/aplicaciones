@@ -27,6 +27,13 @@
                             />
                             <field name="optima_installations_risk_exception"/>
                             <field name="optima_installations_risk_sync_date" readonly="1"/>
+                            <field name="optima_ecommerce_risk_last_sync_date" readonly="1"/>
+                            <field
+                                name="optima_ecommerce_risk_sync_error"
+                                readonly="1"
+                                invisible="not optima_ecommerce_risk_sync_error"
+                            />
+                            <field name="optima_ecommerce_risk_last_sent" invisible="1"/>
                         </group>
                     </group>
 

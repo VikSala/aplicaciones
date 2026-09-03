@@ -38,6 +38,8 @@ class AccountMove(models.Model):
     def create(self, vals_list):
         moves = super().create(vals_list)
         moves._optima_sync_ecommerce_flag_from_sale_lines()
+        for company, partners in moves._optima_get_risk_sync_map().items():
+            partners._optima_queue_ecommerce_risk_sync(company=company)
         return moves
 
     def action_post(self):
@@ -62,3 +64,39 @@ class AccountMove(models.Model):
         )
         moves._optima_sync_ecommerce_flag_from_sale_lines()
         return moves
+
+    def _optima_is_ecommerce_risk_move(self):
+        self.ensure_one()
+        if self.move_type not in ("out_invoice", "out_refund"):
+            return False
+        return bool(
+            self.is_ecommerce
+            or self.invoice_line_ids.sale_line_ids.order_id.filtered("is_ecommerce")
+        )
+
+    def _optima_get_risk_sync_map(self):
+        result = {}
+        for move in self.filtered(lambda m: m._optima_is_ecommerce_risk_move()):
+            result.setdefault(move.company_id, self.env["res.partner"])
+            result[move.company_id] |= move.commercial_partner_id
+        return result
+
+    def write(self, vals):
+        before = self._optima_get_risk_sync_map()
+        result = super().write(vals)
+        after = self._optima_get_risk_sync_map()
+        for company in set(before) | set(after):
+            partners = (
+                before.get(company, self.env["res.partner"])
+                | after.get(company, self.env["res.partner"])
+            ).exists()
+            if partners:
+                partners._optima_queue_ecommerce_risk_sync(company=company)
+        return result
+
+    def unlink(self):
+        before = self._optima_get_risk_sync_map()
+        result = super().unlink()
+        for company, partners in before.items():
+            partners.exists()._optima_queue_ecommerce_risk_sync(company=company)
+        return result

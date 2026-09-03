@@ -120,3 +120,39 @@ class SaleOrderLine(models.Model):
             line.optima_ecommerce_risk_amount = (
                 line._optima_get_live_ecommerce_risk_amount()
             )
+
+    def _optima_get_risk_sync_map(self):
+        result = {}
+        for line in self.filtered(
+            lambda line: line.order_id.is_ecommerce and line.order_id.state == "sale"
+        ):
+            result.setdefault(line.company_id, self.env["res.partner"])
+            result[line.company_id] |= line.order_id.partner_invoice_id.commercial_partner_id
+        return result
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        lines = super().create(vals_list)
+        for company, partners in lines._optima_get_risk_sync_map().items():
+            partners._optima_queue_ecommerce_risk_sync(company=company)
+        return lines
+
+    def write(self, vals):
+        before = self._optima_get_risk_sync_map()
+        result = super().write(vals)
+        after = self._optima_get_risk_sync_map()
+        for company in set(before) | set(after):
+            partners = (
+                before.get(company, self.env["res.partner"])
+                | after.get(company, self.env["res.partner"])
+            ).exists()
+            if partners:
+                partners._optima_queue_ecommerce_risk_sync(company=company)
+        return result
+
+    def unlink(self):
+        before = self._optima_get_risk_sync_map()
+        result = super().unlink()
+        for company, partners in before.items():
+            partners.exists()._optima_queue_ecommerce_risk_sync(company=company)
+        return result

@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from odoo import api, fields, models
+from odoo import api, fields, models, SUPERUSER_ID
 
 
 class ResPartner(models.Model):
@@ -50,6 +50,29 @@ class ResPartner(models.Model):
             "Porcentaje de crédito consumido a partir del cual se muestra una alerta "
             "informativa. No bloquea por sí solo el crédito."
         ),
+    )
+
+    # -------------------------------------------------------------------------
+    # Estado de sincronización Ecommerce -> Instalaciones
+    # -------------------------------------------------------------------------
+    optima_ecommerce_risk_last_sent = fields.Monetary(
+        string="Último riesgo Ecommerce enviado",
+        currency_field="currency_id",
+        company_dependent=True,
+        readonly=True,
+        copy=False,
+    )
+    optima_ecommerce_risk_last_sync_date = fields.Datetime(
+        string="Último envío a Instalaciones",
+        company_dependent=True,
+        readonly=True,
+        copy=False,
+    )
+    optima_ecommerce_risk_sync_error = fields.Text(
+        string="Error sincronización Ecommerce",
+        company_dependent=True,
+        readonly=True,
+        copy=False,
     )
 
     # -------------------------------------------------------------------------
@@ -144,6 +167,79 @@ class ResPartner(models.Model):
             "optima_installations_risk_sync_date",
             "optima_risk_alert_percentage",
         ]
+
+    def _optima_queue_ecommerce_risk_sync(self, company=None):
+        """Encola el envío del riesgo local a Instalaciones tras el commit.
+
+        La cola deduplica múltiples cambios del mismo cliente durante una única
+        operación (confirmación, facturación, conciliación, etc.) y el cron actúa
+        como reintento si Instalaciones no estuviera disponible.
+        """
+        if self.env.context.get("skip_optima_risk_sync"):
+            return
+        company = company or self.env.company
+        partners = self.mapped("commercial_partner_id").exists()
+        if not partners:
+            return
+
+        Queue = self.env["optima.ecommerce.risk.sync.queue"].sudo()
+        queue_ids = []
+        for partner in partners:
+            partner = partner.with_company(company)
+            queue = Queue.search(
+                [
+                    ("partner_id", "=", partner.id),
+                    ("company_id", "=", company.id),
+                ],
+                limit=1,
+            )
+            vals = {
+                "pending": True,
+                "next_attempt": fields.Datetime.now(),
+                "last_error": False,
+            }
+            if queue:
+                queue.write(vals)
+            else:
+                queue = Queue.create({
+                    "partner_id": partner.id,
+                    "company_id": company.id,
+                    **vals,
+                })
+            queue_ids.append(queue.id)
+
+        registry = self.env.registry
+        dbname = self.env.cr.dbname
+        queue_ids = tuple(set(queue_ids))
+
+        def _after_commit():
+            try:
+                with registry.cursor() as cr:
+                    env = api.Environment(
+                        cr,
+                        SUPERUSER_ID,
+                        {"allowed_company_ids": [company.id]},
+                    )
+                    queues = env["optima.ecommerce.risk.sync.queue"].sudo().browse(
+                        queue_ids
+                    ).exists()
+                    now = fields.Datetime.now()
+                    for queue in queues:
+                        if (
+                            queue.pending
+                            and (not queue.next_attempt or queue.next_attempt <= now)
+                        ):
+                            queue._process_one()
+                    cr.commit()
+            except Exception:
+                # Nunca revertimos una venta/factura ya confirmada por un problema
+                # del sistema externo. El cron reintentará las colas pendientes.
+                import logging
+                logging.getLogger(__name__).exception(
+                    "Error post-commit sincronizando riesgo Ecommerce en %s", dbname
+                )
+
+        self.env.cr.postcommit.add(_after_commit)
 
     @api.model_create_multi
     def create(self, vals_list):

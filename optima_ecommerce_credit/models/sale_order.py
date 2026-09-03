@@ -27,7 +27,10 @@ class SaleOrder(models.Model):
             if "is_ecommerce" not in vals and vals.get("website_id"):
                 vals["is_ecommerce"] = True
             prepared_vals_list.append(vals)
-        return super().create(prepared_vals_list)
+        orders = super().create(prepared_vals_list)
+        for company, partners in orders._optima_get_risk_sync_map().items():
+            partners._optima_queue_ecommerce_risk_sync(company=company)
+        return orders
 
     def _prepare_invoice(self):
         vals = super()._prepare_invoice()
@@ -203,3 +206,31 @@ class SaleOrder(models.Model):
         if not status["allowed"]:
             raise ValidationError(status["reason"])
         return True
+
+    def _optima_get_risk_sync_map(self):
+        result = {}
+        for order in self.filtered(lambda o: o.is_ecommerce and o.state == "sale"):
+            result.setdefault(order.company_id, self.env["res.partner"])
+            result[order.company_id] |= order.partner_invoice_id.commercial_partner_id
+        return result
+
+    def write(self, vals):
+        before = self._optima_get_risk_sync_map()
+        result = super().write(vals)
+        after = self._optima_get_risk_sync_map()
+        companies = set(before) | set(after)
+        for company in companies:
+            partners = (
+                before.get(company, self.env["res.partner"])
+                | after.get(company, self.env["res.partner"])
+            ).exists()
+            if partners:
+                partners._optima_queue_ecommerce_risk_sync(company=company)
+        return result
+
+    def unlink(self):
+        before = self._optima_get_risk_sync_map()
+        result = super().unlink()
+        for company, partners in before.items():
+            partners.exists()._optima_queue_ecommerce_risk_sync(company=company)
+        return result

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="ir_cron_optima_ecommerce_risk_sync_retry" model="ir.cron">
+        <field name="name">Optima: reintentar sincronización riesgo Ecommerce</field>
+        <field name="model_id" ref="model_optima_ecommerce_risk_sync_queue"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_process_pending()</field>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+</odoo>
