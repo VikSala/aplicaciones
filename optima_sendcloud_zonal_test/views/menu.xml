@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem
+        id="menu_sendcloud_zonal_test_wizard"
+        name="Test Spain Shipping Methods"
+        parent="delivery_sendcloud_oca.menu_sendcloud_sendcloud_config_wizards"
+        action="action_sendcloud_zonal_test_wizard"
+        sequence="90"
+        groups="stock.group_stock_manager"
+    />
+</odoo>
