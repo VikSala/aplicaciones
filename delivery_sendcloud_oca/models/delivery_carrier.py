@@ -453,17 +453,134 @@ class DeliveryCarrier(models.Model):
         self.env["sendcloud.carrier"]._create_update_carriers(retrieved_carriers)
 
     @api.model
+    def _merge_sendcloud_shipping_methods(self, base_methods, extra_methods):
+        """Merge contextual Sendcloud shipping-method responses by method ID.
+
+        Sendcloud's ``countries`` data is contextual: the same shipping-method ID
+        can expose different routes depending on the sender address and postal-code
+        parameters used in the request.  Keep a single Odoo carrier per Sendcloud
+        method ID, while accumulating every distinct route observed during sync.
+        """
+        merged = {}
+        ordered_ids = []
+
+        for method in list(base_methods or []) + list(extra_methods or []):
+            method_code = method.get("id")
+            if not method_code:
+                continue
+
+            if method_code not in merged:
+                method_vals = dict(method)
+                method_vals["countries"] = [
+                    dict(country) for country in (method.get("countries") or [])
+                ]
+                merged[method_code] = method_vals
+                ordered_ids.append(method_code)
+                continue
+
+            current = merged[method_code]
+            # Contextual calls normally return the same method metadata. Preserve
+            # the first complete value and only fill fields that were missing.
+            for key, value in method.items():
+                if key == "countries":
+                    continue
+                if current.get(key) in (None, "", []) and value not in (None, "", []):
+                    current[key] = value
+
+            existing_routes = {
+                (country.get("from_iso_2"), country.get("iso_2")): country
+                for country in current.get("countries", [])
+            }
+            for country in method.get("countries") or []:
+                route_key = (country.get("from_iso_2"), country.get("iso_2"))
+                existing_country = existing_routes.get(route_key)
+                if existing_country is None:
+                    new_country = dict(country)
+                    current.setdefault("countries", []).append(new_country)
+                    existing_routes[route_key] = new_country
+                    continue
+
+                # A zonal response can add information (for example a price) to a
+                # route already seen in the global response. Fill only missing data.
+                for key, value in country.items():
+                    if existing_country.get(key) in (None, "", []) and value not in (
+                        None,
+                        "",
+                        [],
+                    ):
+                        existing_country[key] = value
+
+        return [merged[method_code] for method_code in ordered_ids]
+
+    @api.model
+    def _get_sendcloud_shipping_methods_for_sync(
+        self, integration, company, is_return=False
+    ):
+        """Retrieve global methods and enrich them with domestic zonal routes.
+
+        ``sender_address=all`` is not sufficient for zonal carriers (for example
+        Correos PUDO in Spain).  Sendcloud may return an international route for a
+        method while the same method ID is also valid domestically when postal-code
+        context is supplied.
+
+        For every configured Sender Address we therefore make one real domestic
+        query using its own country/postal code and merge those routes into the
+        global response.  This is generic (no Spain-specific postal codes) and keeps
+        the existing OCA data model intact.
+        """
+        params = {"sender_address": "all"}
+        if is_return:
+            params["is_return"] = True
+        shipping_methods = integration.get_shipping_methods(params)
+
+        sender_addresses = self.env["sendcloud.sender.address"].search(
+            [
+                ("company_id", "=", company.id),
+                ("active", "=", True),
+            ]
+        )
+        for sender_address in sender_addresses:
+            if not (
+                sender_address.sendcloud_code
+                and sender_address.country
+                and sender_address.postal_code
+            ):
+                continue
+
+            zonal_params = {
+                "sender_address": str(sender_address.sendcloud_code),
+                "from_postal_code": sender_address.postal_code,
+                "to_country": sender_address.country,
+                # A domestic query only needs a real postal-code context to expose
+                # domestic/zonal methods. The sender postal code is a valid, generic
+                # representative destination and avoids country-specific hardcoding.
+                "to_postal_code": sender_address.postal_code,
+            }
+            if is_return:
+                zonal_params["is_return"] = True
+
+            zonal_methods = integration.get_shipping_methods(zonal_params)
+            shipping_methods = self._merge_sendcloud_shipping_methods(
+                shipping_methods, zonal_methods
+            )
+
+        return shipping_methods
+
+    @api.model
     def sendcloud_sync_shipping_method(self):
         for company in self.env["res.company"].search([]):
             integration = company.sendcloud_default_integration_id
             if integration:
-                params = {"sender_address": "all"}
-                shipping_methods = integration.get_shipping_methods(params)
+                shipping_methods = self._get_sendcloud_shipping_methods_for_sync(
+                    integration, company
+                )
                 self._sendcloud_create_update_shipping_methods(
                     shipping_methods, company.id
                 )
-                params = {"sender_address": "all", "is_return": True}
-                shipping_methods = integration.get_shipping_methods(params)
+
+                shipping_methods = self._get_sendcloud_shipping_methods_for_sync(
+                    integration, company, is_return=True
+                )
                 self._sendcloud_create_update_shipping_methods(
                     shipping_methods, company.id, is_return=True
                 )

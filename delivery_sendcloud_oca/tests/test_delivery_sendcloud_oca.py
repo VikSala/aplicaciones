@@ -771,6 +771,53 @@ class TestDeliverySendCloud(TransactionCase):
         with self.assertRaises(UserError):
             self.integration.action_sendcloud_update_integrations()
 
+    def test_18b_merge_contextual_shipping_method_routes(self):
+        carrier_model = self.env["delivery.carrier"]
+        base_methods = [
+            {
+                "id": 2207,
+                "name": "Correos Estandar Pudo Delivery 0-1kg",
+                "carrier": "correos",
+                "service_point_input": "required",
+                "countries": [
+                    {
+                        "id": 10,
+                        "from_iso_2": "ES",
+                        "iso_2": "AD",
+                        "price": None,
+                    }
+                ],
+            }
+        ]
+        zonal_methods = [
+            {
+                "id": 2207,
+                "name": "Correos Estandar Pudo Delivery 0-1kg",
+                "carrier": "correos",
+                "service_point_input": "required",
+                "countries": [
+                    {
+                        "id": 11,
+                        "from_iso_2": "ES",
+                        "iso_2": "ES",
+                        "price": None,
+                    }
+                ],
+            }
+        ]
+
+        merged = carrier_model._merge_sendcloud_shipping_methods(
+            base_methods, zonal_methods
+        )
+
+        self.assertEqual(len(merged), 1)
+        self.assertEqual(merged[0]["id"], 2207)
+        routes = {
+            (country.get("from_iso_2"), country.get("iso_2"))
+            for country in merged[0]["countries"]
+        }
+        self.assertEqual(routes, {("ES", "AD"), ("ES", "ES")})
+
     def test_19_sendcloud_available_carriers(self):
         delivery_carrier_obj = self.env["delivery.carrier"]
         test_partner = self.env["res.partner"].create(
