@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sale_order_form_optima_pickup_sendcloud" model="ir.ui.view">
+        <field name="name">sale.order.form.optima.pickup.sendcloud</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="optima_delivery_pickup.sale_order_form_optima_pickup"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='optima_pickup']//field[@name='optima_pickup_external_id']" position="after">
+                <field
+                    name="optima_sendcloud_to_post_number"
+                    string="Sendcloud Post Number"
+                    readonly="1"
+                    invisible="optima_pickup_provider_code != 'sendcloud'"
+                />
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,21 @@
+.optima_pickup_method {
+    .optima_pickup_label { cursor: pointer; }
+    .optima_pickup_price { white-space: normal; text-align: end; }
+    .optima_pickup_details {
+        border-left: 3px solid var(--bs-primary);
+        padding-left: 0.75rem;
+    }
+    [name="o_optima_pickup_error"] { white-space: pre-line; }
+}
+
+@media (max-width: 767.98px) {
+    .optima_pickup_method {
+        .optima_pickup_price {
+            float: none !important;
+            display: block;
+            margin-top: 0.5rem;
+            text-align: start;
+        }
+        [name="o_optima_pickup_location"] { margin-left: 0 !important; }
+    }
+}

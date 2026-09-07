@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sale_order_form_optima_pickup" model="ir.ui.view">
+        <field name="name">sale.order.form.optima.pickup</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Punto de recogida" name="optima_pickup" invisible="not optima_pickup_mode">
+                    <group>
+                        <group>
+                            <field name="optima_pickup_mode" readonly="1"/>
+                            <field name="optima_pickup_provider_code" readonly="1"/>
+                            <field name="optima_pickup_external_id" readonly="1"/>
+                            <field name="optima_pickup_carrier_name" readonly="1"/>
+                            <field name="optima_pickup_carrier_code" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="optima_pickup_name" readonly="1"/>
+                            <field name="optima_pickup_street" readonly="1"/>
+                            <field name="optima_pickup_zip" readonly="1"/>
+                            <field name="optima_pickup_city" readonly="1"/>
+                            <field name="optima_pickup_country_code" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Coordenadas">
+                        <field name="optima_pickup_latitude" readonly="1"/>
+                        <field name="optima_pickup_longitude" readonly="1"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

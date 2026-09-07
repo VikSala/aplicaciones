@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="product_template_form_shipping_dimensions" model="ir.ui.view">
+        <field name="name">product.template.form.shipping.dimensions</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='group_lots_and_weight']/div[@name='weight']" position="after">
+                <label for="shipping_length_mm" string="Largo" invisible="product_variant_count &gt; 1 and not is_product_variant"/>
+                <div class="o_row" name="shipping_length_mm" invisible="product_variant_count &gt; 1 and not is_product_variant">
+                    <field name="shipping_length_mm" class="oe_inline"/>
+                    <span>mm</span>
+                </div>
+                <label for="shipping_width_mm" string="Ancho" invisible="product_variant_count &gt; 1 and not is_product_variant"/>
+                <div class="o_row" name="shipping_width_mm" invisible="product_variant_count &gt; 1 and not is_product_variant">
+                    <field name="shipping_width_mm" class="oe_inline"/>
+                    <span>mm</span>
+                </div>
+                <label for="shipping_height_mm" string="Alto" invisible="product_variant_count &gt; 1 and not is_product_variant"/>
+                <div class="o_row" name="shipping_height_mm" invisible="product_variant_count &gt; 1 and not is_product_variant">
+                    <field name="shipping_height_mm" class="oe_inline"/>
+                    <span>mm</span>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="product_variant_easy_form_shipping_dimensions" model="ir.ui.view">
+        <field name="name">product.product.easy.form.shipping.dimensions</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_variant_easy_edit_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='weight']/div[field[@name='weight']]" position="after">
+                <label for="shipping_length_mm" string="Largo"/>
+                <div class="o_row"><field name="shipping_length_mm" class="oe_inline"/><span>mm</span></div>
+                <label for="shipping_width_mm" string="Ancho"/>
+                <div class="o_row"><field name="shipping_width_mm" class="oe_inline"/><span>mm</span></div>
+                <label for="shipping_height_mm" string="Alto"/>
+                <div class="o_row"><field name="shipping_height_mm" class="oe_inline"/><span>mm</span></div>
+            </xpath>
+        </field>
+    </record>
+</odoo>
