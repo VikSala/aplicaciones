@@ -6,6 +6,19 @@ from odoo.addons.website_sale.controllers.delivery import Delivery
 
 class OptimaPickupDelivery(Delivery):
 
+    def _prepare_checkout_page_values(self, order_sudo, **kwargs):
+        """Add pickup values to the initial /shop/checkout rendering.
+
+        Odoo 18 renders ``website_sale.delivery_form`` directly from
+        ``WebsiteSale.shop_checkout`` on the first page load. That path does
+        not call ``_get_additional_delivery_context`` (the latter is only
+        used by the AJAX ``/shop/delivery_methods`` route). Therefore both
+        rendering paths must receive the generic pickup context.
+        """
+        values = super()._prepare_checkout_page_values(order_sudo, **kwargs)
+        values.update(order_sudo._optima_pickup_checkout_values())
+        return values
+
     def _get_additional_delivery_context(self):
         values = super()._get_additional_delivery_context()
         order_sudo = request.website.sale_get_order()
