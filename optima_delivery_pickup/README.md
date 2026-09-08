@@ -15,3 +15,8 @@ Current development phase:
 
 Eligibility restrictions by destination, weight and dimensions are deliberately
 postponed to a later phase.
+
+
+### 18.0.0.3.2
+- Mantiene el carrier/importe pickup al volver al checkout.
+- Evita que un método estándar aparezca seleccionado a la vez que Punto de recogida.

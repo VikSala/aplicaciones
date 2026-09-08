@@ -109,4 +109,12 @@
             </li>
         </xpath>
     </template>
+
+
+    <template id="delivery_method_generic_pickup_selection" inherit_id="website_sale.delivery_method">
+        <xpath expr="//input[@name='o_delivery_radio']" position="attributes">
+            <attribute name="t-att-checked">is_selected and not order.optima_pickup_mode</attribute>
+        </xpath>
+    </template>
+
 </odoo>

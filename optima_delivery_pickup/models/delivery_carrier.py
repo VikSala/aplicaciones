@@ -20,3 +20,25 @@ class DeliveryCarrier(models.Model):
     def _optima_pickup_get_provider_code(self):
         self.ensure_one()
         return False
+
+
+    def rate_shipment(self, order):
+        """Reuse the resolved pickup rate during standard Odoo refreshes.
+
+        This prevents website_sale from re-querying a technical pickup carrier
+        when the customer comes back to checkout. Provider-specific rating is
+        performed only by the pickup adapter when the point is selected.
+        """
+        self.ensure_one()
+        if (
+            getattr(order, "optima_pickup_mode", False)
+            and getattr(order, "optima_pickup_resolved", False)
+            and getattr(order, "optima_pickup_delivery_carrier_id", False) == self
+        ):
+            return {
+                "success": True,
+                "price": order.optima_pickup_delivery_price or 0.0,
+                "error_message": False,
+                "warning_message": False,
+            }
+        return super().rate_shipment(order)

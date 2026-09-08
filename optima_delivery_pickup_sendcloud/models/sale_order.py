@@ -553,6 +553,21 @@ class SaleOrder(models.Model):
             key=lambda item: (item["price"], item["carrier"].sequence, item["carrier"].id),
         )
         message = selected["warning"] or ""
+        if (
+            message
+            and self.sendcloud_service_point_address
+            and "requires a service point" in str(message).lower()
+        ):
+            # delivery_sendcloud_oca can emit this warning while rating some
+            # PUDO methods even though the hosted picker selection has already
+            # been stored on the order. Keep the warning in the server log, but
+            # do not show a false-positive alert to the customer.
+            _logger.info(
+                "Optima pickup: ignoring Sendcloud service-point warning for already selected point %s: %s",
+                normalized.get("id"),
+                message,
+            )
+            message = ""
 
         _logger.info(
             "Optima pickup: resolved Sendcloud service point %s (%s) to %s at %.2f %s via %s",

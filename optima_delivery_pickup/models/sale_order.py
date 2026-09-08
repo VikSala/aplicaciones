@@ -54,6 +54,24 @@ class SaleOrder(models.Model):
         copy=False,
     )
 
+
+    def _get_preferred_delivery_method(self, available_delivery_methods):
+        """Keep a resolved pickup carrier when Odoo reloads the checkout.
+
+        website_sale normally falls back to the first standard website carrier
+        when the current carrier is not part of ``_get_delivery_methods()``.
+        Technical pickup methods can intentionally be outside that list, so
+        falling back would overwrite the pickup delivery line and price.
+        """
+        self.ensure_one()
+        if (
+            self.optima_pickup_mode
+            and self.optima_pickup_resolved
+            and self.optima_pickup_delivery_carrier_id
+        ):
+            return self.optima_pickup_delivery_carrier_id
+        return super()._get_preferred_delivery_method(available_delivery_methods)
+
     def _optima_pickup_get_provider_carriers(self):
         """Return available pickup carriers grouped by provider code."""
         self.ensure_one()

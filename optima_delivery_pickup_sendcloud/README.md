@@ -20,3 +20,7 @@ Product-dimension eligibility rules are not applied yet.
 
 - Resolve Sendcloud pickup pricing from the synchronized country-route price before falling back to `rate_shipment`.
 - Match the technical Sendcloud method by carrier, origin/destination and weight bracket, avoiding unrelated 0.00 methods.
+
+
+### 18.0.0.3.2
+- No muestra el aviso falso de Service Point cuando el punto Sendcloud ya está guardado.

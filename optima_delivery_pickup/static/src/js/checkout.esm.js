@@ -16,6 +16,9 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         const result = this._super.apply(this, arguments);
         const pickupRadio = this.el.querySelector("input[name='o_optima_pickup_radio']");
         if (pickupRadio?.checked) {
+            // The concrete pickup carrier remains on sale.order for logistics,
+            // but it must not look like a second standard checkout selection.
+            this._uncheckStandardDeliveryMethods();
             if (pickupRadio.dataset.resolved === "1") {
                 this._enableMainButton();
             } else {
