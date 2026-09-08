@@ -9,3 +9,9 @@ Adaptador Sendcloud para `optima_delivery_pickup`.
 - Sincroniza también `sendcloud_service_point_address` y `postNumber` para mantener compatibilidad con OCA.
 
 El cálculo de precio, validación dimensional y asignación del carrier real se implementarán en la siguiente fase.
+
+
+## 18.0.0.2.1
+
+- El descubrimiento de Sendcloud PUDO ya no depende de `sale.order._get_delivery_methods()`.
+- Los métodos técnicos Service Point pueden permanecer ocultos del checkout estándar; el adaptador los descubre directamente y los agrupa bajo la opción genérica `Punto de recogida`.

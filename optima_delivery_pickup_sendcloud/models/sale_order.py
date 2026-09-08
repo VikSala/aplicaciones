@@ -12,6 +12,34 @@ class SaleOrder(models.Model):
         copy=False,
     )
 
+    def _optima_pickup_get_provider_carriers(self):
+        """Add technical Sendcloud PUDO methods independently of website_sale.
+
+        ``sale.order._get_delivery_methods()`` is intentionally designed for
+        normal delivery methods rendered by Odoo's checkout. A pickup adapter
+        must not depend on those technical PUDO carriers being part of that
+        list (or even being website-published), because they are hidden behind
+        the single generic "Punto de recogida" option.
+        """
+        self.ensure_one()
+        grouped = super()._optima_pickup_get_provider_carriers()
+        Carrier = self.env["delivery.carrier"]
+        sendcloud_carriers = Carrier.sudo().search(
+            [
+                ("active", "=", True),
+                ("delivery_type", "=", "sendcloud"),
+                ("sendcloud_service_point_required", "=", True),
+                *Carrier._check_company_domain(self.company_id),
+            ]
+        ).filtered(
+            lambda carrier: carrier.sendcloud_integration_id
+            and carrier.sendcloud_integration_id.active
+            and carrier.sendcloud_integration_id.service_point_enabled
+        )
+        if sendcloud_carriers:
+            grouped["sendcloud"] |= sendcloud_carriers
+        return grouped
+
     def _optima_pickup_provider_descriptor(self, provider_code, carriers):
         descriptor = super()._optima_pickup_provider_descriptor(provider_code, carriers)
         if provider_code != "sendcloud":
