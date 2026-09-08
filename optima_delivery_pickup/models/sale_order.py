@@ -98,12 +98,24 @@ class SaleOrder(models.Model):
             "longitude": self.optima_pickup_longitude,
         }
 
+    def _optima_pickup_force_visible(self):
+        """Development hook: keep the generic pickup option visible.
+
+        During the first integration phase we deliberately render the option
+        even when no provider descriptor is available. This lets us test the
+        checkout/UI independently from carrier eligibility rules. Later this
+        hook can return False (or become a website setting) once the real
+        weight/dimension/destination conditions are implemented.
+        """
+        self.ensure_one()
+        return True
+
     def _optima_pickup_checkout_values(self):
         self.ensure_one()
         providers = self._optima_pickup_get_providers()
         return {
-            "optima_pickup_available": bool(providers),
-            "optima_pickup_selected": bool(self.optima_pickup_mode and providers),
+            "optima_pickup_available": bool(providers) or self._optima_pickup_force_visible(),
+            "optima_pickup_selected": bool(self.optima_pickup_mode),
             "optima_pickup_provider_codes": [provider["code"] for provider in providers],
             "optima_pickup_point": self._optima_pickup_selected_point(),
         }

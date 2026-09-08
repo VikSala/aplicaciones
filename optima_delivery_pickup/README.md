@@ -19,3 +19,11 @@ El pago se mantiene bloqueado al usar la opción pickup hasta implementar:
 - resolución del método real;
 - precio real o tarifa Odoo;
 - asignación de `carrier_id`.
+
+
+## V0.2.2 - modo de prueba visible
+
+- La opción **Punto de recogida** se muestra siempre en el checkout.
+- Se puede activar el modo pickup aunque todavía no haya provider descriptor.
+- Si no existe provider, el frontend muestra un diagnóstico inline en vez de ocultar la opción.
+- Esta visibilidad forzada es temporal hasta implementar las reglas definitivas.

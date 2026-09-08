@@ -2,18 +2,13 @@
 <odoo>
     <template id="delivery_form_generic_pickup" inherit_id="website_sale.delivery_form">
         <xpath expr="//li[@name='o_delivery_method']" position="attributes">
-            <attribute name="t-if">
-                not (
-                    optima_pickup_available
-                    and dm.optima_pickup_provider_code
-                    and dm.optima_pickup_provider_code in optima_pickup_provider_codes
-                )
-            </attribute>
+            <!-- V0.2.2: durante las pruebas no ocultamos ningún método estándar. -->
+            <attribute name="t-if">True</attribute>
         </xpath>
 
         <xpath expr="//ul[@id='o_delivery_methods']/t[@t-foreach='delivery_methods']" position="after">
             <li
-                t-if="optima_pickup_available"
+                t-if="True"
                 name="o_optima_pickup_method"
                 class="list-group-item o_outline optima_pickup_method"
             >

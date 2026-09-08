@@ -63,9 +63,10 @@ class OptimaPickupDelivery(Delivery):
         self._check_order_can_change_delivery(order_sudo)
 
         providers = order_sudo._optima_pickup_get_providers()
-        if not providers:
-            raise UserError(_("No hay puntos de recogida disponibles para esta dirección."))
 
+        # En V0.2.2 permitimos entrar en modo pickup aunque todavía no haya
+        # descriptor de proveedor. El frontend mostrará el diagnóstico dentro
+        # de la propia opción. Esto es intencionado mientras validamos la UI.
         order_sudo._remove_delivery_line()
         order_sudo.write({"carrier_id": False})
         order_sudo._optima_pickup_clear_selection(keep_mode=True)
