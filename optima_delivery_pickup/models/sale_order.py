@@ -32,6 +32,28 @@ class SaleOrder(models.Model):
     optima_pickup_longitude = fields.Float(string="Longitud", digits=(16, 7), copy=False)
     optima_pickup_raw_data = fields.Json(string="Datos originales del proveedor", copy=False)
 
+    # Resultado genérico de la resolución del método de entrega. El core no
+    # sabe cómo calcularlo; cada adaptador implementa el hook correspondiente.
+    optima_pickup_resolved = fields.Boolean(
+        string="Pickup resuelto",
+        copy=False,
+    )
+    optima_pickup_delivery_carrier_id = fields.Many2one(
+        "delivery.carrier",
+        string="Método de entrega pickup",
+        copy=False,
+        ondelete="set null",
+    )
+    optima_pickup_delivery_price = fields.Monetary(
+        string="Precio pickup",
+        currency_field="currency_id",
+        copy=False,
+    )
+    optima_pickup_resolution_message = fields.Char(
+        string="Diagnóstico pickup",
+        copy=False,
+    )
+
     def _optima_pickup_get_provider_carriers(self):
         """Return available pickup carriers grouped by provider code."""
         self.ensure_one()
@@ -75,6 +97,26 @@ class SaleOrder(models.Model):
         self.ensure_one()
         return None
 
+    def _optima_pickup_resolve_delivery(self, provider_code, normalized, raw_point, extra):
+        """Adapter hook: resolve point -> concrete delivery carrier + price.
+
+        Expected success payload::
+
+            {
+                "success": True,
+                "carrier": delivery.carrier record,
+                "price": 4.95,
+                "message": "optional diagnostic/warning",
+            }
+
+        The default implementation deliberately leaves the selection pending.
+        """
+        self.ensure_one()
+        return {
+            "success": False,
+            "message": _("El proveedor todavía no implementa el cálculo del método de entrega."),
+        }
+
     def _optima_pickup_after_clear(self):
         """Adapter hook to clear provider-specific fields."""
         self.ensure_one()
@@ -98,14 +140,24 @@ class SaleOrder(models.Model):
             "longitude": self.optima_pickup_longitude,
         }
 
+    def _optima_pickup_resolution_payload(self):
+        self.ensure_one()
+        carrier = self.optima_pickup_delivery_carrier_id
+        return {
+            "success": bool(self.optima_pickup_resolved and carrier),
+            "carrier_id": carrier.id or False,
+            "carrier_name": carrier.display_name if carrier else "",
+            "price": self.optima_pickup_delivery_price or 0.0,
+            "currency": self.currency_id.name or "EUR",
+            "message": self.optima_pickup_resolution_message or "",
+        }
+
     def _optima_pickup_force_visible(self):
         """Development hook: keep the generic pickup option visible.
 
-        During the first integration phase we deliberately render the option
-        even when no provider descriptor is available. This lets us test the
-        checkout/UI independently from carrier eligibility rules. Later this
-        hook can return False (or become a website setting) once the real
-        weight/dimension/destination conditions are implemented.
+        Intentionally True for the current development phase. Eligibility by
+        destination, weight and dimensions will be added later without changing
+        the provider/checkout architecture.
         """
         self.ensure_one()
         return True
@@ -113,12 +165,32 @@ class SaleOrder(models.Model):
     def _optima_pickup_checkout_values(self):
         self.ensure_one()
         providers = self._optima_pickup_get_providers()
+        resolution = self._optima_pickup_resolution_payload()
         return {
             "optima_pickup_available": bool(providers) or self._optima_pickup_force_visible(),
             "optima_pickup_selected": bool(self.optima_pickup_mode),
             "optima_pickup_provider_codes": [provider["code"] for provider in providers],
             "optima_pickup_point": self._optima_pickup_selected_point(),
+            "optima_pickup_resolved": resolution["success"],
+            "optima_pickup_price": resolution["price"],
+            "optima_pickup_currency": resolution["currency"],
+            "optima_pickup_delivery_carrier_name": resolution["carrier_name"],
+            "optima_pickup_resolution_message": resolution["message"],
         }
+
+    def _optima_pickup_clear_resolution(self, remove_delivery_line=False):
+        self.ensure_one()
+        if remove_delivery_line:
+            self._remove_delivery_line()
+            self.write({"carrier_id": False})
+        self.write(
+            {
+                "optima_pickup_resolved": False,
+                "optima_pickup_delivery_carrier_id": False,
+                "optima_pickup_delivery_price": 0.0,
+                "optima_pickup_resolution_message": False,
+            }
+        )
 
     def _optima_pickup_clear_selection(self, keep_mode=False):
         self.ensure_one()
@@ -138,9 +210,61 @@ class SaleOrder(models.Model):
                 "optima_pickup_longitude": 0.0,
                 "optima_pickup_raw_data": False,
                 "pickup_location_data": False,
+                "optima_pickup_resolved": False,
+                "optima_pickup_delivery_carrier_id": False,
+                "optima_pickup_delivery_price": 0.0,
+                "optima_pickup_resolution_message": False,
             }
         )
         self._optima_pickup_after_clear()
+
+    def _optima_pickup_apply_resolution(self, provider_code, normalized, raw_point, extra):
+        """Resolve and apply the concrete Odoo delivery method.
+
+        A previous delivery line is removed first so a changed pickup point can
+        never leave a stale carrier/price attached to the quotation.
+        """
+        self.ensure_one()
+        self._optima_pickup_clear_resolution(remove_delivery_line=True)
+
+        resolution = self._optima_pickup_resolve_delivery(
+            provider_code, normalized, raw_point, extra
+        ) or {}
+        if not resolution.get("success"):
+            message = resolution.get("message") or _(
+                "No se ha podido calcular un método de entrega para este punto."
+            )
+            self.write({"optima_pickup_resolution_message": message})
+            return self._optima_pickup_resolution_payload()
+
+        carrier = resolution.get("carrier")
+        if not carrier or carrier._name != "delivery.carrier" or len(carrier) != 1:
+            message = _("El proveedor devolvió un método de entrega no válido.")
+            self.write({"optima_pickup_resolution_message": message})
+            return self._optima_pickup_resolution_payload()
+
+        try:
+            price = float(resolution.get("price", 0.0))
+        except (TypeError, ValueError):
+            price = 0.0
+        if price < 0:
+            message = _("El proveedor devolvió un precio de entrega no válido.")
+            self.write({"optima_pickup_resolution_message": message})
+            return self._optima_pickup_resolution_payload()
+
+        # This is the same standard Odoo mechanism used when a customer chooses
+        # a normal delivery carrier in checkout.
+        self.set_delivery_line(carrier, price)
+        self.write(
+            {
+                "carrier_id": carrier.id,
+                "optima_pickup_resolved": True,
+                "optima_pickup_delivery_carrier_id": carrier.id,
+                "optima_pickup_delivery_price": price,
+                "optima_pickup_resolution_message": resolution.get("message") or False,
+            }
+        )
+        return self._optima_pickup_resolution_payload()
 
     def _optima_pickup_store_point(self, provider_code, raw_point, extra=None):
         self.ensure_one()
@@ -201,4 +325,10 @@ class SaleOrder(models.Model):
             }
         )
         self._optima_pickup_after_store_point(provider_code, normalized, raw_point, extra)
-        return self._optima_pickup_selected_point()
+        resolution = self._optima_pickup_apply_resolution(
+            provider_code, normalized, raw_point, extra
+        )
+        return {
+            "point": self._optima_pickup_selected_point(),
+            "resolution": resolution,
+        }

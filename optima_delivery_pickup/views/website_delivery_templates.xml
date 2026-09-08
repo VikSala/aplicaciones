@@ -2,7 +2,7 @@
 <odoo>
     <template id="delivery_form_generic_pickup" inherit_id="website_sale.delivery_form">
         <xpath expr="//li[@name='o_delivery_method']" position="attributes">
-            <!-- V0.2.2: durante las pruebas no ocultamos ningún método estándar. -->
+            <!-- Durante el desarrollo no ocultamos ningún método estándar. -->
             <attribute name="t-if">True</attribute>
         </xpath>
 
@@ -21,6 +21,7 @@
                                 type="radio"
                                 class="form-check-input position-absolute"
                                 t-att-checked="optima_pickup_selected"
+                                t-att-data-resolved="'1' if optima_pickup_resolved else '0'"
                             />
                             <label class="o_delivery_carrier_label optima_pickup_label" for="o_optima_pickup">
                                 <span class="fw-semibold">Punto de recogida</span>
@@ -32,7 +33,10 @@
                     </div>
                     <div class="col col-auto">
                         <span class="o_wsale_delivery_price_badge float-end fw-bold optima_pickup_price" name="price">
-                            <t t-if="optima_pickup_point">Precio pendiente de cálculo</t>
+                            <t t-if="optima_pickup_resolved">
+                                <t t-esc="'%.2f %s' % (optima_pickup_price, optima_pickup_currency)"/>
+                            </t>
+                            <t t-elif="optima_pickup_point">Precio pendiente de cálculo</t>
                             <t t-else="">Selecciona un punto para calcular el precio</t>
                         </span>
                     </div>
@@ -62,6 +66,14 @@
                                         </t>
                                     </t>
                                 </div>
+                                <div
+                                    name="o_optima_pickup_carrier"
+                                    t-attf-class="small text-muted mt-1 {{'' if optima_pickup_resolved and optima_pickup_delivery_carrier_name else 'd-none'}}"
+                                >
+                                    <t t-if="optima_pickup_resolved and optima_pickup_delivery_carrier_name">
+                                        Método: <t t-esc="optima_pickup_delivery_carrier_name"/>
+                                    </t>
+                                </div>
                             </div>
                             <button type="button" name="o_optima_pickup_selector" class="btn btn-link btn-sm p-0 text-nowrap">
                                 Cambiar punto
@@ -78,9 +90,20 @@
                         Seleccionar punto de recogida
                     </button>
 
-                    <div name="o_optima_pickup_error" class="alert alert-warning py-2 px-3 mt-2 mb-0 d-none" role="alert"/>
+                    <div
+                        name="o_optima_pickup_error"
+                        t-attf-class="alert alert-warning py-2 px-3 mt-2 mb-0 {{'' if optima_pickup_resolution_message and not optima_pickup_resolved else 'd-none'}}"
+                        role="alert"
+                    >
+                        <t t-if="optima_pickup_resolution_message and not optima_pickup_resolved" t-esc="optima_pickup_resolution_message"/>
+                    </div>
                     <div class="small text-muted mt-2">
-                        El precio y el método de transporte definitivo se calcularán después de validar el punto seleccionado.
+                        <t t-if="optima_pickup_resolved">
+                            Método y precio calculados para el punto seleccionado.
+                        </t>
+                        <t t-else="">
+                            Selecciona un punto para calcular el método de transporte y su precio.
+                        </t>
                     </div>
                 </div>
             </li>

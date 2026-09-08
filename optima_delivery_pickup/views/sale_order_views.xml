@@ -23,6 +23,16 @@
                             <field name="optima_pickup_country_code" readonly="1"/>
                         </group>
                     </group>
+                    <group string="Resolución de transporte">
+                        <group>
+                            <field name="optima_pickup_resolved" readonly="1"/>
+                            <field name="optima_pickup_delivery_carrier_id" readonly="1"/>
+                            <field name="optima_pickup_delivery_price" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="optima_pickup_resolution_message" readonly="1"/>
+                        </group>
+                    </group>
                     <group string="Coordenadas">
                         <field name="optima_pickup_latitude" readonly="1"/>
                         <field name="optima_pickup_longitude" readonly="1"/>

@@ -1,17 +1,16 @@
 # Optima Delivery Pickup - Sendcloud
 
-Adaptador Sendcloud para `optima_delivery_pickup`.
+Sendcloud adapter for `optima_delivery_pickup`.
 
-- Detecta los `delivery.carrier` de `delivery_sendcloud_oca` que requieren Service Point.
-- Aporta la Public Key/configuración del checkout.
-- En esta primera fase reutiliza el Hosted Service Point Picker oficial de Sendcloud.
-- Normaliza el punto al formato genérico/estándar de Odoo.
-- Sincroniza también `sendcloud_service_point_address` y `postNumber` para mantener compatibilidad con OCA.
+Current development phase:
 
-El cálculo de precio, validación dimensional y asignación del carrier real se implementarán en la siguiente fase.
+- Opens Sendcloud's hosted Service Point Picker.
+- Normalizes and persists the selected service point.
+- Keeps `delivery_sendcloud_oca`'s `sendcloud_service_point_address` in sync.
+- Matches the selected point carrier (Correos, InPost, ...) against technical
+  Sendcloud PUDO delivery methods.
+- Calls Odoo's standard `delivery.carrier.rate_shipment(order)` for matching
+  methods and selects the lowest valid returned rate.
+- The core then creates the real delivery line and enables checkout.
 
-
-## 18.0.0.2.1
-
-- El descubrimiento de Sendcloud PUDO ya no depende de `sale.order._get_delivery_methods()`.
-- Los métodos técnicos Service Point pueden permanecer ocultos del checkout estándar; el adaptador los descubre directamente y los agrupa bajo la opción genérica `Punto de recogida`.
+Product-dimension eligibility rules are not applied yet.

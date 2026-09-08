@@ -1,29 +1,17 @@
 # Optima Delivery Pickup
 
-Core multi-proveedor para puntos de recogida en Odoo 18.
+Generic multi-provider pickup core for Odoo 18 ecommerce.
 
-## Responsabilidades
+Current development phase:
 
-- Campos físicos de producto: Largo, Ancho y Alto (mm).
-- Opción genérica "Punto de recogida" en el checkout.
-- Estado genérico del punto seleccionado en `sale.order`.
-- Reutiliza `sale.order.pickup_location_data` estándar de Odoo para la dirección logística final.
-- Registro frontend de proveedores para que cada adaptador aporte su selector/mapa.
-- No depende de Sendcloud, UPS, GLS, CTT ni ningún carrier concreto.
+- Generic `Punto de recogida` option is intentionally always visible.
+- Product length / width / height fields in millimetres.
+- Provider-neutral pickup-point snapshot stored on `sale.order`.
+- Uses Odoo's standard `pickup_location_data`.
+- Generic provider frontend registry.
+- Generic point -> delivery carrier + price resolution hook.
+- When an adapter resolves a carrier, the core uses Odoo's standard
+  `sale.order.set_delivery_line()` and re-enables checkout confirmation.
 
-## V0.2
-
-El pago se mantiene bloqueado al usar la opción pickup hasta implementar:
-
-- validación de peso + dimensiones;
-- resolución del método real;
-- precio real o tarifa Odoo;
-- asignación de `carrier_id`.
-
-
-## V0.2.2 - modo de prueba visible
-
-- La opción **Punto de recogida** se muestra siempre en el checkout.
-- Se puede activar el modo pickup aunque todavía no haya provider descriptor.
-- Si no existe provider, el frontend muestra un diagnóstico inline en vez de ocultar la opción.
-- Esta visibilidad forzada es temporal hasta implementar las reglas definitivas.
+Eligibility restrictions by destination, weight and dimensions are deliberately
+postponed to a later phase.

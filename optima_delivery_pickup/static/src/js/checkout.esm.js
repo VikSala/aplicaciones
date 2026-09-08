@@ -14,8 +14,13 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
 
     start() {
         const result = this._super.apply(this, arguments);
-        if (this.el.querySelector("input[name='o_optima_pickup_radio']")?.checked) {
-            this._disableMainButton();
+        const pickupRadio = this.el.querySelector("input[name='o_optima_pickup_radio']");
+        if (pickupRadio?.checked) {
+            if (pickupRadio.dataset.resolved === "1") {
+                this._enableMainButton();
+            } else {
+                this._disableMainButton();
+            }
         }
         return result;
     },
@@ -66,10 +71,12 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         const pickupRadio = this.el.querySelector("input[name='o_optima_pickup_radio']");
         if (pickupRadio) {
             pickupRadio.checked = false;
+            pickupRadio.dataset.resolved = "0";
         }
         this.el
             .querySelector("[name='o_optima_pickup_location']")
             ?.classList.add("d-none");
+        this._enableMainButton();
         rpc("/shop/optima_pickup/clear_mode", {}).catch(() => {});
     },
 
@@ -81,7 +88,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         if (providers.length > 1) {
             this._showError(
                 container,
-                "Hay varios proveedores de puntos disponibles. El mapa unificado se añadirá en la siguiente fase."
+                "Hay varios proveedores de puntos disponibles. El mapa unificado se añadirá en una fase posterior."
             );
             return;
         }
@@ -107,6 +114,8 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
     },
 
     async _savePoint(container, providerCode, rawPoint, extra) {
+        this._disableMainButton();
+        this._clearError(container);
         try {
             const result = await rpc("/shop/optima_pickup/set_point", {
                 provider_code: providerCode,
@@ -116,20 +125,24 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             if (!result?.success) {
                 throw new Error("No se ha podido guardar el punto de recogida.");
             }
-            this._updatePickupPoint(container, result.point);
+            this._updatePickupPoint(container, result.point, result.resolution || {});
+            this._updateCartSummary(result.summary);
         } catch (error) {
+            this._disableMainButton();
             this._showError(container, this._errorMessage(error));
         }
     },
 
-    _updatePickupPoint(container, point) {
+    _updatePickupPoint(container, point, resolution = {}) {
         const details = container.querySelector("[name='o_optima_pickup_details']");
         const name = container.querySelector("[name='o_optima_pickup_name']");
         const address = container.querySelector("[name='o_optima_pickup_address']");
+        const carrier = container.querySelector("[name='o_optima_pickup_carrier']");
         const initialButtons = container.querySelectorAll(
             ":scope > [name='o_optima_pickup_location'] > button[name='o_optima_pickup_selector']"
         );
         const price = container.querySelector(".optima_pickup_price");
+        const radio = container.querySelector("input[name='o_optima_pickup_radio']");
 
         if (name) {
             name.textContent = point.name || "";
@@ -143,10 +156,57 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         }
         details?.classList.remove("d-none");
         initialButtons.forEach((button) => button.classList.add("d-none"));
-        if (price) {
-            price.textContent = "Precio pendiente de cálculo";
+
+        if (resolution.success) {
+            if (price) {
+                price.textContent = this._formatCurrency(
+                    resolution.price || 0,
+                    resolution.currency || "EUR"
+                );
+            }
+            if (carrier) {
+                carrier.textContent = resolution.carrier_name
+                    ? `Método: ${resolution.carrier_name}`
+                    : "";
+                carrier.classList.toggle("d-none", !resolution.carrier_name);
+            }
+            if (radio) {
+                radio.dataset.resolved = "1";
+            }
+            if (resolution.message) {
+                this._showError(container, resolution.message);
+            } else {
+                this._clearError(container);
+            }
+            this._enableMainButton();
+        } else {
+            if (price) {
+                price.textContent = "Precio pendiente de cálculo";
+            }
+            if (carrier) {
+                carrier.textContent = "";
+                carrier.classList.add("d-none");
+            }
+            if (radio) {
+                radio.dataset.resolved = "0";
+            }
+            this._disableMainButton();
+            if (resolution.message) {
+                this._showError(container, resolution.message);
+            }
         }
-        this._disableMainButton();
+    },
+
+    _formatCurrency(amount, currency) {
+        try {
+            const language = document.documentElement.lang || "es-ES";
+            return new Intl.NumberFormat(language, {
+                style: "currency",
+                currency,
+            }).format(Number(amount || 0));
+        } catch {
+            return `${Number(amount || 0).toFixed(2)} ${currency || ""}`.trim();
+        }
     },
 
     _showPickupArea(container) {
@@ -165,6 +225,10 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
 
     _disableMainButton() {
         document.querySelector("a[name='website_sale_main_button']")?.classList.add("disabled");
+    },
+
+    _enableMainButton() {
+        document.querySelector("a[name='website_sale_main_button']")?.classList.remove("disabled");
     },
 
     _updateCartSummary(result) {

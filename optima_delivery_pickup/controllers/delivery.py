@@ -7,14 +7,7 @@ from odoo.addons.website_sale.controllers.delivery import Delivery
 class OptimaPickupDelivery(Delivery):
 
     def _prepare_checkout_page_values(self, order_sudo, **kwargs):
-        """Add pickup values to the initial /shop/checkout rendering.
-
-        Odoo 18 renders ``website_sale.delivery_form`` directly from
-        ``WebsiteSale.shop_checkout`` on the first page load. That path does
-        not call ``_get_additional_delivery_context`` (the latter is only
-        used by the AJAX ``/shop/delivery_methods`` route). Therefore both
-        rendering paths must receive the generic pickup context.
-        """
+        """Add pickup values to the initial /shop/checkout rendering."""
         values = super()._prepare_checkout_page_values(order_sudo, **kwargs)
         values.update(order_sudo._optima_pickup_checkout_values())
         return values
@@ -31,6 +24,11 @@ class OptimaPickupDelivery(Delivery):
                     "optima_pickup_selected": False,
                     "optima_pickup_provider_codes": [],
                     "optima_pickup_point": {},
+                    "optima_pickup_resolved": False,
+                    "optima_pickup_price": 0.0,
+                    "optima_pickup_currency": "EUR",
+                    "optima_pickup_delivery_carrier_name": "",
+                    "optima_pickup_resolution_message": "",
                 }
             )
         return values
@@ -60,6 +58,7 @@ class OptimaPickupDelivery(Delivery):
             "success": True,
             "providers": order_sudo._optima_pickup_get_providers(),
             "point": order_sudo._optima_pickup_selected_point(),
+            "resolution": order_sudo._optima_pickup_resolution_payload(),
         }
 
     @route(
@@ -77,9 +76,8 @@ class OptimaPickupDelivery(Delivery):
 
         providers = order_sudo._optima_pickup_get_providers()
 
-        # En V0.2.2 permitimos entrar en modo pickup aunque todavía no haya
-        # descriptor de proveedor. El frontend mostrará el diagnóstico dentro
-        # de la propia opción. Esto es intencionado mientras validamos la UI.
+        # Durante el desarrollo el modo pickup puede seleccionarse aunque no
+        # haya proveedores. La opción genérica se mantiene siempre visible.
         order_sudo._remove_delivery_line()
         order_sudo.write({"carrier_id": False})
         order_sudo._optima_pickup_clear_selection(keep_mode=True)
@@ -88,6 +86,7 @@ class OptimaPickupDelivery(Delivery):
             "summary": self._order_summary_values(order_sudo),
             "providers": providers,
             "point": {},
+            "resolution": order_sudo._optima_pickup_resolution_payload(),
         }
 
     @route(
@@ -127,7 +126,12 @@ class OptimaPickupDelivery(Delivery):
         if provider_code not in available_codes:
             raise UserError(_("Ese proveedor de puntos ya no está disponible para el pedido."))
 
-        normalized_point = order_sudo._optima_pickup_store_point(
+        stored = order_sudo._optima_pickup_store_point(
             provider_code, point, extra or {}
         )
-        return {"success": True, "point": normalized_point}
+        return {
+            "success": True,
+            "point": stored["point"],
+            "resolution": stored["resolution"],
+            "summary": self._order_summary_values(order_sudo),
+        }
