@@ -14,3 +14,9 @@ Current development phase:
 - The core then creates the real delivery line and enables checkout.
 
 Product-dimension eligibility rules are not applied yet.
+
+
+## 18.0.0.3.1
+
+- Resolve Sendcloud pickup pricing from the synchronized country-route price before falling back to `rate_shipment`.
+- Match the technical Sendcloud method by carrier, origin/destination and weight bracket, avoiding unrelated 0.00 methods.

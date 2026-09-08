@@ -245,6 +245,187 @@ class SaleOrder(models.Model):
                 score = max(score, 60)
         return score
 
+    def _optima_sendcloud_order_weight(self):
+        """Return the estimated order weight in kg for Sendcloud bracket matching."""
+        self.ensure_one()
+        getter = getattr(self, "_get_estimated_weight", None)
+        if getter:
+            try:
+                return max(float(getter() or 0.0), 0.0)
+            except (TypeError, ValueError):
+                pass
+        weight = 0.0
+        for line in self.order_line.filtered(lambda line: not line.is_delivery):
+            if not line.product_id:
+                continue
+            weight += (line.product_id.weight or 0.0) * line.product_uom_qty
+        return max(float(weight), 0.0)
+
+    @staticmethod
+    def _optima_sendcloud_numeric_field(record, exact_names, contains=()):
+        for name in exact_names:
+            if name in record._fields:
+                try:
+                    value = record[name]
+                    if value is not False and value is not None:
+                        return float(value)
+                except (TypeError, ValueError, Exception):
+                    continue
+        for name, field in record._fields.items():
+            lname = name.lower()
+            if field.type not in ("float", "integer", "monetary"):
+                continue
+            if all(token in lname for token in contains):
+                try:
+                    value = record[name]
+                    if value is not False and value is not None:
+                        return float(value)
+                except (TypeError, ValueError, Exception):
+                    continue
+        return None
+
+    def _optima_sendcloud_weight_matches(self, carrier, weight):
+        """Match Sendcloud's own min/max method bracket before rating.
+
+        This prevents all 0-1 / 1-2 / 2-5 kg variants of one carrier from
+        being treated as equivalent just because they share the same carrier
+        code (for example ``inpost_es``).
+        """
+        minimum = self._optima_sendcloud_numeric_field(
+            carrier,
+            ("sendcloud_min_weight", "min_weight"),
+            ("min", "weight"),
+        )
+        maximum = self._optima_sendcloud_numeric_field(
+            carrier,
+            ("sendcloud_max_weight", "max_weight"),
+            ("max", "weight"),
+        )
+        if minimum is not None and weight < minimum:
+            return False
+        if maximum not in (None, 0.0) and weight > maximum:
+            return False
+        return True
+
+    @staticmethod
+    def _optima_sendcloud_country_value(value):
+        if not value:
+            return ""
+        if getattr(value, "_name", None):
+            for name in ("code", "iso_2", "country_code"):
+                if name in value._fields:
+                    code = value[name]
+                    if code and not getattr(code, "_name", None):
+                        return str(code).upper()
+            return ""
+        text = str(value).strip().upper()
+        return text if len(text) == 2 else ""
+
+    def _optima_sendcloud_line_country(self, line, role):
+        """Extract origin/destination ISO2 from an OCA Sendcloud route line."""
+        exact = {
+            "from": (
+                "from_iso_2", "from_country_code", "from_country_id", "from_country",
+                "country_from_id", "country_from", "origin_country_id", "origin_country_code",
+            ),
+            "to": (
+                "to_iso_2", "to_country_code", "to_country_id", "to_country",
+                "country_to_id", "country_to", "destination_country_id", "destination_country_code",
+            ),
+        }[role]
+        for name in exact:
+            if name in line._fields:
+                code = self._optima_sendcloud_country_value(line[name])
+                if code:
+                    return code
+        role_tokens = (role,) if role == "from" else ("to", "destination")
+        for name in line._fields:
+            lname = name.lower()
+            if not ("country" in lname or "iso" in lname):
+                continue
+            if not any(token in lname for token in role_tokens):
+                continue
+            code = self._optima_sendcloud_country_value(line[name])
+            if code:
+                return code
+        return ""
+
+    def _optima_sendcloud_route_price(self, carrier):
+        """Return the synced Sendcloud price for the matching country route.
+
+        ``delivery_sendcloud_oca`` stores prices per shipping route (the rows
+        displayed in the Sendcloud method under From Country / To Country /
+        Price).  ``rate_shipment`` can legitimately return the delivery
+        product's 0.00 price in this checkout context, so the pickup adapter
+        first consumes the synced route price that belongs to the technical
+        method itself.
+
+        The connector's internal relation names have changed between series,
+        therefore this helper discovers Sendcloud route relations by model
+        metadata instead of depending on one private OCA field name.
+        """
+        self.ensure_one()
+        partner = self.partner_shipping_id or self.partner_id
+        destination = (partner.country_id.code or "").upper()
+        warehouse_partner = self.warehouse_id.partner_id if self.warehouse_id else self.company_id.partner_id
+        origin = (warehouse_partner.country_id.code or self.company_id.country_id.code or "").upper()
+
+        roots = [carrier]
+        for name, field in carrier._fields.items():
+            if field.type != "many2one" or not name.startswith("sendcloud_"):
+                continue
+            try:
+                related = carrier[name]
+            except Exception:
+                continue
+            if related and related not in roots:
+                roots.append(related)
+
+        seen = set()
+        candidates = []
+        for root in roots:
+            for name, field in root._fields.items():
+                if field.type not in ("one2many", "many2many"):
+                    continue
+                lname = name.lower()
+                comodel = (field.comodel_name or "").lower()
+                if "sendcloud" not in lname and "sendcloud" not in comodel and "country" not in lname:
+                    continue
+                try:
+                    lines = root[name]
+                except Exception:
+                    continue
+                for line in lines:
+                    key = (line._name, line.id)
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    price = self._optima_sendcloud_numeric_field(
+                        line,
+                        ("price", "sendcloud_price"),
+                        ("price",),
+                    )
+                    if price is None:
+                        continue
+                    from_code = self._optima_sendcloud_line_country(line, "from")
+                    to_code = self._optima_sendcloud_line_country(line, "to")
+                    # A route row must at least identify the destination.  When
+                    # origin is present, require it too.
+                    if destination and to_code and to_code != destination:
+                        continue
+                    if origin and from_code and from_code != origin:
+                        continue
+                    if destination and not to_code:
+                        continue
+                    candidates.append((price, line, from_code, to_code))
+
+        if not candidates:
+            return False, 0.0, False
+        # There should normally be one ES->ES row.  If a connector variant has
+        # duplicates, use the lowest synchronized amount.
+        price, line, _from, _to = min(candidates, key=lambda item: (item[0], item[1].id))
+        return True, max(float(price), 0.0), line
+
     def _optima_pickup_resolve_delivery(self, provider_code, normalized, raw_point, extra):
         if provider_code != "sendcloud":
             return super()._optima_pickup_resolve_delivery(
@@ -293,9 +474,31 @@ class SaleOrder(models.Model):
                 ),
             }
 
+        order_weight = self._optima_sendcloud_order_weight()
         successful_rates = []
         errors = []
         for carrier in matching.sorted(lambda item: (item.sequence, item.id)):
+            if not self._optima_sendcloud_weight_matches(carrier, order_weight):
+                continue
+
+            route_found, route_price, route_line = self._optima_sendcloud_route_price(carrier)
+            if route_found:
+                successful_rates.append(
+                    {
+                        "carrier": carrier,
+                        "price": route_price,
+                        "warning": "",
+                        "source": "sendcloud_route",
+                        "route_line": route_line,
+                    }
+                )
+                continue
+
+            # Fallback for connector variants that do not expose synchronized
+            # country-price rows on the carrier.  A zero fallback is *not*
+            # accepted here: it is indistinguishable from the generic 0.00
+            # delivery product price and previously caused the wrong InPost
+            # method to win the comparison.
             try:
                 rate = carrier.rate_shipment(self)
             except Exception as exc:  # Keep checkout alive; diagnostic is logged server-side.
@@ -313,51 +516,52 @@ class SaleOrder(models.Model):
                 price = float(rate.get("price", 0.0))
             except (TypeError, ValueError):
                 continue
-            if price < 0:
+            if price <= 0:
                 continue
             successful_rates.append(
                 {
                     "carrier": carrier,
                     "price": price,
                     "warning": rate.get("warning_message") or "",
+                    "source": "rate_shipment",
+                    "route_line": False,
                 }
             )
 
         if not successful_rates:
             diagnostic = errors[0] if errors else ""
             _logger.warning(
-                "Optima pickup: no rate for Sendcloud point carrier %s. Matching methods: %s. Error: %s",
+                "Optima pickup: no positive Sendcloud route/rate for point carrier %s. "
+                "Matching methods: %s. Weight: %.3f kg. Error: %s",
                 point_carrier_code,
                 matching.mapped("display_name"),
+                order_weight,
                 diagnostic,
             )
             return {
                 "success": False,
                 "message": _(
-                    "El punto se ha guardado, pero Sendcloud no ha devuelto una tarifa válida para el pedido."
+                    "El punto se ha guardado, pero no encuentro una tarifa Sendcloud compatible para este pedido."
                 ),
             }
 
-        # If several weight brackets/methods are valid, choose the lowest real
-        # price returned by Odoo/Sendcloud. Restrictions by our own dimensions
-        # will be introduced in a later phase as agreed.
+        # Several technical methods can share one carrier code.  At this stage
+        # choose the cheapest method that matches carrier + route + weight.
+        # Dimension limits will be introduced in the dedicated later phase.
         selected = min(
             successful_rates,
             key=lambda item: (item["price"], item["carrier"].sequence, item["carrier"].id),
         )
         message = selected["warning"] or ""
-        if selected["price"] == 0.0:
-            message = _(
-                "Sendcloud ha devuelto 0,00 para este método. Comprueba el Price Check del método si esperabas una tarifa distinta."
-            )
 
         _logger.info(
-            "Optima pickup: resolved Sendcloud service point %s (%s) to %s at %.2f %s",
+            "Optima pickup: resolved Sendcloud service point %s (%s) to %s at %.2f %s via %s",
             normalized.get("id"),
             point_carrier_code,
             selected["carrier"].display_name,
             selected["price"],
             self.currency_id.name,
+            selected.get("source"),
         )
         return {
             "success": True,
