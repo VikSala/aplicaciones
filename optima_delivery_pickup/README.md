@@ -109,3 +109,8 @@ validation will later reject the current cart.
   proveedor se conserva como fallback de emergencia.
 - Al elegir un marcador se mantiene el flujo estable de Fases 1-4: spinner,
   validación exacta del punto, precio definitivo, total y Confirmar.
+
+
+## 18.0.0.8.1
+- Corrige la compilación SCSS de Odoo 18 evitando `min()` entre unidades `px` y `vw/vh` en el modal del mapa unificado.
+- Mantiene el mismo tamaño visual mediante `width/height` + `max-width/max-height`.
