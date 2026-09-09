@@ -22,12 +22,12 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
                 this._setPickupLoading(false);
                 this._enableMainButton();
             } else {
+                // An unresolved point can only be a stale selection from an
+                // interrupted/older checkout flow. Keep confirmation blocked
+                // and let the customer choose the point again; normal 0.4.5
+                // selection resolves atomically in the set_point request.
+                this._setPickupLoading(false);
                 this._disableMainButton();
-                // If the customer refreshed the page after the point had already
-                // been saved but before rating finished, resume the resolution.
-                if (pickupRadio.dataset.pointId) {
-                    this._resolveStoredPoint().catch(() => {});
-                }
             }
         }
         return result;
@@ -159,47 +159,24 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         this._clearError(this._getLivePickupContainer());
 
         try {
-            const stored = await rpc("/shop/optima_pickup/set_point", {
+            const result = await rpc("/shop/optima_pickup/set_point", {
                 provider_code: providerCode,
                 point: rawPoint,
                 extra,
             });
-            if (!stored?.success) {
-                throw new Error("No se ha podido guardar el punto de recogida.");
-            }
-
-            this._markPickupSelected();
-            this._updatePickupPointPending(stored.point);
-            this._updateCartSummary(stored.summary);
-
-            await this._resolveStoredPoint();
-        } catch (error) {
-            this._setPickupLoading(false);
-            this._disableMainButton();
-            this._markPickupSelected();
-            this._showError(this._getLivePickupContainer(), this._errorMessage(error));
-        }
-    },
-
-    async _resolveStoredPoint() {
-        const container = this._getLivePickupContainer();
-        const radio = this._getPickupRadio();
-        if (!radio?.checked || !radio.dataset.pointId) {
-            return;
-        }
-
-        this._markPickupSelected();
-        this._setPickupLoading(true, "Calculando precio…");
-        this._disableMainButton();
-        this._clearError(container);
-
-        try {
-            const result = await rpc("/shop/optima_pickup/resolve", {});
             if (!result?.success) {
-                throw new Error("No se ha podido calcular el método de entrega.");
+                throw new Error("No se ha podido guardar y calcular el punto de recogida.");
             }
+
+            // set_point now returns the final provider validation/rating in the
+            // same request. The local preview/spinner remains visible while the
+            // request is in flight, then the real point, price and totals replace it.
             this._markPickupSelected();
-            this._updatePickupPoint(this._getLivePickupContainer(), result.point, result.resolution || {});
+            this._updatePickupPoint(
+                this._getLivePickupContainer(),
+                result.point || {},
+                result.resolution || {}
+            );
             this._updateCartSummary(result.summary);
         } catch (error) {
             this._setPickupLoading(false);
@@ -207,7 +184,6 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             this._markPickupSelected();
             this._setPriceText("Precio no disponible");
             this._showError(this._getLivePickupContainer(), this._errorMessage(error));
-            throw error;
         }
     },
 

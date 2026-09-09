@@ -2,7 +2,7 @@
 
 Generic multi-provider pickup core for Odoo 18 ecommerce.
 
-Current development phase (18.0.0.4.4):
+Current development phase (18.0.0.4.5):
 
 - Generic `Punto de recogida` option remains intentionally always visible.
 - Product length / width / height fields in millimetres.
@@ -52,3 +52,16 @@ validation will later reject the current cart.
 - Pending pickup mode no longer allows Odoo to auto-select the first standard carrier.
 - Preserves native `pickup_location_data` while delivery lines are recalculated.
 - Automatically resumes a pending stored point resolution after a checkout reload.
+
+
+## 18.0.0.4.5
+
+- Keeps the 0.4.4 immediate point preview and circular loading spinner.
+- Restores the proven 0.3.2 single-request pricing flow: `set_point` now stores
+  the point and resolves the concrete carrier/price atomically.
+- Removes the frontend dependency on `/shop/optima_pickup/resolve`, avoiding the
+  interrupted-connection regression introduced by the two-request flow.
+- Preserves provider callback extras during validation/rating instead of losing
+  them between requests.
+- Checkout confirmation remains blocked until the same request returns a valid
+  carrier and price.
