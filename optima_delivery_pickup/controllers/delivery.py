@@ -59,6 +59,7 @@ class OptimaPickupDelivery(Delivery):
             "providers": order_sudo._optima_pickup_get_providers(),
             "point": order_sudo._optima_pickup_selected_point(),
             "resolution": order_sudo._optima_pickup_resolution_payload(),
+            "summary": self._order_summary_values(order_sudo),
         }
 
     @route(

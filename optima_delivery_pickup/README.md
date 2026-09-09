@@ -65,3 +65,9 @@ validation will later reject the current cart.
   them between requests.
 - Checkout confirmation remains blocked until the same request returns a valid
   carrier and price.
+
+## 18.0.0.4.6
+
+- Limpia la selección pickup cuando el carrito se queda sin productos entregables, evitando heredar punto/precio al reutilizar el mismo presupuesto web.
+- La sustitución de punto se aplica de forma atómica: primero valida/resuelve y solo después reemplaza la línea de transporte.
+- El checkout recupera el estado real del servidor y reintenta una vez ante una interrupción de red de `/shop/optima_pickup/set_point`.

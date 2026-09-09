@@ -150,7 +150,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
     },
 
     async _savePoint(providerCode, rawPoint, extra) {
-        // The Sendcloud modal has already closed at this point. Reflect the
+        // The provider modal has already closed at this point. Reflect the
         // customer's choice immediately, show the spinner and block checkout.
         this._markPickupSelected();
         this._previewRawPoint(rawPoint);
@@ -158,19 +158,18 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         this._disableMainButton();
         this._clearError(this._getLivePickupContainer());
 
+        const payload = {
+            provider_code: providerCode,
+            point: rawPoint,
+            extra,
+        };
+
         try {
-            const result = await rpc("/shop/optima_pickup/set_point", {
-                provider_code: providerCode,
-                point: rawPoint,
-                extra,
-            });
+            const result = await this._setPointWithRecovery(payload, rawPoint);
             if (!result?.success) {
                 throw new Error("No se ha podido guardar y calcular el punto de recogida.");
             }
 
-            // set_point now returns the final provider validation/rating in the
-            // same request. The local preview/spinner remains visible while the
-            // request is in flight, then the real point, price and totals replace it.
             this._markPickupSelected();
             this._updatePickupPoint(
                 this._getLivePickupContainer(),
@@ -179,12 +178,93 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             );
             this._updateCartSummary(result.summary);
         } catch (error) {
-            this._setPickupLoading(false);
-            this._disableMainButton();
-            this._markPickupSelected();
-            this._setPriceText("Precio no disponible");
-            this._showError(this._getLivePickupContainer(), this._errorMessage(error));
+            // A transport interruption must not leave the browser showing a
+            // point different from the server. Restore the authoritative state
+            // when possible; otherwise keep confirmation safely blocked.
+            const restored = await this._restorePickupStateAfterFailure(error);
+            if (!restored) {
+                this._setPickupLoading(false);
+                this._disableMainButton();
+                this._markPickupSelected();
+                this._setPriceText("Precio no disponible");
+                this._showError(this._getLivePickupContainer(), this._errorMessage(error));
+            }
         }
+    },
+
+    async _setPointWithRecovery(payload, rawPoint) {
+        try {
+            return await rpc("/shop/optima_pickup/set_point", payload);
+        } catch (error) {
+            if (!this._isConnectionError(error)) {
+                throw error;
+            }
+
+            // The HTTP response can be lost after Odoo has already committed
+            // the selection. Query the cheap state endpoint before retrying the
+            // expensive Sendcloud validation.
+            try {
+                const state = await rpc("/shop/optima_pickup/state", {});
+                const selectedId = rawPoint?.id ? String(rawPoint.id) : "";
+                const storedId = state?.point?.id ? String(state.point.id) : "";
+                if (
+                    state?.success &&
+                    selectedId &&
+                    selectedId === storedId &&
+                    (state.resolution?.success || state.resolution?.message)
+                ) {
+                    return {
+                        success: true,
+                        point: state.point || {},
+                        resolution: state.resolution || {},
+                        summary: state.summary,
+                    };
+                }
+            } catch {
+                // Ignore state lookup failure and perform one idempotent retry.
+            }
+
+            await new Promise((resolve) => window.setTimeout(resolve, 250));
+            return await rpc("/shop/optima_pickup/set_point", payload);
+        }
+    },
+
+    async _restorePickupStateAfterFailure(error) {
+        try {
+            const state = await rpc("/shop/optima_pickup/state", {});
+            if (!state?.success) {
+                return false;
+            }
+            const point = state.point || {};
+            const resolution = state.resolution || {};
+            this._markPickupSelected();
+            if (point.id) {
+                this._updatePickupPoint(this._getLivePickupContainer(), point, resolution);
+            } else {
+                this._setPickupLoading(false);
+                this._setPriceText("Precio no disponible");
+                this._disableMainButton();
+            }
+            this._updateCartSummary(state.summary);
+            const message = resolution.success
+                ? "No se ha podido completar el cambio de punto. Se mantiene la última selección válida."
+                : this._errorMessage(error);
+            this._showError(this._getLivePickupContainer(), message);
+            return true;
+        } catch {
+            return false;
+        }
+    },
+
+    _isConnectionError(error) {
+        const message = this._errorMessage(error).toLowerCase();
+        return (
+            message.includes("couldn't be established") ||
+            message.includes("could not be established") ||
+            message.includes("interrupted") ||
+            message.includes("connection") ||
+            message.includes("network")
+        );
     },
 
     _previewRawPoint(point = {}) {

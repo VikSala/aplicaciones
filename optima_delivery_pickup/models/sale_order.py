@@ -426,6 +426,32 @@ class SaleOrder(models.Model):
         }
 
 
+    def _cart_update(self, product_id, line_id=None, add_qty=0, set_qty=0, **kwargs):
+        """Keep pickup state consistent when the ecommerce cart is emptied.
+
+        Odoo keeps the same draft sale order when a logged-in customer empties
+        the cart.  Without clearing our custom pickup snapshot, the next product
+        added to that draft order could inherit the previous point, carrier and
+        price even though it belongs to a new cart contents state.
+
+        Full revalidation on every quantity/product change belongs to the next
+        phase.  Here we only handle the hard boundary where the cart no longer
+        contains any deliverable product, because carrying a pickup selection
+        across that boundary is always stale.
+        """
+        self.ensure_one()
+        result = super()._cart_update(
+            product_id, line_id=line_id, add_qty=add_qty, set_qty=set_qty, **kwargs
+        )
+        if self.optima_pickup_mode and not self._has_deliverable_products():
+            # website_sale may already have removed the delivery line when the
+            # cart became empty/only-services.  Repeat safely with the native
+            # keep flag so provider cleanup happens in one controlled place.
+            self.with_context(keep_pickup_location=True)._remove_delivery_line()
+            self.write({"carrier_id": False})
+            self._optima_pickup_clear_selection(keep_mode=False)
+        return result
+
     def _get_preferred_delivery_method(self, available_delivery_methods):
         """Keep pickup ownership of the checkout while selected or resolving.
 
@@ -621,23 +647,30 @@ class SaleOrder(models.Model):
         self._optima_pickup_after_clear()
 
     def _optima_pickup_apply_resolution(self, provider_code, normalized, raw_point, extra):
-        """Resolve and apply the concrete Odoo delivery method.
+        """Resolve first, mutate the delivery line only after a valid result.
 
-        A previous delivery line is removed first so a changed pickup point can
-        never leave a stale carrier/price attached to the quotation.
+        The previous implementation removed the current delivery line before
+        package/provider validation.  If the new point could not be resolved,
+        checkout was left halfway through the transition and the order summary
+        could temporarily lose its shipping line.  By validating and rating
+        first, unexpected failures roll back cleanly and a successful change is
+        applied atomically.
         """
         self.ensure_one()
-        self._optima_pickup_clear_resolution(remove_delivery_line=True)
+
+        def fail(message):
+            self._optima_pickup_clear_resolution(remove_delivery_line=True)
+            self.write({"optima_pickup_resolution_message": message})
+            return self._optima_pickup_resolution_payload()
 
         validation = self._optima_pickup_validate_package(
             provider_code=provider_code, point=normalized
         ) or {}
         if not validation.get("success"):
-            message = validation.get("message") or _(
-                "El pedido no cumple los requisitos logísticos del punto de recogida."
+            return fail(
+                validation.get("message")
+                or _("El pedido no cumple los requisitos logísticos del punto de recogida.")
             )
-            self.write({"optima_pickup_resolution_message": message})
-            return self._optima_pickup_resolution_payload()
 
         # Provider validation can attach server-side data (for example the
         # Sendcloud method ids that passed weight/dimension checks). Keep that
@@ -648,29 +681,26 @@ class SaleOrder(models.Model):
             provider_code, normalized, raw_point, resolve_extra
         ) or {}
         if not resolution.get("success"):
-            message = resolution.get("message") or _(
-                "No se ha podido calcular un método de entrega para este punto."
+            return fail(
+                resolution.get("message")
+                or _("No se ha podido calcular un método de entrega para este punto.")
             )
-            self.write({"optima_pickup_resolution_message": message})
-            return self._optima_pickup_resolution_payload()
 
         carrier = resolution.get("carrier")
         if not carrier or carrier._name != "delivery.carrier" or len(carrier) != 1:
-            message = _("El proveedor devolvió un método de entrega no válido.")
-            self.write({"optima_pickup_resolution_message": message})
-            return self._optima_pickup_resolution_payload()
+            return fail(_("El proveedor devolvió un método de entrega no válido."))
 
         try:
             price = float(resolution.get("price", 0.0))
         except (TypeError, ValueError):
-            price = 0.0
+            price = -1.0
         if price < 0:
-            message = _("El proveedor devolvió un precio de entrega no válido.")
-            self.write({"optima_pickup_resolution_message": message})
-            return self._optima_pickup_resolution_payload()
+            return fail(_("El proveedor devolvió un precio de entrega no válido."))
 
-        # This is the same standard Odoo mechanism used when a customer chooses
-        # a normal delivery carrier in checkout.
+        # Only now replace the old delivery line.  If anything above raises an
+        # unexpected exception, the request transaction rolls back without
+        # destroying a previously valid checkout state.
+        self._optima_pickup_clear_resolution(remove_delivery_line=True)
         self.with_context(keep_pickup_location=True).set_delivery_line(carrier, price)
         method_limits = resolution.get("method_limits")
         if not isinstance(method_limits, dict):

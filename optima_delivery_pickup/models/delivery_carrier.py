@@ -31,7 +31,8 @@ class DeliveryCarrier(models.Model):
         """
         self.ensure_one()
         if (
-            getattr(order, "optima_pickup_mode", False)
+            not self.env.context.get("optima_pickup_force_rate")
+            and getattr(order, "optima_pickup_mode", False)
             and getattr(order, "optima_pickup_resolved", False)
             and getattr(order, "optima_pickup_delivery_carrier_id", False) == self
         ):
