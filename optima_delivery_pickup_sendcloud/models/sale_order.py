@@ -473,7 +473,15 @@ class SaleOrder(models.Model):
         return {"success": True, "methods": methods}
 
     def _optima_sendcloud_point_methods(self, integration, point):
-        """Return methods Sendcloud says can deliver to this exact point."""
+        """Return methods Sendcloud says can deliver to this exact point.
+
+        Sendcloud's ``shipping_methods`` endpoint can require the route data for
+        zonal carriers.  In Spain this matters for providers such as Correos /
+        Correos Express and some locker networks: querying only by
+        ``service_point_id`` can legitimately return an empty set even though
+        the point itself is valid.  Always send the same origin/destination
+        context used by the shipping-products validation.
+        """
         self.ensure_one()
         try:
             service_point_id = int(point.get("id") or 0)
@@ -484,25 +492,131 @@ class SaleOrder(models.Model):
                 "success": False,
                 "message": _("El punto Sendcloud no tiene un identificador válido."),
             }
+
+        origin = self._optima_sendcloud_origin_data()
+        destination_country = str(point.get("country_code") or "").upper()
+        params = {"service_point_id": service_point_id}
+        if origin.get("postal_code"):
+            params["from_postal_code"] = str(origin["postal_code"])[:12]
+        if point.get("zip_code"):
+            params["to_postal_code"] = str(point["zip_code"])[:12]
+        if destination_country:
+            params["to_country"] = destination_country
+
+        def parse_methods(payload):
+            if isinstance(payload, dict):
+                rows = payload.get("shipping_methods") or payload.get("methods") or []
+            elif isinstance(payload, list):
+                # Be tolerant of compatible Sendcloud proxies / older responses.
+                rows = payload
+            else:
+                rows = []
+            parsed = {}
+            for method in rows:
+                if not isinstance(method, dict) or method.get("id") in (None, False):
+                    continue
+                try:
+                    method_id = int(method["id"])
+                except (TypeError, ValueError):
+                    continue
+                parsed[method_id] = method
+            return parsed
+
         result = self._optima_sendcloud_api_get(
             integration,
             "shipping_methods",
-            params={"service_point_id": service_point_id},
+            params=params,
         )
         if not result.get("success"):
             return result
-        payload = result.get("payload")
-        rows = payload.get("shipping_methods", []) if isinstance(payload, dict) else []
-        methods = {}
-        for method in rows:
-            if not isinstance(method, dict) or method.get("id") in (None, False):
-                continue
-            try:
-                method_id = int(method["id"])
-            except (TypeError, ValueError):
-                continue
-            methods[method_id] = method
+        methods = parse_methods(result.get("payload"))
+
+        if not methods:
+            # Sendcloud documents sender_address as required for zonal carriers.
+            # We cannot safely assume an Odoo database field contains the
+            # remote sender id across all OCA versions, so retry with the
+            # documented special value ``all``.  Safety is preserved because
+            # these exact-point methods are later intersected with the
+            # Shipping Products result already filtered by the real warehouse
+            # country/postcode and by the estimated package.
+            all_sender_params = dict(params, sender_address="all")
+            retry = self._optima_sendcloud_api_get(
+                integration,
+                "shipping_methods",
+                params=all_sender_params,
+            )
+            if retry.get("success"):
+                methods = parse_methods(retry.get("payload"))
+                if methods:
+                    _logger.info(
+                        "Optima pickup: service point %s required sender_address=all "
+                        "to expose zonal Sendcloud methods",
+                        service_point_id,
+                    )
         return {"success": True, "methods": methods}
+
+    def _optima_sendcloud_compatible_remote_methods(self, product_methods, point_methods):
+        """Join package-compatible and point-compatible Sendcloud methods.
+
+        Method ids are the preferred identity.  Sendcloud documents those ids
+        as volatile, however, so a strict id intersection is unnecessarily
+        brittle when two endpoints are refreshed at slightly different times.
+        If there is no id match, accept only an unambiguous normalized-name
+        match.  The dimensional properties always come from Shipping Products;
+        the exact-point method supplies the current point-compatible identity.
+        """
+        self.ensure_one()
+        product_methods = product_methods or {}
+        point_methods = point_methods or {}
+        compatible = []
+        seen = set()
+
+        for method_id in sorted(set(product_methods) & set(point_methods)):
+            merged = dict(point_methods.get(method_id) or {})
+            merged.update(product_methods.get(method_id) or {})
+            merged["id"] = method_id
+            merged["_optima_match"] = "id"
+            compatible.append(merged)
+            seen.add(method_id)
+
+        if compatible:
+            return compatible
+
+        # No direct id intersection.  Retry by exact normalized method name.
+        # We intentionally do not use fuzzy carrier-only matching here: a name
+        # must identify one package-compatible and one exact-point-compatible
+        # method, otherwise validation stays fail-closed.
+        product_by_name = {}
+        for method in product_methods.values():
+            name = self._optima_sendcloud_normalize_token(method.get("name") or "")
+            if name:
+                product_by_name.setdefault(name, []).append(method)
+        point_by_name = {}
+        for method in point_methods.values():
+            name = self._optima_sendcloud_normalize_token(method.get("name") or "")
+            if name:
+                point_by_name.setdefault(name, []).append(method)
+
+        for name in sorted(set(product_by_name) & set(point_by_name)):
+            products = product_by_name[name]
+            points = point_by_name[name]
+            if len(products) != 1 or len(points) != 1:
+                continue
+            product_method = products[0]
+            point_method = points[0]
+            try:
+                point_id = int(point_method.get("id") or 0)
+            except (TypeError, ValueError):
+                point_id = 0
+            merged = dict(point_method)
+            merged.update(product_method)
+            if point_id:
+                # Use the id returned by the exact-point endpoint as the most
+                # current identity, while keeping Shipping Products properties.
+                merged["id"] = point_id
+            merged["_optima_match"] = "name"
+            compatible.append(merged)
+        return compatible
 
     def _optima_sendcloud_external_method_ids(self, carrier):
         """Best-effort discovery of Sendcloud's remote shipping-method id."""
@@ -678,8 +792,17 @@ class SaleOrder(models.Model):
                 ),
             }
 
-        compatible_ids = sorted(set(product_methods) & set(point_methods))
-        if not compatible_ids:
+        compatible_methods = self._optima_sendcloud_compatible_remote_methods(
+            product_methods, point_methods
+        )
+        if not compatible_methods:
+            _logger.warning(
+                "Optima pickup: no Sendcloud package/point method intersection for point %s. "
+                "Package method ids=%s; point method ids=%s",
+                (point or {}).get("id"),
+                sorted(product_methods),
+                sorted(point_methods),
+            )
             return {
                 **validation,
                 "success": False,
@@ -688,19 +811,21 @@ class SaleOrder(models.Model):
                 ) % self._optima_sendcloud_package_label(package),
             }
 
-        compatible_methods = []
-        for method_id in compatible_ids:
-            merged = dict(point_methods.get(method_id) or {})
-            merged.update(product_methods.get(method_id) or {})
-            merged["id"] = method_id
-            compatible_methods.append(merged)
+        compatible_ids = []
+        for method in compatible_methods:
+            try:
+                method_id = int(method.get("id") or 0)
+            except (TypeError, ValueError):
+                method_id = 0
+            if method_id:
+                compatible_ids.append(method_id)
 
         return {
             **validation,
             "success": True,
             "message": False,
             "sendcloud_integration_id": integration.id,
-            "sendcloud_compatible_method_ids": compatible_ids,
+            "sendcloud_compatible_method_ids": sorted(set(compatible_ids)),
             "sendcloud_compatible_methods": compatible_methods,
         }
 
