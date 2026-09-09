@@ -92,6 +92,53 @@ class OptimaPickupDelivery(Delivery):
         }
 
     @route(
+        "/shop/optima_pickup/search_points",
+        type="json",
+        auth="public",
+        methods=["POST"],
+        website=True,
+    )
+    def optima_pickup_search_points(
+        self, provider_codes=None, query=None, radius_m=10000
+    ):
+        order_sudo = request.website.sale_get_order()
+        if not order_sudo:
+            raise ValidationError(_("El carrito está vacío."))
+        if not order_sudo.optima_pickup_mode:
+            raise UserError(_("Selecciona primero la opción Punto de recogida."))
+
+        available = order_sudo._optima_pickup_get_providers()
+        available_codes = {provider["code"] for provider in available}
+        requested_codes = [
+            str(code) for code in (provider_codes or []) if str(code) in available_codes
+        ]
+        if not requested_codes:
+            requested_codes = sorted(available_codes)
+
+        try:
+            radius = int(radius_m or 10000)
+        except (TypeError, ValueError):
+            radius = 10000
+        radius = min(max(radius, 500), 50000)
+        search_query = (query or order_sudo._optima_pickup_default_search_query() or "").strip()
+        if not search_query:
+            raise ValidationError(_("Falta una dirección o código postal para buscar puntos."))
+
+        result = order_sudo._optima_pickup_search_points(
+            provider_codes=requested_codes, query=search_query, radius_m=radius
+        ) or {}
+        points = result.get("points") if isinstance(result, dict) else []
+        errors = result.get("errors") if isinstance(result, dict) else []
+        return {
+            "success": True,
+            "query": search_query,
+            "radius_m": radius,
+            "providers": available,
+            "points": points if isinstance(points, list) else [],
+            "errors": errors if isinstance(errors, list) else [],
+        }
+
+    @route(
         "/shop/optima_pickup/clear_mode",
         type="json",
         auth="public",

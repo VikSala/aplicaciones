@@ -2,7 +2,7 @@
 
 Generic multi-provider pickup core for Odoo 18 ecommerce.
 
-Current development phase (18.0.0.6.0):
+Current development phase (18.0.0.8.0):
 
 - Generic `Punto de recogida` option remains intentionally always visible.
 - Product length / width / height fields in millimetres.
@@ -80,3 +80,32 @@ validation will later reject the current cart.
 - Al cambiar o editar la dirección de entrega, elimina el punto anterior y mantiene el modo pickup activo para obligar a seleccionar un punto adecuado a la nueva dirección.
 - Guarda huellas internas de dirección y perfil logístico validados y las comprueba de nuevo al renderizar checkout y antes del pago, protegiendo frente a cambios hechos por otros módulos o escrituras directas.
 - Un fallo temporal del proveedor durante una modificación del carrito no impide editar el carrito: deja pickup pendiente con diagnóstico y Confirmar bloqueado.
+
+## 18.0.0.7.0 — Fase 4
+
+- Añade una protección local final antes de confirmar un pedido pickup: punto,
+  método, huellas logística/dirección y `pickup_location_data` deben seguir
+  coincidiendo con lo validado en checkout, sin volver a llamar a la API durante
+  el callback de pago.
+- Copia al albarán de salida un snapshot operativo del método, embalaje esperado,
+  límites y punto seleccionado.
+- Añade la pestaña **Método de entrega** al albarán para que almacén vea la misma
+  información con la que se confirmó el pedido.
+- Antes de `send_to_shipper`, bloquea una expedición pickup si el método o el
+  destino ya no coinciden con el snapshot confirmado.
+- La creación real de envío, etiqueta y tracking sigue delegada al conector del
+  transportista instalado (por ejemplo `delivery_sendcloud_oca`).
+
+
+## 18.0.0.8.0 — Fase 5
+
+- Sustituye la dependencia funcional del picker alojado por un **mapa unificado**
+  propiedad del core, preparado para mezclar puntos de varios proveedores.
+- Añade `/shop/optima_pickup/search_points` y un hook backend genérico para que
+  cada adaptador aporte puntos normalizados sin exponer credenciales al navegador.
+- El cliente puede buscar por dirección/CP, ampliar radio (5/10/20/50 km) y
+  ordenar por distancia, precio estimado o plazo.
+- La lista funciona incluso si el mapa Leaflet no carga; el selector alojado del
+  proveedor se conserva como fallback de emergencia.
+- Al elegir un marcador se mantiene el flujo estable de Fases 1-4: spinner,
+  validación exacta del punto, precio definitivo, total y Confirmar.

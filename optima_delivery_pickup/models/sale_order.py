@@ -662,6 +662,27 @@ class SaleOrder(models.Model):
                 providers.append(descriptor)
         return sorted(providers, key=lambda item: (item.get("sequence", 100), item["code"]))
 
+    def _optima_pickup_default_search_query(self):
+        """Return a human-friendly destination query for provider searches."""
+        self.ensure_one()
+        partner = self.partner_shipping_id or self.partner_id
+        parts = [
+            (partner.street or "").strip(),
+            " ".join(part for part in ((partner.zip or "").strip(), (partner.city or "").strip()) if part),
+        ]
+        return ", ".join(part for part in parts if part)
+
+    def _optima_pickup_search_points(self, provider_codes=None, query=None, radius_m=10000):
+        """Generic multi-provider point discovery hook.
+
+        Every adapter extends this method, calls ``super()`` and appends its
+        normalized public point dictionaries.  The core therefore owns one
+        frontend map while provider credentials and API details stay entirely
+        server-side.
+        """
+        self.ensure_one()
+        return {"points": [], "errors": []}
+
     def _optima_pickup_prepare_point(self, provider_code, point, extra=None):
         """Adapter hook: validate provider payload and normalize it.
 
@@ -985,6 +1006,123 @@ class SaleOrder(models.Model):
         return self._optima_pickup_apply_resolution(
             provider_code, normalized, raw_point, {}
         )
+
+    def _optima_delivery_confirmation_guard(self):
+        """Final no-I/O guard before confirming a pickup sale order.
+
+        Checkout/provider validation has already happened before payment. At
+        confirmation time we deliberately do not call a remote API again: a
+        transient provider outage must not turn a successful payment callback
+        into a half-confirmed order. Instead, we verify that the exact local
+        state validated at checkout is still present.
+        """
+        self.ensure_one()
+        if not self.optima_pickup_mode:
+            return
+        if not self.optima_pickup_external_id:
+            raise ValidationError(_(
+                "El pedido está en modo punto de recogida pero no tiene un punto seleccionado."
+            ))
+        if not (
+            self.optima_pickup_resolved
+            and self.optima_pickup_delivery_carrier_id
+            and self.carrier_id
+        ):
+            raise ValidationError(_(
+                "El punto de recogida no tiene un método de entrega validado."
+            ))
+        if self.carrier_id != self.optima_pickup_delivery_carrier_id:
+            raise ValidationError(_(
+                "El método de entrega ya no coincide con el método validado para el punto de recogida."
+            ))
+        if not isinstance(self.pickup_location_data, dict) or not self.pickup_location_data:
+            raise ValidationError(_(
+                "Faltan los datos estándar de la ubicación de recogida en el pedido."
+            ))
+
+        profile = self._optima_pickup_package_profile()
+        if not profile.get("success"):
+            raise ValidationError(
+                profile.get("message")
+                or _("El pedido ya no tiene datos logísticos válidos para la expedición.")
+            )
+
+        validated_logistics = self.optima_pickup_resolved_logistics_fingerprint or ""
+        validated_address = self.optima_pickup_resolved_address_fingerprint or ""
+        if not validated_logistics or validated_logistics != self._optima_pickup_logistics_fingerprint():
+            raise ValidationError(_(
+                "El contenido del pedido ha cambiado desde la última validación del punto de recogida. "
+                "Vuelve al checkout para recalcular el envío."
+            ))
+        if not validated_address or validated_address != self._optima_pickup_address_fingerprint():
+            raise ValidationError(_(
+                "La dirección de entrega ha cambiado desde la última validación del punto de recogida. "
+                "Vuelve al checkout y selecciona de nuevo el punto."
+            ))
+
+    def _optima_delivery_picking_snapshot_vals(self):
+        """Build the operational snapshot copied to outgoing pickings."""
+        self.ensure_one()
+        profile = self._optima_pickup_package_profile()
+        method = self.carrier_id
+        return {
+            "optima_delivery_snapshot_ready": bool(method and profile.get("success")),
+            "optima_delivery_method_snapshot_id": method.id or False,
+            "optima_delivery_method_name_snapshot": method.display_name if method else False,
+            "optima_delivery_expected_packaging": (
+                self.optima_delivery_packaging_suggested or False
+            ),
+            "optima_delivery_method_limits_text": self.optima_delivery_method_limits or False,
+            "optima_delivery_method_limits_snapshot": (
+                self.optima_delivery_method_limits_snapshot or False
+            ),
+            "optima_delivery_package_weight_kg": profile.get("weight_kg", 0.0),
+            "optima_delivery_package_length_mm": profile.get("length_mm", 0.0),
+            "optima_delivery_package_width_mm": profile.get("width_mm", 0.0),
+            "optima_delivery_package_height_mm": profile.get("height_mm", 0.0),
+            "optima_delivery_package_unit_count": profile.get("unit_count", 0),
+            "optima_delivery_pickup_mode": bool(self.optima_pickup_mode),
+            "optima_delivery_pickup_provider_code": self.optima_pickup_provider_code or False,
+            "optima_delivery_pickup_external_id": self.optima_pickup_external_id or False,
+            "optima_delivery_pickup_carrier_code": self.optima_pickup_carrier_code or False,
+            "optima_delivery_pickup_name": self.optima_pickup_name or False,
+            "optima_delivery_pickup_street": self.optima_pickup_street or False,
+            "optima_delivery_pickup_zip": self.optima_pickup_zip or False,
+            "optima_delivery_pickup_city": self.optima_pickup_city or False,
+            "optima_delivery_pickup_country_code": self.optima_pickup_country_code or False,
+        }
+
+    def _optima_delivery_provider_sync_picking(self, picking):
+        """Adapter hook to copy provider-specific shipment data to a picking."""
+        self.ensure_one()
+        picking.ensure_one()
+        return None
+
+    def _optima_delivery_sync_pickings(self):
+        """Copy checkout delivery decisions to newly-created outgoing pickings."""
+        for order in self:
+            vals = order._optima_delivery_picking_snapshot_vals()
+            pickings = order.picking_ids.filtered(
+                lambda picking: picking.state != "cancel"
+                and picking.picking_type_id.code == "outgoing"
+            )
+            for picking in pickings:
+                picking_vals = dict(vals)
+                # The selected pickup carrier is authoritative for the shipment.
+                # For ordinary deliveries we leave Odoo's native carrier
+                # propagation untouched and only copy the informational snapshot.
+                if order.optima_pickup_mode and order.carrier_id:
+                    picking_vals["carrier_id"] = order.carrier_id.id
+                picking.write(picking_vals)
+                order._optima_delivery_provider_sync_picking(picking)
+
+    def _action_confirm(self):
+        """Protect pickup confirmation and prepare warehouse shipment data."""
+        for order in self:
+            order._optima_delivery_confirmation_guard()
+        result = super()._action_confirm()
+        self._optima_delivery_sync_pickings()
+        return result
 
     def _check_cart_is_ready_to_be_paid(self):
         self.ensure_one()
