@@ -22,6 +22,7 @@
                                 class="form-check-input position-absolute"
                                 t-att-checked="optima_pickup_selected"
                                 t-att-data-resolved="'1' if optima_pickup_resolved else '0'"
+                                t-att-data-point-id="optima_pickup_point.get('id', '') if optima_pickup_point else ''"
                             />
                             <label class="o_delivery_carrier_label optima_pickup_label" for="o_optima_pickup">
                                 <span class="fw-semibold">Punto de recogida</span>
@@ -33,11 +34,18 @@
                     </div>
                     <div class="col col-auto">
                         <span class="o_wsale_delivery_price_badge float-end fw-bold optima_pickup_price" name="price">
-                            <t t-if="optima_pickup_resolved">
-                                <t t-esc="'%.2f %s' % (optima_pickup_price, optima_pickup_currency)"/>
-                            </t>
-                            <t t-elif="optima_pickup_point">Precio pendiente de cálculo</t>
-                            <t t-else="">Selecciona un punto para calcular el precio</t>
+                            <span
+                                class="spinner-border spinner-border-sm me-2 d-none optima_pickup_spinner"
+                                role="status"
+                                aria-hidden="true"
+                            />
+                            <span class="optima_pickup_price_text">
+                                <t t-if="optima_pickup_resolved">
+                                    <t t-esc="'%.2f %s' % (optima_pickup_price, optima_pickup_currency)"/>
+                                </t>
+                                <t t-elif="optima_pickup_point">Precio pendiente de cálculo</t>
+                                <t t-else="">Selecciona un punto para calcular el precio</t>
+                            </span>
                         </span>
                     </div>
                 </div>

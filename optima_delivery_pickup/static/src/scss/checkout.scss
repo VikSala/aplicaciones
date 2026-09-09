@@ -1,6 +1,11 @@
 .optima_pickup_method {
     .optima_pickup_label { cursor: pointer; }
     .optima_pickup_price { white-space: normal; text-align: end; }
+    .optima_pickup_spinner { vertical-align: -0.125em; }
+    &.optima_pickup_loading [name="o_optima_pickup_selector"] {
+        pointer-events: none;
+        opacity: 0.65;
+    }
     .optima_pickup_details {
         border-left: 3px solid var(--bs-primary);
         padding-left: 0.75rem;

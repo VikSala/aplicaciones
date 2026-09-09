@@ -427,20 +427,18 @@ class SaleOrder(models.Model):
 
 
     def _get_preferred_delivery_method(self, available_delivery_methods):
-        """Keep a resolved pickup carrier when Odoo reloads the checkout.
+        """Keep pickup ownership of the checkout while selected or resolving.
 
-        website_sale normally falls back to the first standard website carrier
-        when the current carrier is not part of ``_get_delivery_methods()``.
-        Technical pickup methods can intentionally be outside that list, so
-        falling back would overwrite the pickup delivery line and price.
+        Once pickup mode is active Odoo must not silently fall back to the first
+        standard website carrier while the point is being resolved.  A resolved
+        pickup keeps its concrete carrier; a pending pickup intentionally
+        returns an empty carrier recordset so no standard method is auto-picked.
         """
         self.ensure_one()
-        if (
-            self.optima_pickup_mode
-            and self.optima_pickup_resolved
-            and self.optima_pickup_delivery_carrier_id
-        ):
-            return self.optima_pickup_delivery_carrier_id
+        if self.optima_pickup_mode:
+            if self.optima_pickup_resolved and self.optima_pickup_delivery_carrier_id:
+                return self.optima_pickup_delivery_carrier_id
+            return self.env["delivery.carrier"]
         return super()._get_preferred_delivery_method(available_delivery_methods)
 
     def _optima_pickup_get_provider_carriers(self):
@@ -578,7 +576,10 @@ class SaleOrder(models.Model):
     def _optima_pickup_clear_resolution(self, remove_delivery_line=False):
         self.ensure_one()
         if remove_delivery_line:
-            self._remove_delivery_line()
+            # Clearing only the carrier/rate must never erase the point itself.
+            # website_sale._remove_delivery_line() normally clears
+            # pickup_location_data unless this context flag is present.
+            self.with_context(keep_pickup_location=True)._remove_delivery_line()
             self.write({"carrier_id": False})
         self.write(
             {
@@ -670,7 +671,7 @@ class SaleOrder(models.Model):
 
         # This is the same standard Odoo mechanism used when a customer chooses
         # a normal delivery carrier in checkout.
-        self.set_delivery_line(carrier, price)
+        self.with_context(keep_pickup_location=True).set_delivery_line(carrier, price)
         method_limits = resolution.get("method_limits")
         if not isinstance(method_limits, dict):
             method_limits = {}
@@ -689,7 +690,7 @@ class SaleOrder(models.Model):
         )
         return self._optima_pickup_resolution_payload()
 
-    def _optima_pickup_store_point(self, provider_code, raw_point, extra=None):
+    def _optima_pickup_store_point(self, provider_code, raw_point, extra=None, resolve=True):
         self.ensure_one()
         extra = extra or {}
         normalized = self._optima_pickup_prepare_point(provider_code, raw_point, extra)
@@ -748,10 +749,46 @@ class SaleOrder(models.Model):
             }
         )
         self._optima_pickup_after_store_point(provider_code, normalized, raw_point, extra)
-        resolution = self._optima_pickup_apply_resolution(
-            provider_code, normalized, raw_point, extra
-        )
+        if resolve:
+            resolution = self._optima_pickup_apply_resolution(
+                provider_code, normalized, raw_point, extra
+            )
+        else:
+            resolution = self._optima_pickup_resolution_payload()
         return {
             "point": self._optima_pickup_selected_point(),
             "resolution": resolution,
         }
+
+    def _optima_pickup_resolve_stored_point(self):
+        """Resolve the point already persisted on the order.
+
+        This separates the fast 'store selection' step from the potentially
+        slower carrier API validation/rating step used by website checkout.
+        """
+        self.ensure_one()
+        if not self.optima_pickup_mode or not self.optima_pickup_external_id:
+            self._optima_pickup_clear_resolution(remove_delivery_line=True)
+            self.write({
+                "optima_pickup_resolution_message": _("No hay un punto de recogida seleccionado."),
+            })
+            return self._optima_pickup_resolution_payload()
+
+        provider_code = self.optima_pickup_provider_code or ""
+        normalized = self._optima_pickup_selected_point()
+        raw_point = self.optima_pickup_raw_data or {}
+        if not isinstance(raw_point, dict):
+            raw_point = {}
+        return self._optima_pickup_apply_resolution(
+            provider_code, normalized, raw_point, {}
+        )
+
+    def _check_cart_is_ready_to_be_paid(self):
+        self.ensure_one()
+        if self.optima_pickup_mode and not (
+            self.optima_pickup_resolved and self.optima_pickup_delivery_carrier_id
+        ):
+            raise ValidationError(_(
+                "El punto de recogida todavía no tiene un método y precio de entrega válidos."
+            ))
+        return super()._check_cart_is_ready_to_be_paid()

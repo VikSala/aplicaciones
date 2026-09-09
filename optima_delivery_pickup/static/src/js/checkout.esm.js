@@ -10,19 +10,24 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         "click input[name='o_optima_pickup_radio']": "_onPickupRadioClick",
         "click [name='o_optima_pickup_selector']": "_onPickupSelectorClick",
         "click input[name='o_delivery_radio']": "_onStandardDeliveryClick",
+        "click a[name='website_sale_main_button']": "_onMainButtonClick",
     },
 
     start() {
         const result = this._super.apply(this, arguments);
-        const pickupRadio = this.el.querySelector("input[name='o_optima_pickup_radio']");
+        const pickupRadio = this._getPickupRadio();
         if (pickupRadio?.checked) {
-            // The concrete pickup carrier remains on sale.order for logistics,
-            // but it must not look like a second standard checkout selection.
-            this._uncheckStandardDeliveryMethods();
+            this._markPickupSelected();
             if (pickupRadio.dataset.resolved === "1") {
+                this._setPickupLoading(false);
                 this._enableMainButton();
             } else {
                 this._disableMainButton();
+                // If the customer refreshed the page after the point had already
+                // been saved but before rating finished, resume the resolution.
+                if (pickupRadio.dataset.pointId) {
+                    this._resolveStoredPoint().catch(() => {});
+                }
             }
         }
         return result;
@@ -32,58 +37,86 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         if (!ev.currentTarget.checked) {
             return;
         }
-        this._uncheckStandardDeliveryMethods();
+        const container = this._getLivePickupContainer();
+        this._markPickupSelected();
         this._disableMainButton();
-        const container = this._getPickupContainer(ev.currentTarget);
         this._showPickupArea(container);
         this._clearError(container);
         try {
             const result = await rpc("/shop/optima_pickup/select_mode", {});
             this._updateCartSummary(result.summary);
-            await this._openProviderSelector(container, result.providers, result.point);
+            this._markPickupSelected();
+            await this._openProviderSelector(result.providers, result.point);
         } catch (error) {
-            ev.currentTarget.checked = false;
-            this._showError(container, this._errorMessage(error));
+            const radio = this._getPickupRadio();
+            if (radio) {
+                radio.checked = false;
+            }
+            this._setPickupLoading(false);
+            this._showError(this._getLivePickupContainer(), this._errorMessage(error));
         }
     },
 
     async _onPickupSelectorClick(ev) {
         ev.preventDefault();
         ev.stopPropagation();
-        const container = this._getPickupContainer(ev.currentTarget);
-        const radio = container.querySelector("input[name='o_optima_pickup_radio']");
+        if (this._isPickupLoading()) {
+            return;
+        }
+        const container = this._getLivePickupContainer();
+        const radio = this._getPickupRadio();
         this._clearError(container);
         try {
             let result;
-            if (!radio.checked) {
-                radio.checked = true;
-                this._uncheckStandardDeliveryMethods();
+            if (!radio?.checked) {
+                if (radio) {
+                    radio.checked = true;
+                }
+                this._markPickupSelected();
                 this._disableMainButton();
                 result = await rpc("/shop/optima_pickup/select_mode", {});
                 this._updateCartSummary(result.summary);
             } else {
                 result = await rpc("/shop/optima_pickup/state", {});
             }
-            await this._openProviderSelector(container, result.providers, result.point);
+            this._markPickupSelected();
+            await this._openProviderSelector(result.providers, result.point);
         } catch (error) {
-            this._showError(container, this._errorMessage(error));
+            this._showError(this._getLivePickupContainer(), this._errorMessage(error));
         }
     },
 
-    _onStandardDeliveryClick() {
-        const pickupRadio = this.el.querySelector("input[name='o_optima_pickup_radio']");
+    _onStandardDeliveryClick(ev) {
+        if (this._isPickupLoading()) {
+            ev.preventDefault();
+            ev.stopImmediatePropagation();
+            this._markPickupSelected();
+            return;
+        }
+        const pickupRadio = this._getPickupRadio();
         if (pickupRadio) {
             pickupRadio.checked = false;
             pickupRadio.dataset.resolved = "0";
+            pickupRadio.dataset.pointId = "";
         }
-        this.el
-            .querySelector("[name='o_optima_pickup_location']")
+        this._getLivePickupContainer()
+            ?.querySelector("[name='o_optima_pickup_location']")
             ?.classList.add("d-none");
+        this._setPickupLoading(false);
         this._enableMainButton();
         rpc("/shop/optima_pickup/clear_mode", {}).catch(() => {});
     },
 
-    async _openProviderSelector(container, providers, currentPoint) {
+    _onMainButtonClick(ev) {
+        const pickupRadio = this._getPickupRadio();
+        if (pickupRadio?.checked && pickupRadio.dataset.resolved !== "1") {
+            ev.preventDefault();
+            ev.stopImmediatePropagation();
+        }
+    },
+
+    async _openProviderSelector(providers, currentPoint) {
+        const container = this._getLivePickupContainer();
         if (!providers?.length) {
             this._showError(container, "No hay proveedores de puntos de recogida disponibles.");
             return;
@@ -110,42 +143,92 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             config: descriptor.config || {},
             currentPoint: currentPoint || {},
             onSelect: async (rawPoint, extra = {}) => {
-                await this._savePoint(container, descriptor.code, rawPoint, extra);
+                await this._savePoint(descriptor.code, rawPoint, extra);
             },
-            onError: (message) => this._showError(container, message),
+            onError: (message) => this._showError(this._getLivePickupContainer(), message),
         });
     },
 
-    async _savePoint(container, providerCode, rawPoint, extra) {
+    async _savePoint(providerCode, rawPoint, extra) {
+        // The Sendcloud modal has already closed at this point. Reflect the
+        // customer's choice immediately, show the spinner and block checkout.
+        this._markPickupSelected();
+        this._previewRawPoint(rawPoint);
+        this._setPickupLoading(true, "Calculando precio…");
         this._disableMainButton();
-        this._clearError(container);
+        this._clearError(this._getLivePickupContainer());
+
         try {
-            const result = await rpc("/shop/optima_pickup/set_point", {
+            const stored = await rpc("/shop/optima_pickup/set_point", {
                 provider_code: providerCode,
                 point: rawPoint,
                 extra,
             });
-            if (!result?.success) {
+            if (!stored?.success) {
                 throw new Error("No se ha podido guardar el punto de recogida.");
             }
-            this._updatePickupPoint(container, result.point, result.resolution || {});
-            this._updateCartSummary(result.summary);
+
+            this._markPickupSelected();
+            this._updatePickupPointPending(stored.point);
+            this._updateCartSummary(stored.summary);
+
+            await this._resolveStoredPoint();
         } catch (error) {
+            this._setPickupLoading(false);
             this._disableMainButton();
-            this._showError(container, this._errorMessage(error));
+            this._markPickupSelected();
+            this._showError(this._getLivePickupContainer(), this._errorMessage(error));
         }
     },
 
-    _updatePickupPoint(container, point, resolution = {}) {
-        const details = container.querySelector("[name='o_optima_pickup_details']");
-        const name = container.querySelector("[name='o_optima_pickup_name']");
-        const address = container.querySelector("[name='o_optima_pickup_address']");
-        const carrier = container.querySelector("[name='o_optima_pickup_carrier']");
-        const initialButtons = container.querySelectorAll(
-            ":scope > [name='o_optima_pickup_location'] > button[name='o_optima_pickup_selector']"
-        );
-        const price = container.querySelector(".optima_pickup_price");
-        const radio = container.querySelector("input[name='o_optima_pickup_radio']");
+    async _resolveStoredPoint() {
+        const container = this._getLivePickupContainer();
+        const radio = this._getPickupRadio();
+        if (!radio?.checked || !radio.dataset.pointId) {
+            return;
+        }
+
+        this._markPickupSelected();
+        this._setPickupLoading(true, "Calculando precio…");
+        this._disableMainButton();
+        this._clearError(container);
+
+        try {
+            const result = await rpc("/shop/optima_pickup/resolve", {});
+            if (!result?.success) {
+                throw new Error("No se ha podido calcular el método de entrega.");
+            }
+            this._markPickupSelected();
+            this._updatePickupPoint(this._getLivePickupContainer(), result.point, result.resolution || {});
+            this._updateCartSummary(result.summary);
+        } catch (error) {
+            this._setPickupLoading(false);
+            this._disableMainButton();
+            this._markPickupSelected();
+            this._setPriceText("Precio no disponible");
+            this._showError(this._getLivePickupContainer(), this._errorMessage(error));
+            throw error;
+        }
+    },
+
+    _previewRawPoint(point = {}) {
+        const normalizedPreview = {
+            id: point.id ? String(point.id) : "",
+            name: point.name || "",
+            street: [point.street, point.house_number].filter(Boolean).join(" "),
+            zip_code: point.postal_code || point.zip_code || "",
+            city: point.city || "",
+        };
+        this._updatePickupPointPending(normalizedPreview);
+    },
+
+    _updatePickupPointPending(point = {}) {
+        const container = this._getLivePickupContainer();
+        const details = container?.querySelector("[name='o_optima_pickup_details']");
+        const name = container?.querySelector("[name='o_optima_pickup_name']");
+        const address = container?.querySelector("[name='o_optima_pickup_address']");
+        const carrier = container?.querySelector("[name='o_optima_pickup_carrier']");
+        const radio = this._getPickupRadio();
 
         if (name) {
             name.textContent = point.name || "";
@@ -158,15 +241,53 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             );
         }
         details?.classList.remove("d-none");
-        initialButtons.forEach((button) => button.classList.add("d-none"));
-
-        if (resolution.success) {
-            if (price) {
-                price.textContent = this._formatCurrency(
-                    resolution.price || 0,
-                    resolution.currency || "EUR"
-                );
+        this._hideInitialSelectorButton(container);
+        if (carrier) {
+            carrier.textContent = "";
+            carrier.classList.add("d-none");
+        }
+        if (radio) {
+            radio.checked = true;
+            radio.dataset.resolved = "0";
+            if (point.id) {
+                radio.dataset.pointId = String(point.id);
             }
+        }
+        this._showPickupArea(container);
+        this._setPriceText("Calculando precio…");
+    },
+
+    _updatePickupPoint(container, point, resolution = {}) {
+        container = this._getLivePickupContainer() || container;
+        const details = container?.querySelector("[name='o_optima_pickup_details']");
+        const name = container?.querySelector("[name='o_optima_pickup_name']");
+        const address = container?.querySelector("[name='o_optima_pickup_address']");
+        const carrier = container?.querySelector("[name='o_optima_pickup_carrier']");
+        const radio = this._getPickupRadio();
+
+        if (name) {
+            name.textContent = point.name || "";
+        }
+        if (address) {
+            address.replaceChildren(
+                document.createTextNode(point.street || ""),
+                document.createElement("br"),
+                document.createTextNode([point.zip_code, point.city].filter(Boolean).join(" "))
+            );
+        }
+        details?.classList.remove("d-none");
+        this._hideInitialSelectorButton(container);
+
+        if (radio) {
+            radio.checked = true;
+            radio.dataset.pointId = point.id ? String(point.id) : radio.dataset.pointId || "";
+        }
+
+        this._setPickupLoading(false);
+        if (resolution.success) {
+            this._setPriceText(
+                this._formatCurrency(resolution.price || 0, resolution.currency || "EUR")
+            );
             if (carrier) {
                 carrier.textContent = resolution.carrier_name
                     ? `Método: ${resolution.carrier_name}`
@@ -183,9 +304,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             }
             this._enableMainButton();
         } else {
-            if (price) {
-                price.textContent = "Precio pendiente de cálculo";
-            }
+            this._setPriceText("Precio no disponible");
             if (carrier) {
                 carrier.textContent = "";
                 carrier.classList.add("d-none");
@@ -198,6 +317,34 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
                 this._showError(container, resolution.message);
             }
         }
+        this._markPickupSelected();
+    },
+
+    _setPickupLoading(loading, label = "Calculando precio…") {
+        const container = this._getLivePickupContainer();
+        container?.classList.toggle("optima_pickup_loading", Boolean(loading));
+        const spinner = container?.querySelector(".optima_pickup_spinner");
+        spinner?.classList.toggle("d-none", !loading);
+        if (loading) {
+            this._setPriceText(label);
+        }
+    },
+
+    _isPickupLoading() {
+        return Boolean(this._getLivePickupContainer()?.classList.contains("optima_pickup_loading"));
+    },
+
+    _setPriceText(text) {
+        const element = this._getLivePickupContainer()?.querySelector(".optima_pickup_price_text");
+        if (element) {
+            element.textContent = text || "";
+        }
+    },
+
+    _hideInitialSelectorButton(container) {
+        container
+            ?.querySelectorAll("[name='o_optima_pickup_location'] > button[name='o_optima_pickup_selector']")
+            .forEach((button) => button.classList.add("d-none"));
     },
 
     _formatCurrency(amount, currency) {
@@ -216,8 +363,21 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         container?.querySelector("[name='o_optima_pickup_location']")?.classList.remove("d-none");
     },
 
-    _getPickupContainer(element) {
-        return element.closest("[name='o_optima_pickup_method']");
+    _getLivePickupContainer() {
+        return this.el.querySelector("[name='o_optima_pickup_method']");
+    },
+
+    _getPickupRadio() {
+        return this.el.querySelector("input[name='o_optima_pickup_radio']");
+    },
+
+    _markPickupSelected() {
+        const pickupRadio = this._getPickupRadio();
+        if (pickupRadio) {
+            pickupRadio.checked = true;
+        }
+        this._uncheckStandardDeliveryMethods();
+        this._showPickupArea(this._getLivePickupContainer());
     },
 
     _uncheckStandardDeliveryMethods() {
@@ -227,11 +387,23 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
     },
 
     _disableMainButton() {
-        document.querySelector("a[name='website_sale_main_button']")?.classList.add("disabled");
+        const button = document.querySelector("a[name='website_sale_main_button']");
+        if (!button) {
+            return;
+        }
+        button.classList.add("disabled");
+        button.setAttribute("aria-disabled", "true");
+        button.setAttribute("tabindex", "-1");
     },
 
     _enableMainButton() {
-        document.querySelector("a[name='website_sale_main_button']")?.classList.remove("disabled");
+        const button = document.querySelector("a[name='website_sale_main_button']");
+        if (!button) {
+            return;
+        }
+        button.classList.remove("disabled");
+        button.removeAttribute("aria-disabled");
+        button.removeAttribute("tabindex");
     },
 
     _updateCartSummary(result) {
@@ -257,6 +429,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
     },
 
     _showError(container, message) {
+        container = this._getLivePickupContainer() || container;
         const alert = container?.querySelector("[name='o_optima_pickup_error']");
         if (alert) {
             alert.textContent = message || "Se ha producido un error al procesar el punto de recogida.";
@@ -265,6 +438,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
     },
 
     _clearError(container) {
+        container = this._getLivePickupContainer() || container;
         const alert = container?.querySelector("[name='o_optima_pickup_error']");
         if (alert) {
             alert.textContent = "";

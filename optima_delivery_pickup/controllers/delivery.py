@@ -126,12 +126,40 @@ class OptimaPickupDelivery(Delivery):
         if provider_code not in available_codes:
             raise UserError(_("Ese proveedor de puntos ya no está disponible para el pedido."))
 
+        # Store the selected point first and return quickly. Price/method
+        # resolution is intentionally a second request so the checkout can
+        # immediately show the chosen point and a loading state while provider
+        # APIs are queried.
+        order_sudo._optima_pickup_clear_resolution(remove_delivery_line=True)
         stored = order_sudo._optima_pickup_store_point(
-            provider_code, point, extra or {}
+            provider_code, point, extra or {}, resolve=False
         )
         return {
             "success": True,
             "point": stored["point"],
             "resolution": stored["resolution"],
+            "summary": self._order_summary_values(order_sudo),
+        }
+
+    @route(
+        "/shop/optima_pickup/resolve",
+        type="json",
+        auth="public",
+        methods=["POST"],
+        website=True,
+    )
+    def optima_pickup_resolve(self):
+        order_sudo = request.website.sale_get_order()
+        if not order_sudo:
+            raise ValidationError(_("El carrito está vacío."))
+        self._check_order_can_change_delivery(order_sudo)
+        if not order_sudo.optima_pickup_mode or not order_sudo.optima_pickup_external_id:
+            raise UserError(_("Selecciona primero un punto de recogida."))
+
+        resolution = order_sudo._optima_pickup_resolve_stored_point()
+        return {
+            "success": True,
+            "point": order_sudo._optima_pickup_selected_point(),
+            "resolution": resolution,
             "summary": self._order_summary_values(order_sudo),
         }

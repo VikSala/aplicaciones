@@ -2,7 +2,7 @@
 
 Generic multi-provider pickup core for Odoo 18 ecommerce.
 
-Current development phase (18.0.0.4.1):
+Current development phase (18.0.0.4.4):
 
 - Generic `Punto de recogida` option remains intentionally always visible.
 - Product length / width / height fields in millimetres.
@@ -42,3 +42,13 @@ validation will later reject the current cart.
 - La pestaña del pedido pasa a llamarse **Método de entrega** y se muestra en cualquier presupuesto.
 - Añade resumen genérico del método seleccionado, embalaje sugerido y límites del método.
 - Los límites se conservan como snapshot asociado al transportista que los proporcionó.
+
+
+## 18.0.0.4.4
+
+- Pickup selection is persisted and rendered before slow provider rating starts.
+- Adds a visible circular loading spinner while the point method/price is resolving.
+- Checkout confirmation is disabled both in the UI and server-side until pickup is resolved.
+- Pending pickup mode no longer allows Odoo to auto-select the first standard carrier.
+- Preserves native `pickup_location_data` while delivery lines are recalculated.
+- Automatically resumes a pending stored point resolution after a checkout reload.
