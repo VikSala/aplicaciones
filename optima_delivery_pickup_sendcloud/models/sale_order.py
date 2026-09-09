@@ -2,6 +2,9 @@ import json
 import logging
 import re
 import unicodedata
+from math import ceil
+
+import requests
 
 from odoo import _, fields, models
 from odoo.exceptions import ValidationError
@@ -124,7 +127,7 @@ class SaleOrder(models.Model):
         missing = [key for key in required if not point.get(key)]
         if missing:
             raise ValidationError(
-                _("Faltan datos obligatorios del punto Sendcloud: %s", ", ".join(missing))
+                _("Faltan datos obligatorios del punto Sendcloud: %s") % ", ".join(missing)
             )
 
         service_point_id = str(point["id"])
@@ -308,6 +311,400 @@ class SaleOrder(models.Model):
         return True
 
     @staticmethod
+    def _optima_sendcloud_secret_key(integration):
+        """Read the API secret without exposing it outside the server.
+
+        OCA series have used the conventional ``secret_key`` name.  The small
+        fallback keeps this adapter tolerant of compatible forks while never
+        logging or returning the credential.
+        """
+        if not integration:
+            return ""
+        for name in ("secret_key", "api_secret", "secret"):
+            if name not in integration._fields:
+                continue
+            try:
+                value = integration[name]
+            except Exception:  # pragma: no cover - defensive for custom fields
+                continue
+            if value and not getattr(value, "_name", None):
+                return str(value)
+        for name, field in integration._fields.items():
+            if "secret" not in name.lower() or field.type not in ("char", "text"):
+                continue
+            try:
+                value = integration[name]
+            except Exception:  # pragma: no cover
+                continue
+            if value:
+                return str(value)
+        return ""
+
+    def _optima_sendcloud_api_get(self, integration, endpoint, params=None):
+        """Perform one authenticated Sendcloud v2 GET request.
+
+        Validation is deliberately fail-closed: a timeout or API error never
+        turns into an apparently valid pickup shipment.
+        """
+        self.ensure_one()
+        public_key = str(getattr(integration, "public_key", "") or "")
+        secret_key = self._optima_sendcloud_secret_key(integration)
+        if not public_key or not secret_key:
+            return {
+                "success": False,
+                "message": _(
+                    "La integración Sendcloud no tiene disponibles la clave pública y secreta necesarias para validar el bulto."
+                ),
+            }
+
+        url = "https://panel.sendcloud.sc/api/v2/%s" % endpoint.lstrip("/")
+        try:
+            response = requests.get(
+                url,
+                params=params or {},
+                auth=(public_key, secret_key),
+                timeout=(4, 10),
+            )
+            response.raise_for_status()
+            payload = response.json()
+        except requests.RequestException as exc:
+            _logger.warning(
+                "Optima pickup: Sendcloud API request failed for %s: %s",
+                endpoint,
+                exc,
+            )
+            return {
+                "success": False,
+                "message": _(
+                    "No se ha podido validar el bulto con Sendcloud en este momento. Inténtalo de nuevo."
+                ),
+            }
+        except ValueError:
+            _logger.warning(
+                "Optima pickup: Sendcloud API returned invalid JSON for %s", endpoint
+            )
+            return {
+                "success": False,
+                "message": _(
+                    "Sendcloud ha devuelto una respuesta no válida al comprobar el bulto."
+                ),
+            }
+        return {"success": True, "payload": payload}
+
+    def _optima_sendcloud_origin_data(self):
+        self.ensure_one()
+        warehouse_partner = (
+            self.warehouse_id.partner_id if self.warehouse_id else self.company_id.partner_id
+        )
+        country = (
+            warehouse_partner.country_id.code
+            or self.company_id.country_id.code
+            or ""
+        ).upper()
+        return {
+            "country_code": country,
+            "postal_code": (warehouse_partner.zip or "").strip(),
+        }
+
+    @staticmethod
+    def _optima_sendcloud_package_label(package):
+        return _("%.3f kg · %.0f × %.0f × %.0f mm") % (
+            package.get("weight_kg", 0.0),
+            package.get("length_mm", 0.0),
+            package.get("width_mm", 0.0),
+            package.get("height_mm", 0.0),
+        )
+
+    def _optima_sendcloud_shipping_product_methods(self, integration, point, package):
+        """Return methods that Sendcloud accepts for weight + dimensions.
+
+        The Shipping Products endpoint itself performs the dimensional check.
+        We ask only for service-point last-mile products and later intersect
+        these ids with the methods supported by the exact chosen point.
+        """
+        self.ensure_one()
+        origin = self._optima_sendcloud_origin_data()
+        destination_country = (point.get("country_code") or "").upper()
+        if not origin["country_code"] or not destination_country:
+            return {
+                "success": False,
+                "message": _(
+                    "No se puede validar Sendcloud porque falta el país de origen o destino."
+                ),
+            }
+
+        params = {
+            "from_country": origin["country_code"],
+            "to_country": destination_country,
+            "weight": max(int(ceil(float(package["weight_kg"]) * 1000.0)), 1),
+            "weight_unit": "gram",
+            "length": max(int(ceil(float(package["length_mm"]))), 1),
+            "length_unit": "millimeter",
+            "width": max(int(ceil(float(package["width_mm"]))), 1),
+            "width_unit": "millimeter",
+            "height": max(int(ceil(float(package["height_mm"]))), 1),
+            "height_unit": "millimeter",
+            "last_mile": "service_point",
+        }
+        if origin["postal_code"]:
+            params["from_postal_code"] = origin["postal_code"][:12]
+        if point.get("zip_code"):
+            params["to_postal_code"] = str(point["zip_code"])[:12]
+
+        result = self._optima_sendcloud_api_get(
+            integration, "shipping-products", params=params
+        )
+        if not result.get("success"):
+            return result
+        payload = result.get("payload")
+        products = payload if isinstance(payload, list) else []
+        methods = {}
+        for product in products:
+            if not isinstance(product, dict):
+                continue
+            for method in product.get("methods") or []:
+                if not isinstance(method, dict) or method.get("id") in (None, False):
+                    continue
+                try:
+                    method_id = int(method["id"])
+                except (TypeError, ValueError):
+                    continue
+                methods[method_id] = method
+        return {"success": True, "methods": methods}
+
+    def _optima_sendcloud_point_methods(self, integration, point):
+        """Return methods Sendcloud says can deliver to this exact point."""
+        self.ensure_one()
+        try:
+            service_point_id = int(point.get("id") or 0)
+        except (TypeError, ValueError):
+            service_point_id = 0
+        if not service_point_id:
+            return {
+                "success": False,
+                "message": _("El punto Sendcloud no tiene un identificador válido."),
+            }
+        result = self._optima_sendcloud_api_get(
+            integration,
+            "shipping_methods",
+            params={"service_point_id": service_point_id},
+        )
+        if not result.get("success"):
+            return result
+        payload = result.get("payload")
+        rows = payload.get("shipping_methods", []) if isinstance(payload, dict) else []
+        methods = {}
+        for method in rows:
+            if not isinstance(method, dict) or method.get("id") in (None, False):
+                continue
+            try:
+                method_id = int(method["id"])
+            except (TypeError, ValueError):
+                continue
+            methods[method_id] = method
+        return {"success": True, "methods": methods}
+
+    def _optima_sendcloud_external_method_ids(self, carrier):
+        """Best-effort discovery of Sendcloud's remote shipping-method id."""
+        ids = set()
+
+        def add_value(value):
+            if value in (None, False, "") or getattr(value, "_name", None):
+                return
+            try:
+                number = int(value)
+            except (TypeError, ValueError):
+                return
+            if number > 0:
+                ids.add(number)
+
+        scalar_names = {
+            "sendcloud_method_id",
+            "sendcloud_shipping_method_id",
+            "sendcloud_shipping_method_code",
+            "shipping_method_external_id",
+        }
+        scalar_names.update(
+            name
+            for name, field in carrier._fields.items()
+            if field.type not in ("many2one", "one2many", "many2many")
+            and "id" in name.lower()
+            and (
+                (name.startswith("sendcloud_") and ("method" in name or "shipping" in name))
+                or ("external" in name and "method" in name)
+            )
+        )
+        for name in scalar_names:
+            if name in carrier._fields and carrier._fields[name].type not in (
+                "many2one",
+                "one2many",
+                "many2many",
+            ):
+                try:
+                    add_value(carrier[name])
+                except Exception:  # pragma: no cover
+                    pass
+
+        for name, field in carrier._fields.items():
+            if field.type != "many2one" or not name.startswith("sendcloud_"):
+                continue
+            if "method" not in name and "shipping" not in name:
+                continue
+            if "integration" in name or "carrier" in name:
+                continue
+            try:
+                related = carrier[name]
+            except Exception:  # pragma: no cover
+                continue
+            if not related:
+                continue
+            for related_name in (
+                "sendcloud_id",
+                "external_id",
+                "shipping_method_id",
+                "method_id",
+                "remote_id",
+            ):
+                if related_name not in related._fields:
+                    continue
+                related_field = related._fields[related_name]
+                if related_field.type in ("many2one", "one2many", "many2many"):
+                    continue
+                try:
+                    add_value(related[related_name])
+                except Exception:  # pragma: no cover
+                    pass
+        return ids
+
+    def _optima_sendcloud_local_method_names(self, carrier):
+        names = {carrier.name or "", carrier.display_name or ""}
+        for field_name, field in carrier._fields.items():
+            if field.type != "many2one" or not field_name.startswith("sendcloud_"):
+                continue
+            if "method" not in field_name and "shipping" not in field_name:
+                continue
+            if "integration" in field_name or "carrier" in field_name:
+                continue
+            try:
+                related = carrier[field_name]
+            except Exception:  # pragma: no cover
+                continue
+            if not related:
+                continue
+            for name_field in ("name", "display_name"):
+                if name_field in related._fields:
+                    try:
+                        value = related[name_field]
+                    except Exception:  # pragma: no cover
+                        continue
+                    if value and not getattr(value, "_name", None):
+                        names.add(str(value))
+        normalized = set()
+        for value in names:
+            token = self._optima_sendcloud_normalize_token(value)
+            if not token:
+                continue
+            normalized.add(token)
+            if token.startswith("sendcloud"):
+                normalized.add(token[len("sendcloud") :])
+        return {name for name in normalized if name}
+
+    def _optima_sendcloud_api_method_match_score(self, carrier, api_method):
+        try:
+            api_id = int(api_method.get("id") or 0)
+        except (TypeError, ValueError):
+            api_id = 0
+        if api_id and api_id in self._optima_sendcloud_external_method_ids(carrier):
+            return 1000
+
+        api_name = self._optima_sendcloud_normalize_token(api_method.get("name") or "")
+        if not api_name:
+            return 0
+        best = 0
+        for local_name in self._optima_sendcloud_local_method_names(carrier):
+            if local_name == api_name:
+                best = max(best, 900)
+            elif min(len(local_name), len(api_name)) >= 12 and (
+                local_name in api_name or api_name in local_name
+            ):
+                best = max(best, 700)
+        return best
+
+    def _optima_pickup_validate_package(self, provider_code=False, point=False):
+        validation = super()._optima_pickup_validate_package(provider_code, point)
+        if provider_code != "sendcloud" or not validation.get("success"):
+            return validation
+
+        self.ensure_one()
+        package = validation["package"]
+        carriers = self._optima_pickup_get_provider_carriers().get(
+            "sendcloud", self.env["delivery.carrier"]
+        )
+        integration = self._optima_sendcloud_pickup_integration(carriers)
+        if not integration:
+            return {
+                **validation,
+                "success": False,
+                "message": _(
+                    "No hay una integración Sendcloud activa con Service Points para validar el bulto."
+                ),
+            }
+
+        product_result = self._optima_sendcloud_shipping_product_methods(
+            integration, point or {}, package
+        )
+        if not product_result.get("success"):
+            return {**validation, **product_result, "package": package}
+        product_methods = product_result.get("methods") or {}
+        if not product_methods:
+            return {
+                **validation,
+                "success": False,
+                "message": _(
+                    "El bulto estimado (%s) no cumple los límites de ningún método de punto de recogida disponible en Sendcloud."
+                ) % self._optima_sendcloud_package_label(package),
+            }
+
+        point_result = self._optima_sendcloud_point_methods(integration, point or {})
+        if not point_result.get("success"):
+            return {**validation, **point_result, "package": package}
+        point_methods = point_result.get("methods") or {}
+        if not point_methods:
+            return {
+                **validation,
+                "success": False,
+                "message": _(
+                    "El punto seleccionado ya no admite ningún método de envío Sendcloud. Selecciona otro punto."
+                ),
+            }
+
+        compatible_ids = sorted(set(product_methods) & set(point_methods))
+        if not compatible_ids:
+            return {
+                **validation,
+                "success": False,
+                "message": _(
+                    "El punto seleccionado no admite ningún método compatible con el bulto estimado (%s)."
+                ) % self._optima_sendcloud_package_label(package),
+            }
+
+        compatible_methods = []
+        for method_id in compatible_ids:
+            merged = dict(point_methods.get(method_id) or {})
+            merged.update(product_methods.get(method_id) or {})
+            merged["id"] = method_id
+            compatible_methods.append(merged)
+
+        return {
+            **validation,
+            "success": True,
+            "message": False,
+            "sendcloud_integration_id": integration.id,
+            "sendcloud_compatible_method_ids": compatible_ids,
+            "sendcloud_compatible_methods": compatible_methods,
+        }
+
+    @staticmethod
     def _optima_sendcloud_country_value(value):
         if not value:
             return ""
@@ -426,6 +823,65 @@ class SaleOrder(models.Model):
         price, line, _from, _to = min(candidates, key=lambda item: (item[0], item[1].id))
         return True, max(float(price), 0.0), line
 
+    @staticmethod
+    def _optima_sendcloud_dimension_to_mm(value, unit):
+        try:
+            number = float(value or 0.0)
+        except (TypeError, ValueError):
+            return 0.0
+        factor = {
+            "millimeter": 1.0,
+            "millimetre": 1.0,
+            "mm": 1.0,
+            "centimeter": 10.0,
+            "centimetre": 10.0,
+            "cm": 10.0,
+            "meter": 1000.0,
+            "metre": 1000.0,
+            "m": 1000.0,
+        }.get(str(unit or "millimeter").strip().lower(), 1.0)
+        return max(number * factor, 0.0)
+
+    def _optima_sendcloud_method_limits_snapshot(self, api_method):
+        """Normalize Sendcloud method constraints into the core snapshot schema."""
+        method = api_method if isinstance(api_method, dict) else {}
+        properties = method.get("properties")
+        properties = properties if isinstance(properties, dict) else {}
+        dimensions = properties.get("max_dimensions")
+        dimensions = dimensions if isinstance(dimensions, dict) else {}
+        unit = dimensions.get("unit") or "millimeter"
+
+        try:
+            min_weight_kg = max(float(properties.get("min_weight") or 0.0) / 1000.0, 0.0)
+        except (TypeError, ValueError):
+            min_weight_kg = 0.0
+        try:
+            max_weight_kg = max(float(properties.get("max_weight") or 0.0) / 1000.0, 0.0)
+        except (TypeError, ValueError):
+            max_weight_kg = 0.0
+
+        snapshot = {
+            "provider": "sendcloud",
+            "source": "shipping-products",
+            "remote_method_id": method.get("id") or False,
+            "remote_method_name": method.get("name") or "",
+            "min_weight_kg": min_weight_kg,
+            "max_weight_kg": max_weight_kg,
+            "max_length_mm": self._optima_sendcloud_dimension_to_mm(
+                dimensions.get("length"), unit
+            ),
+            "max_width_mm": self._optima_sendcloud_dimension_to_mm(
+                dimensions.get("width"), unit
+            ),
+            "max_height_mm": self._optima_sendcloud_dimension_to_mm(
+                dimensions.get("height"), unit
+            ),
+        }
+        # A method can be valid even when Sendcloud omits numeric properties.
+        # Return a snapshot anyway so the back office can distinguish
+        # "validated but not numerically reported" from "never validated".
+        return snapshot
+
     def _optima_pickup_resolve_delivery(self, provider_code, normalized, raw_point, extra):
         if provider_code != "sendcloud":
             return super()._optima_pickup_resolve_delivery(
@@ -433,6 +889,16 @@ class SaleOrder(models.Model):
             )
 
         self.ensure_one()
+        validation = (extra or {}).get("_optima_package_validation") or {}
+        package = validation.get("package") or self._optima_pickup_package_profile()
+        compatible_api_methods = validation.get("sendcloud_compatible_methods") or []
+        if not validation.get("success") or not compatible_api_methods:
+            return {
+                "success": False,
+                "message": validation.get("message")
+                or _("No se ha podido validar el bulto con Sendcloud."),
+            }
+
         carriers = self._optima_pickup_get_provider_carriers().get(
             "sendcloud", self.env["delivery.carrier"]
         )
@@ -449,43 +915,72 @@ class SaleOrder(models.Model):
             )
 
         point_carrier_code = normalized.get("carrier_code") or ""
-        scored = [
-            (self._optima_sendcloud_carrier_match_score(carrier, point_carrier_code), carrier)
-            for carrier in carriers
-        ]
-        best_score = max((score for score, _carrier in scored), default=0)
-        matching = self.env["delivery.carrier"]
-        if best_score:
-            for score, carrier in scored:
-                if score == best_score:
-                    matching |= carrier
+        package_weight = float(package.get("weight_kg") or 0.0)
+        candidates = []
+        for carrier in carriers.sorted(lambda item: (item.sequence, item.id)):
+            # Local synchronized bracket remains a secondary sanity check.  The
+            # Sendcloud API has already filtered the package by weight/dimensions.
+            if not self._optima_sendcloud_weight_matches(carrier, package_weight):
+                continue
+            method_score = 0
+            matched_api_method = False
+            for api_method in compatible_api_methods:
+                score = self._optima_sendcloud_api_method_match_score(carrier, api_method)
+                if score > method_score:
+                    method_score = score
+                    matched_api_method = api_method
+            if not method_score:
+                continue
+            point_score = self._optima_sendcloud_carrier_match_score(
+                carrier, point_carrier_code
+            )
+            candidates.append(
+                {
+                    "carrier": carrier,
+                    "method_score": method_score,
+                    "point_score": point_score,
+                    "api_method": matched_api_method,
+                }
+            )
 
-        if not matching:
+        if not candidates:
             _logger.warning(
-                "Optima pickup: no Sendcloud carrier matched service-point carrier %s. Candidates: %s",
+                "Optima pickup: Sendcloud returned compatible remote methods %s but none maps "
+                "unambiguously to a synchronized Odoo PUDO method. Point carrier=%s, locals=%s",
+                [m.get("id") for m in compatible_api_methods],
                 point_carrier_code,
                 carriers.mapped("display_name"),
             )
             return {
                 "success": False,
                 "message": _(
-                    "El punto se ha guardado, pero no encuentro un método Sendcloud PUDO del transportista %s.",
-                    point_carrier_code or "?",
+                    "Sendcloud tiene un método compatible, pero no se puede vincular con un método PUDO sincronizado en Odoo. Sincroniza los métodos Sendcloud."
                 ),
             }
 
-        order_weight = self._optima_sendcloud_order_weight()
+        # Keep only the strongest remote-method mapping.  Carrier-code affinity
+        # breaks ties but can never rescue a method whose API identity did not
+        # match; this avoids selecting another service that happens to share a
+        # carrier and weight bracket.
+        best_method_score = max(item["method_score"] for item in candidates)
+        candidates = [
+            item for item in candidates if item["method_score"] == best_method_score
+        ]
+        best_point_score = max(item["point_score"] for item in candidates)
+        if best_point_score:
+            candidates = [
+                item for item in candidates if item["point_score"] == best_point_score
+            ]
+
         successful_rates = []
         errors = []
-        for carrier in matching.sorted(lambda item: (item.sequence, item.id)):
-            if not self._optima_sendcloud_weight_matches(carrier, order_weight):
-                continue
-
+        for item in candidates:
+            carrier = item["carrier"]
             route_found, route_price, route_line = self._optima_sendcloud_route_price(carrier)
             if route_found:
                 successful_rates.append(
                     {
-                        "carrier": carrier,
+                        **item,
                         "price": route_price,
                         "warning": "",
                         "source": "sendcloud_route",
@@ -494,11 +989,6 @@ class SaleOrder(models.Model):
                 )
                 continue
 
-            # Fallback for connector variants that do not expose synchronized
-            # country-price rows on the carrier.  A zero fallback is *not*
-            # accepted here: it is indistinguishable from the generic 0.00
-            # delivery product price and previously caused the wrong InPost
-            # method to win the comparison.
             try:
                 rate = carrier.rate_shipment(self)
             except Exception as exc:  # Keep checkout alive; diagnostic is logged server-side.
@@ -520,7 +1010,7 @@ class SaleOrder(models.Model):
                 continue
             successful_rates.append(
                 {
-                    "carrier": carrier,
+                    **item,
                     "price": price,
                     "warning": rate.get("warning_message") or "",
                     "source": "rate_shipment",
@@ -531,26 +1021,27 @@ class SaleOrder(models.Model):
         if not successful_rates:
             diagnostic = errors[0] if errors else ""
             _logger.warning(
-                "Optima pickup: no positive Sendcloud route/rate for point carrier %s. "
-                "Matching methods: %s. Weight: %.3f kg. Error: %s",
+                "Optima pickup: no positive Sendcloud route/rate after API package validation. "
+                "Point carrier=%s, weight=%.3f kg, methods=%s, error=%s",
                 point_carrier_code,
-                matching.mapped("display_name"),
-                order_weight,
+                package_weight,
+                [item["carrier"].display_name for item in candidates],
                 diagnostic,
             )
             return {
                 "success": False,
                 "message": _(
-                    "El punto se ha guardado, pero no encuentro una tarifa Sendcloud compatible para este pedido."
+                    "El bulto es compatible, pero no encuentro una tarifa Sendcloud válida para el método sincronizado."
                 ),
             }
 
-        # Several technical methods can share one carrier code.  At this stage
-        # choose the cheapest method that matches carrier + route + weight.
-        # Dimension limits will be introduced in the dedicated later phase.
         selected = min(
             successful_rates,
-            key=lambda item: (item["price"], item["carrier"].sequence, item["carrier"].id),
+            key=lambda item: (
+                item["price"],
+                item["carrier"].sequence,
+                item["carrier"].id,
+            ),
         )
         message = selected["warning"] or ""
         if (
@@ -558,10 +1049,6 @@ class SaleOrder(models.Model):
             and self.sendcloud_service_point_address
             and "requires a service point" in str(message).lower()
         ):
-            # delivery_sendcloud_oca can emit this warning while rating some
-            # PUDO methods even though the hosted picker selection has already
-            # been stored on the order. Keep the warning in the server log, but
-            # do not show a false-positive alert to the customer.
             _logger.info(
                 "Optima pickup: ignoring Sendcloud service-point warning for already selected point %s: %s",
                 normalized.get("id"),
@@ -570,10 +1057,16 @@ class SaleOrder(models.Model):
             message = ""
 
         _logger.info(
-            "Optima pickup: resolved Sendcloud service point %s (%s) to %s at %.2f %s via %s",
+            "Optima pickup: validated package %.3fkg %.0fx%.0fx%.0fmm; resolved point %s "
+            "(%s) to %s / Sendcloud method %s at %.2f %s via %s",
+            package_weight,
+            package.get("length_mm", 0.0),
+            package.get("width_mm", 0.0),
+            package.get("height_mm", 0.0),
             normalized.get("id"),
             point_carrier_code,
             selected["carrier"].display_name,
+            (selected.get("api_method") or {}).get("id"),
             selected["price"],
             self.currency_id.name,
             selected.get("source"),
@@ -583,6 +1076,9 @@ class SaleOrder(models.Model):
             "carrier": selected["carrier"],
             "price": selected["price"],
             "message": message,
+            "method_limits": self._optima_sendcloud_method_limits_snapshot(
+                selected.get("api_method") or {}
+            ),
         }
 
     def _optima_pickup_after_store_point(self, provider_code, normalized, raw_point, extra):

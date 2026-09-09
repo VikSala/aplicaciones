@@ -2,25 +2,29 @@
 
 Sendcloud adapter for `optima_delivery_pickup`.
 
-Current development phase:
+Current development phase (18.0.0.4.0):
 
 - Opens Sendcloud's hosted Service Point Picker.
 - Normalizes and persists the selected service point.
 - Keeps `delivery_sendcloud_oca`'s `sendcloud_service_point_address` in sync.
-- Matches the selected point carrier (Correos, InPost, ...) against technical
-  Sendcloud PUDO delivery methods.
-- Calls Odoo's standard `delivery.carrier.rate_shipment(order)` for matching
-  methods and selects the lowest valid returned rate.
-- The core then creates the real delivery line and enables checkout.
+- Validates the one-parcel weight and dimensions against Sendcloud's
+  `shipping-products` API with `last_mile=service_point`.
+- Intersects those dimension-compatible methods with the methods Sendcloud
+  says are valid for the exact selected `service_point_id`.
+- Maps the resulting remote method to the synchronized technical Odoo PUDO
+  carrier before applying the synchronized route price.
+- API errors and ambiguous method mapping fail closed: checkout confirmation
+  remains blocked rather than accepting an unvalidated shipment.
 
-Product-dimension eligibility rules are not applied yet.
+## 18.0.0.4.0
+
+- Adds real Sendcloud weight/dimension compatibility validation.
+- Adds exact selected-service-point compatibility validation.
+- Prevents selecting a local PUDO method unless it maps to a compatible
+  Sendcloud remote shipping method.
 
 
-## 18.0.0.3.1
-
-- Resolve Sendcloud pickup pricing from the synchronized country-route price before falling back to `rate_shipment`.
-- Match the technical Sendcloud method by carrier, origin/destination and weight bracket, avoiding unrelated 0.00 methods.
-
-
-### 18.0.0.3.2
-- No muestra el aviso falso de Service Point cuando el punto Sendcloud ya está guardado.
+## 18.0.0.4.2
+- Guarda en el pedido los límites del método Sendcloud finalmente seleccionado.
+- Normaliza peso máximo/mínimo y dimensiones máximas del Shipping Products API a kg/mm.
+- El snapshot queda asociado al método técnico de Odoo usado para la expedición.
