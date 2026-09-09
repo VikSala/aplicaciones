@@ -105,6 +105,39 @@ class OptimaPickupDelivery(Delivery):
         return {"success": True}
 
     @route(
+        "/shop/optima_pickup/options",
+        type="json",
+        auth="public",
+        methods=["POST"],
+        website=True,
+    )
+    def optima_pickup_options(self, provider_code=None):
+        """Return customer-facing compatible pickup choices without selecting one."""
+        order_sudo = request.website.sale_get_order()
+        if not order_sudo:
+            raise ValidationError(_("El carrito está vacío."))
+        self._check_order_can_change_delivery(order_sudo)
+        if not order_sudo.optima_pickup_mode:
+            raise UserError(_("Selecciona primero la opción Punto de recogida."))
+
+        result = order_sudo._optima_pickup_get_customer_options(provider_code) or {}
+        if not isinstance(result, dict):
+            result = {
+                "success": False,
+                "groups": [],
+                "message": _("El proveedor ha devuelto una lista de opciones no válida."),
+            }
+        result = dict(result)
+        result.setdefault("success", True)
+        result.setdefault("groups", [])
+        result.setdefault("message", False)
+        result["providers"] = order_sudo._optima_pickup_get_providers()
+        result["point"] = order_sudo._optima_pickup_selected_point()
+        result["resolution"] = order_sudo._optima_pickup_resolution_payload()
+        result["summary"] = self._order_summary_values(order_sudo)
+        return result
+
+    @route(
         "/shop/optima_pickup/set_point",
         type="json",
         auth="public",

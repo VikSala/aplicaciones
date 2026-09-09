@@ -482,6 +482,48 @@ class SaleOrder(models.Model):
         self.ensure_one()
         return False
 
+    def _optima_pickup_get_customer_options(self, provider_code=False):
+        """Adapter hook: normalized delivery choices shown before point selection.
+
+        Phase 2 deliberately separates *discovery* from *selection*.  Providers
+        can return groups (normally pickup points) with one or more concrete
+        offers containing price and estimated transit time.  The core never
+        chooses an offer on behalf of the customer.
+
+        Expected shape::
+
+            {
+                "success": True,
+                "provider_code": "provider",
+                "groups": [
+                    {
+                        "point": {...},
+                        "distance_m": 350,
+                        "offers": [
+                            {
+                                "key": "opaque-provider-key",
+                                "carrier_name": "Carrier",
+                                "method_name": "Service",
+                                "price": 4.20,
+                                "currency": "EUR",
+                                "eta_label": "24 h aprox.",
+                                "map_carriers": "carrier_code",
+                            }
+                        ],
+                    }
+                ],
+            }
+
+        The default result is empty so future adapters can opt in independently.
+        """
+        self.ensure_one()
+        return {
+            "success": True,
+            "provider_code": provider_code or "",
+            "groups": [],
+            "message": False,
+        }
+
     def _optima_pickup_get_providers(self):
         self.ensure_one()
         providers = []

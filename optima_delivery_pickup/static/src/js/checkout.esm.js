@@ -9,11 +9,15 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
     events: {
         "click input[name='o_optima_pickup_radio']": "_onPickupRadioClick",
         "click [name='o_optima_pickup_selector']": "_onPickupSelectorClick",
+        "click [name='o_optima_pickup_offer']": "_onPickupOfferClick",
+        "click [name='o_optima_pickup_open_all']": "_onPickupOpenAllClick",
         "click input[name='o_delivery_radio']": "_onStandardDeliveryClick",
         "click a[name='website_sale_main_button']": "_onMainButtonClick",
     },
 
     start() {
+        this._pickupProviders = [];
+        this._pickupOptionGroups = [];
         const result = this._super.apply(this, arguments);
         const pickupRadio = this._getPickupRadio();
         if (pickupRadio?.checked) {
@@ -46,7 +50,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             const result = await rpc("/shop/optima_pickup/select_mode", {});
             this._updateCartSummary(result.summary);
             this._markPickupSelected();
-            await this._openProviderSelector(result.providers, result.point);
+            await this._loadPickupOptions(result.providers, result.point, result.resolution || {});
         } catch (error) {
             const radio = this._getPickupRadio();
             if (radio) {
@@ -80,7 +84,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
                 result = await rpc("/shop/optima_pickup/state", {});
             }
             this._markPickupSelected();
-            await this._openProviderSelector(result.providers, result.point);
+            await this._loadPickupOptions(result.providers, result.point, result.resolution || {});
         } catch (error) {
             this._showError(this._getLivePickupContainer(), this._errorMessage(error));
         }
@@ -102,6 +106,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         this._getLivePickupContainer()
             ?.querySelector("[name='o_optima_pickup_location']")
             ?.classList.add("d-none");
+        this._hidePickupOptions();
         this._setPickupLoading(false);
         this._enableMainButton();
         rpc("/shop/optima_pickup/clear_mode", {}).catch(() => {});
@@ -115,7 +120,294 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         }
     },
 
-    async _openProviderSelector(providers, currentPoint) {
+    async _loadPickupOptions(providers, currentPoint = {}, currentResolution = {}) {
+        const container = this._getLivePickupContainer();
+        const keepResolvedSelection = Boolean(currentPoint?.id && currentResolution?.success);
+        this._pickupProviders = providers || [];
+        this._pickupOptionGroups = [];
+        this._showPickupArea(container);
+        this._showPickupOptions();
+        this._setPickupOptionsLoading(true, keepResolvedSelection);
+        this._clearError(container);
+        if (!keepResolvedSelection) {
+            this._disableMainButton();
+        }
+
+        if (!this._pickupProviders.length) {
+            this._setPickupOptionsLoading(false);
+            if (keepResolvedSelection) {
+                this._enableMainButton();
+            }
+            this._showError(container, "No hay proveedores de puntos de recogida disponibles.");
+            return;
+        }
+        if (this._pickupProviders.length > 1) {
+            this._setPickupOptionsLoading(false);
+            if (keepResolvedSelection) {
+                this._enableMainButton();
+            }
+            this._showError(
+                container,
+                "Hay varios proveedores de puntos disponibles. La vista unificada multi-proveedor se añadirá en la Fase 5."
+            );
+            return;
+        }
+
+        const descriptor = this._pickupProviders[0];
+        try {
+            const result = await rpc("/shop/optima_pickup/options", {
+                provider_code: descriptor.code,
+            });
+            this._setPickupOptionsLoading(false);
+            if (!result?.success) {
+                this._renderPickupOptions([]);
+                if (!keepResolvedSelection) {
+                    this._setPriceText("Precio no disponible");
+                } else {
+                    this._enableMainButton();
+                }
+                this._showError(
+                    container,
+                    result?.message || "No se han podido calcular las opciones de recogida."
+                );
+                return;
+            }
+
+            this._pickupProviders = result.providers || this._pickupProviders;
+            this._pickupOptionGroups = Array.isArray(result.groups) ? result.groups : [];
+            this._renderPickupOptions(this._pickupOptionGroups, result);
+            this._setPickupLoading(false);
+            if (!keepResolvedSelection) {
+                this._setPriceText(
+                    this._pickupOptionGroups.length ? "Elige un punto" : "Sin opciones compatibles"
+                );
+            }
+            if (result.message) {
+                this._showError(container, result.message);
+            } else {
+                this._clearError(container);
+            }
+            if (!this._pickupOptionGroups.length && !keepResolvedSelection) {
+                this._disableMainButton();
+            } else if (keepResolvedSelection) {
+                this._enableMainButton();
+            }
+        } catch (error) {
+            this._setPickupOptionsLoading(false);
+            this._renderPickupOptions([]);
+            if (!keepResolvedSelection) {
+                this._setPriceText("Precio no disponible");
+            } else {
+                this._enableMainButton();
+            }
+            this._showError(container, this._errorMessage(error));
+        }
+    },
+
+    _renderPickupOptions(groups = [], result = {}) {
+        const container = this._getLivePickupContainer();
+        const list = container?.querySelector("[name='o_optima_pickup_options_list']");
+        const mapButton = container?.querySelector("[name='o_optima_pickup_open_all']");
+        if (!list) {
+            return;
+        }
+        list.replaceChildren();
+
+        const mapCarriers = new Set();
+        for (const group of groups) {
+            for (const offer of group.offers || []) {
+                for (const code of String(offer.map_carriers || "").split(",")) {
+                    if (code.trim()) {
+                        mapCarriers.add(code.trim());
+                    }
+                }
+            }
+        }
+        if (mapButton) {
+            mapButton.classList.toggle("d-none", !groups.length || !mapCarriers.size);
+            mapButton.dataset.carriers = Array.from(mapCarriers).join(",");
+        }
+
+        if (!groups.length) {
+            const empty = document.createElement("div");
+            empty.className = "small text-muted py-2";
+            empty.textContent = result?.empty_label || "No hay puntos compatibles para este pedido.";
+            list.appendChild(empty);
+            return;
+        }
+
+        groups.forEach((group, groupIndex) => {
+            const point = group.point || {};
+            const card = document.createElement("div");
+            card.className = "optima_pickup_option_card border rounded p-3 mb-2";
+
+            const header = document.createElement("div");
+            header.className = "d-flex align-items-start justify-content-between gap-3";
+            const identity = document.createElement("div");
+            identity.className = "flex-grow-1";
+            const title = document.createElement("div");
+            title.className = "fw-semibold";
+            title.textContent = point.name || "Punto de recogida";
+            identity.appendChild(title);
+
+            const address = document.createElement("div");
+            address.className = "small text-muted";
+            address.textContent = [
+                point.street_display || point.street,
+                [point.zip_code, point.city].filter(Boolean).join(" "),
+            ]
+                .filter(Boolean)
+                .join(" · ");
+            identity.appendChild(address);
+            header.appendChild(identity);
+
+            const distance = document.createElement("span");
+            distance.className = "badge text-bg-light optima_pickup_distance";
+            distance.textContent = this._formatDistance(group.distance_m);
+            header.appendChild(distance);
+            card.appendChild(header);
+
+            const offers = document.createElement("div");
+            offers.className = "mt-2 d-grid gap-2";
+            (group.offers || []).forEach((offer, offerIndex) => {
+                const row = document.createElement("div");
+                row.className = "optima_pickup_offer_row d-flex flex-column flex-lg-row align-items-lg-center gap-2 border-top pt-2";
+
+                const details = document.createElement("div");
+                details.className = "flex-grow-1";
+                const method = document.createElement("div");
+                method.className = "small fw-semibold";
+                method.textContent = offer.carrier_name || offer.method_name || "Método compatible";
+                details.appendChild(method);
+
+                if (offer.method_name && offer.method_name !== offer.carrier_name) {
+                    const methodName = document.createElement("div");
+                    methodName.className = "small text-muted";
+                    methodName.textContent = offer.method_name;
+                    details.appendChild(methodName);
+                }
+                if (offer.eta_label) {
+                    const eta = document.createElement("div");
+                    eta.className = "small text-muted";
+                    eta.textContent = offer.eta_label;
+                    details.appendChild(eta);
+                }
+                row.appendChild(details);
+
+                const actions = document.createElement("div");
+                actions.className = "d-flex align-items-center justify-content-between justify-content-lg-end gap-3";
+                const price = document.createElement("span");
+                price.className = "fw-bold text-nowrap";
+                price.textContent = this._formatCurrency(offer.price || 0, offer.currency || "EUR");
+                actions.appendChild(price);
+
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "btn btn-primary btn-sm text-nowrap";
+                button.name = "o_optima_pickup_offer";
+                button.dataset.groupIndex = String(groupIndex);
+                button.dataset.offerIndex = String(offerIndex);
+                button.textContent = "Elegir";
+                actions.appendChild(button);
+                row.appendChild(actions);
+                offers.appendChild(row);
+            });
+            card.appendChild(offers);
+            list.appendChild(card);
+        });
+    },
+
+    async _onPickupOfferClick(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (this._isPickupLoading()) {
+            return;
+        }
+        const groupIndex = Number.parseInt(ev.currentTarget.dataset.groupIndex || "-1", 10);
+        const offerIndex = Number.parseInt(ev.currentTarget.dataset.offerIndex || "-1", 10);
+        const group = this._pickupOptionGroups[groupIndex];
+        const offer = group?.offers?.[offerIndex];
+        if (!group || !offer) {
+            this._showError(this._getLivePickupContainer(), "La opción elegida ya no está disponible.");
+            return;
+        }
+        const point = group.point || {};
+        await this._openProviderSelector(this._pickupProviders, point, {
+            currentPoint: {
+                ...point,
+                provider_code: offer.provider_code || "sendcloud",
+            },
+            config: {
+                carriers: offer.map_carriers || "",
+                service_point_id: point.id || "",
+            },
+            extra: {
+                selected_offer_key: offer.key || "",
+            },
+        });
+    },
+
+    async _onPickupOpenAllClick(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (this._isPickupLoading()) {
+            return;
+        }
+        const carriers = ev.currentTarget.dataset.carriers || "";
+        const statePoint = this._getPickupRadio()?.dataset.pointId
+            ? {provider_code: "sendcloud", id: this._getPickupRadio().dataset.pointId}
+            : {};
+        await this._openProviderSelector(this._pickupProviders, statePoint, {
+            config: {carriers},
+            extra: {selected_offer_key: ""},
+        });
+    },
+
+    _showPickupOptions() {
+        this._getLivePickupContainer()
+            ?.querySelector("[name='o_optima_pickup_options']")
+            ?.classList.remove("d-none");
+    },
+
+    _hidePickupOptions() {
+        const area = this._getLivePickupContainer()?.querySelector("[name='o_optima_pickup_options']");
+        area?.classList.add("d-none");
+        this._pickupOptionGroups = [];
+    },
+
+    _setPickupOptionsLoading(loading, keepResolvedSelection = false) {
+        const container = this._getLivePickupContainer();
+        this._showPickupOptions();
+        container
+            ?.querySelector(".optima_pickup_options_loading")
+            ?.classList.toggle("d-none", !loading);
+        const list = container?.querySelector("[name='o_optima_pickup_options_list']");
+        if (loading && list) {
+            list.replaceChildren();
+        }
+        const mapButton = container?.querySelector("[name='o_optima_pickup_open_all']");
+        if (loading) {
+            mapButton?.classList.add("d-none");
+            if (!keepResolvedSelection) {
+                this._setPickupLoading(true, "Buscando opciones…");
+            }
+        } else if (!keepResolvedSelection) {
+            this._setPickupLoading(false);
+        }
+    },
+
+    _formatDistance(distanceMeters) {
+        const value = Number(distanceMeters);
+        if (!Number.isFinite(value) || value < 0) {
+            return "Distancia no disponible";
+        }
+        if (value < 1000) {
+            return `${Math.round(value)} m`;
+        }
+        return `${(value / 1000).toFixed(value < 10000 ? 1 : 0)} km`;
+    },
+
+    async _openProviderSelector(providers, currentPoint, selectorContext = {}) {
         const container = this._getLivePickupContainer();
         if (!providers?.length) {
             this._showError(container, "No hay proveedores de puntos de recogida disponibles.");
@@ -139,11 +431,21 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             return;
         }
 
+        const config = {
+            ...(descriptor.config || {}),
+            ...(selectorContext.config || {}),
+        };
+        const pointForMap = selectorContext.currentPoint || currentPoint || {};
+        const selectionExtra = selectorContext.extra || {};
+
         await provider.open({
-            config: descriptor.config || {},
-            currentPoint: currentPoint || {},
+            config,
+            currentPoint: pointForMap,
             onSelect: async (rawPoint, extra = {}) => {
-                await this._savePoint(descriptor.code, rawPoint, extra);
+                await this._savePoint(descriptor.code, rawPoint, {
+                    ...extra,
+                    ...selectionExtra,
+                });
             },
             onError: (message) => this._showError(this._getLivePickupContainer(), message),
         });
@@ -177,6 +479,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
                 result.resolution || {}
             );
             this._updateCartSummary(result.summary);
+            this._hidePickupOptions();
         } catch (error) {
             // A transport interruption must not leave the browser showing a
             // point different from the server. Restore the authoritative state

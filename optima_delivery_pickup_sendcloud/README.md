@@ -2,42 +2,41 @@
 
 Sendcloud adapter for `optima_delivery_pickup`.
 
-Current development phase (18.0.0.4.0):
+Current development phase (18.0.0.5.1):
 
-- Opens Sendcloud's hosted Service Point Picker.
-- Normalizes and persists the selected service point.
-- Keeps `delivery_sendcloud_oca`'s `sendcloud_service_point_address` in sync.
-- Validates the one-parcel weight and dimensions against Sendcloud's
-  `shipping-products` API with `last_mile=service_point`.
-- Intersects those dimension-compatible methods with the methods Sendcloud
-  says are valid for the exact selected `service_point_id`.
-- Maps the resulting remote method to the synchronized technical Odoo PUDO
-  carrier before applying the synchronized route price.
-- API errors and ambiguous method mapping fail closed: checkout confirmation
-  remains blocked rather than accepting an unvalidated shipment.
+- Keeps the stable Phase 1 one-request package validation at final selection.
+- Uses Shipping Products to discover compatible synchronized PUDO services for
+  the estimated parcel and to read dimensional limits / transit hours.
+- Uses the Service Points API for non-mutating discovery of nearby points and
+  their distance/opening state.
+- Returns **all safely mapped compatible offers** to the core; it never chooses
+  the cheapest one.
+- A customer-selected offer is carried as an opaque key to the final point
+  selection and fixes the exact local Odoo delivery carrier/service.
+- If Sendcloud changes a remote method id between discovery and selection, the
+  adapter recovers only when the mapping is still unique and unambiguous.
+- Exploratory map selection is accepted automatically only when exactly one
+  compatible service remains; multiple services require an explicit customer
+  choice.
+- The hosted Sendcloud picker can be filtered to the compatible carrier(s) and
+  pre-positioned on the point the customer is evaluating.
 
-## 18.0.0.4.0
+## 18.0.0.4.2 - 18.0.0.4.4
 
-- Adds real Sendcloud weight/dimension compatibility validation.
-- Adds exact selected-service-point compatibility validation.
-- Prevents selecting a local PUDO method unless it maps to a compatible
-  Sendcloud remote shipping method.
+- Stores method-limit snapshots in the order.
+- Stabilizes zonal carrier mapping and volatile Sendcloud ids.
+- Phase 1 final validation is reduced to one bounded Shipping Products request
+  to avoid chained API calls during checkout mutation.
 
+## 18.0.0.5.1
 
-## 18.0.0.4.2
-- Guarda en el pedido los límites del método Sendcloud finalmente seleccionado.
-- Normaliza peso máximo/mínimo y dimensiones máximas del Shipping Products API a kg/mm.
-- El snapshot queda asociado al método técnico de Odoo usado para la expedición.
+- Adds nearby Service Points discovery using Sendcloud's maximum 50 km search
+  radius, returning all compatible points in that area sorted by distance.
+- Groups points by compatible Sendcloud carrier/service and exposes distance,
+  route price and Sendcloud transit estimate.
+- Persists the customer's selected offer key with the point.
+- Removes any price-based automatic service selection from the resolver.
+- Filters/prefills the hosted picker with `carriers` and `servicePointId` context.
 
-
-## 18.0.0.4.3
-- Corrige la validación de puntos para transportistas zonales enviando país y códigos postales al endpoint `shipping_methods`.
-- Tolera respuestas de `shipping_methods` en formato paginado o lista.
-- Evita falsos negativos por IDs volátiles de Sendcloud usando coincidencia exacta y no ambigua por nombre cuando los dos endpoints no comparten ID.
-- Mantiene la validación fail-closed: nunca acepta un método solo por compartir transportista.
-
-## 18.0.0.4.4
-
-- La validación de Fase 1 usa una única consulta acotada a Shipping Products para peso/dimensiones.
-- El método remoto debe mapearse a un PUDO sincronizado del mismo transportista que el punto seleccionado.
-- Se evitan las consultas encadenadas al endpoint `shipping_methods` que podían alargar el checkout y provocar cortes de conexión.
+> Note: the earlier experimental 18.0.0.5.0 approach that auto-selected the
+> cheapest compatible service is intentionally superseded by 18.0.0.5.1.

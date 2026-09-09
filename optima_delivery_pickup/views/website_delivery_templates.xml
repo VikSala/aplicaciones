@@ -95,8 +95,32 @@
                         name="o_optima_pickup_selector"
                     >
                         <i class="fa fa-map-marker me-1" aria-hidden="true"/>
-                        Seleccionar punto de recogida
+                        Ver opciones de puntos de recogida
                     </button>
+
+                    <div name="o_optima_pickup_options" class="mt-3 d-none">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                            <div>
+                                <div class="fw-semibold">Opciones compatibles</div>
+                                <div class="small text-muted">
+                                    Compara distancia, precio y plazo. La elección final es tuya.
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                class="btn btn-outline-primary btn-sm d-none"
+                                name="o_optima_pickup_open_all"
+                            >
+                                <i class="fa fa-map-marker me-1" aria-hidden="true"/>
+                                Explorar todos en el mapa
+                            </button>
+                        </div>
+                        <div class="small text-muted d-none optima_pickup_options_loading">
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"/>
+                            Buscando puntos, tarifas y plazos compatibles…
+                        </div>
+                        <div name="o_optima_pickup_options_list" class="optima_pickup_options_list"/>
+                    </div>
 
                     <div
                         name="o_optima_pickup_error"
@@ -110,7 +134,7 @@
                             Método y precio calculados para el punto seleccionado.
                         </t>
                         <t t-else="">
-                            Selecciona un punto para calcular el método de transporte y su precio.
+                            Compara las opciones disponibles y selecciona el punto que prefieras.
                         </t>
                     </div>
                 </div>
