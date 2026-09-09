@@ -24,22 +24,3 @@
         [name="o_optima_pickup_location"] { margin-left: 0 !important; }
     }
 }
-
-.optima_pickup_options_list {
-    max-height: 28rem;
-    overflow-y: auto;
-    padding-right: 0.25rem;
-}
-
-.optima_pickup_option_card {
-    background: var(--bs-body-bg);
-}
-
-.optima_pickup_distance {
-    white-space: nowrap;
-}
-
-.optima_pickup_offer_row:first-child {
-    border-top: 0 !important;
-    padding-top: 0 !important;
-}

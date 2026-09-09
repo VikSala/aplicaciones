@@ -20,12 +20,6 @@ class SaleOrder(models.Model):
         copy=False,
     )
 
-    optima_sendcloud_selected_offer_key = fields.Char(
-        string="Sendcloud Pickup Offer",
-        copy=False,
-        readonly=True,
-    )
-
     def _optima_pickup_get_provider_carriers(self):
         """Add technical Sendcloud PUDO methods independently of website_sale."""
         self.ensure_one()
@@ -400,159 +394,6 @@ class SaleOrder(models.Model):
             }
         return {"success": True, "payload": payload}
 
-    def _optima_sendcloud_service_points_get(self, integration, params=None):
-        """Query Sendcloud's Service Points API server-side.
-
-        Phase 2 uses this endpoint only to *discover* nearby points and their
-        distance/opening status.  Prices and physical compatibility still come
-        from the Shipping Products/local synchronized method data.
-        """
-        self.ensure_one()
-        public_key = str(getattr(integration, "public_key", "") or "")
-        secret_key = self._optima_sendcloud_secret_key(integration)
-        if not public_key or not secret_key:
-            return {
-                "success": False,
-                "message": _(
-                    "La integración Sendcloud no tiene las credenciales necesarias para buscar puntos de recogida."
-                ),
-            }
-
-        url = "https://servicepoints.sendcloud.sc/api/v2/service-points"
-        try:
-            response = requests.get(
-                url,
-                params=params or {},
-                auth=(public_key, secret_key),
-                timeout=(3, 6),
-            )
-            response.raise_for_status()
-            payload = response.json()
-        except requests.RequestException as exc:
-            _logger.warning(
-                "Optima pickup phase2: Sendcloud service-points request failed: %s",
-                exc,
-            )
-            return {
-                "success": False,
-                "message": _(
-                    "No se han podido consultar los puntos de recogida de Sendcloud en este momento. Inténtalo de nuevo."
-                ),
-            }
-        except ValueError:
-            return {
-                "success": False,
-                "message": _(
-                    "Sendcloud ha devuelto una respuesta no válida al buscar puntos de recogida."
-                ),
-            }
-        return {"success": True, "payload": payload}
-
-    @staticmethod
-    def _optima_sendcloud_offer_key(carrier, api_method):
-        try:
-            remote_id = int((api_method or {}).get("id") or 0)
-        except (TypeError, ValueError):
-            remote_id = 0
-        return "sendcloud:%s:%s" % (carrier.id, remote_id)
-
-    @staticmethod
-    def _optima_sendcloud_parse_offer_key(value):
-        text = str(value or "")
-        parts = text.split(":")
-        if len(parts) != 3 or parts[0] != "sendcloud":
-            return False, False
-        try:
-            carrier_id = int(parts[1])
-            remote_id = int(parts[2])
-        except (TypeError, ValueError):
-            return False, False
-        if carrier_id <= 0 or remote_id <= 0:
-            return False, False
-        return carrier_id, remote_id
-
-    def _optima_sendcloud_method_map_carrier(self, carrier, api_method, integration):
-        """Return the Sendcloud service-point carrier code used by the hosted map."""
-        self.ensure_one()
-        method = api_method if isinstance(api_method, dict) else {}
-        direct = str(
-            method.get("_optima_service_points_carrier")
-            or method.get("_optima_product_carrier")
-            or ""
-        ).strip()
-        if direct:
-            return direct
-
-        # Fallback for older/partial Shipping Products responses: choose the
-        # unique enabled service-point carrier code that best matches the local
-        # synchronized Odoo method.
-        codes = []
-        if integration and "service_point_carrier_ids" in integration._fields:
-            try:
-                codes = [
-                    str(code)
-                    for code in integration.service_point_carrier_ids.mapped("sendcloud_code")
-                    if code
-                ]
-            except Exception:  # pragma: no cover - tolerant of OCA forks
-                codes = []
-        scored = [
-            (self._optima_sendcloud_carrier_match_score(carrier, code), code)
-            for code in codes
-        ]
-        best = max((score for score, _code in scored), default=0)
-        winners = sorted({code for score, code in scored if score and score == best})
-        return winners[0] if len(winners) == 1 else ""
-
-    def _optima_sendcloud_lead_time_hours(self, api_method, origin_country, destination_country):
-        """Extract route transit hours from a Shipping Products method."""
-        method = api_method if isinstance(api_method, dict) else {}
-        value = method.get("lead_time_hours")
-        if isinstance(value, (int, float)):
-            return max(float(value), 0.0)
-        if not isinstance(value, dict):
-            return 0.0
-
-        origin = str(origin_country or "").upper()
-        destination = str(destination_country or "").upper()
-        origin_map = value.get(origin) or value.get(origin.lower())
-        if isinstance(origin_map, (int, float)):
-            return max(float(origin_map), 0.0)
-        if isinstance(origin_map, dict):
-            route_value = origin_map.get(destination) or origin_map.get(destination.lower())
-            if isinstance(route_value, (int, float)):
-                return max(float(route_value), 0.0)
-        return 0.0
-
-    @staticmethod
-    def _optima_sendcloud_eta_label(hours):
-        try:
-            hours = float(hours or 0.0)
-        except (TypeError, ValueError):
-            hours = 0.0
-        if hours <= 0:
-            return _("Plazo no informado por Sendcloud")
-        if hours < 24:
-            return _("Tránsito estimado: %s h") % int(round(hours))
-        days = hours / 24.0
-        if abs(days - round(days)) < 0.01:
-            count = int(round(days))
-            return _(
-                "Tránsito estimado: %s día" if count == 1 else "Tránsito estimado: %s días"
-            ) % count
-        return _("Tránsito estimado: %.1f días") % days
-
-    def _optima_sendcloud_customer_search_address(self):
-        self.ensure_one()
-        partner = self.partner_shipping_id or self.partner_id
-        values = [
-            partner.street or "",
-            partner.street2 or "",
-            partner.zip or "",
-            partner.city or "",
-        ]
-        return ", ".join(value.strip() for value in values if value and value.strip())
-
     def _optima_sendcloud_origin_data(self):
         self.ensure_one()
         warehouse_partner = (
@@ -631,15 +472,7 @@ class SaleOrder(models.Model):
                     method_id = int(method["id"])
                 except (TypeError, ValueError):
                     continue
-                enriched = dict(method)
-                enriched["_optima_shipping_product_code"] = product.get("code") or ""
-                enriched["_optima_product_carrier"] = product.get("carrier") or ""
-                enriched["_optima_service_points_carrier"] = (
-                    product.get("service_points_carrier")
-                    or product.get("carrier")
-                    or ""
-                )
-                methods[method_id] = enriched
+                methods[method_id] = method
         return {"success": True, "methods": methods}
 
     def _optima_sendcloud_point_methods(self, integration, point):
@@ -913,320 +746,6 @@ class SaleOrder(models.Model):
             ):
                 best = max(best, 700)
         return best
-
-    def _optima_sendcloud_customer_offers(self, package):
-        """Return every unambiguous Sendcloud service offer compatible with the parcel.
-
-        No offer is selected here.  The result is the catalogue the customer
-        compares by price/transit time before deciding which point to use.
-        """
-        self.ensure_one()
-        carriers = self._optima_pickup_get_provider_carriers().get(
-            "sendcloud", self.env["delivery.carrier"]
-        )
-        integration = self._optima_sendcloud_pickup_integration(carriers)
-        if not integration:
-            return {
-                "success": False,
-                "message": _(
-                    "No hay una integración Sendcloud activa con Service Points para calcular las opciones."
-                ),
-                "offers": [],
-            }
-        carriers = carriers.filtered(
-            lambda carrier: carrier.sendcloud_integration_id == integration
-        )
-        if not carriers:
-            return {
-                "success": False,
-                "message": _("No hay métodos PUDO Sendcloud sincronizados para esta integración."),
-                "offers": [],
-            }
-
-        partner = self.partner_shipping_id or self.partner_id
-        route_point = {
-            "country_code": (partner.country_id.code or "").upper(),
-            "zip_code": partner.zip or "",
-        }
-        product_result = self._optima_sendcloud_shipping_product_methods(
-            integration, route_point, package
-        )
-        if not product_result.get("success"):
-            return {**product_result, "offers": []}
-        product_methods = product_result.get("methods") or {}
-        if not product_methods:
-            return {
-                "success": False,
-                "message": _(
-                    "El bulto estimado (%s) no es compatible con ningún servicio de punto de recogida de Sendcloud."
-                ) % self._optima_sendcloud_package_label(package),
-                "offers": [],
-            }
-
-        package_weight = float(package.get("weight_kg") or 0.0)
-        origin = self._optima_sendcloud_origin_data()
-        destination_country = route_point["country_code"]
-        offers = []
-        for carrier in carriers.sorted(lambda item: (item.sequence, item.id)):
-            if not self._optima_sendcloud_weight_matches(carrier, package_weight):
-                continue
-
-            scored = []
-            for api_method in product_methods.values():
-                score = self._optima_sendcloud_api_method_match_score(carrier, api_method)
-                if score:
-                    scored.append((score, api_method))
-            if not scored:
-                continue
-            best_score = max(score for score, _method in scored)
-            winners = [method for score, method in scored if score == best_score]
-            unique_remote_ids = {
-                str(method.get("id") or "") for method in winners if method.get("id")
-            }
-            if len(unique_remote_ids) != 1:
-                _logger.warning(
-                    "Optima pickup phase2: ambiguous remote method for local carrier %s: %s",
-                    carrier.display_name,
-                    sorted(unique_remote_ids),
-                )
-                continue
-            api_method = winners[0]
-            map_carrier = self._optima_sendcloud_method_map_carrier(
-                carrier, api_method, integration
-            )
-            if not map_carrier:
-                _logger.warning(
-                    "Optima pickup phase2: cannot determine hosted-picker carrier code for %s",
-                    carrier.display_name,
-                )
-                continue
-
-            route_found, route_price, _route_line = self._optima_sendcloud_route_price(carrier)
-            warning = ""
-            if route_found:
-                price = route_price
-                price_source = "sendcloud_route"
-            else:
-                try:
-                    rate = carrier.with_context(optima_pickup_force_rate=True).rate_shipment(
-                        self.with_context(optima_pickup_force_rate=True)
-                    )
-                except Exception:
-                    _logger.exception(
-                        "Optima pickup phase2: error rating offer %s", carrier.display_name
-                    )
-                    continue
-                if not isinstance(rate, dict) or not rate.get("success"):
-                    continue
-                try:
-                    price = float(rate.get("price", 0.0))
-                except (TypeError, ValueError):
-                    continue
-                if price <= 0:
-                    continue
-                warning = rate.get("warning_message") or ""
-                price_source = "rate_shipment"
-
-            lead_time = self._optima_sendcloud_lead_time_hours(
-                api_method,
-                origin.get("country_code"),
-                destination_country,
-            )
-            offers.append(
-                {
-                    "key": self._optima_sendcloud_offer_key(carrier, api_method),
-                    "provider_code": "sendcloud",
-                    "carrier_id": carrier.id,
-                    "carrier_name": carrier.display_name,
-                    "method_name": api_method.get("name") or carrier.display_name,
-                    "remote_method_id": int(api_method.get("id") or 0),
-                    "map_carriers": map_carrier,
-                    "price": max(float(price), 0.0),
-                    "currency": self.currency_id.name or "EUR",
-                    "lead_time_hours": lead_time,
-                    "eta_label": self._optima_sendcloud_eta_label(lead_time),
-                    "method_limits": self._optima_sendcloud_method_limits_snapshot(api_method),
-                    "price_source": price_source,
-                    "warning": warning,
-                    "_carrier": carrier,
-                    "_api_method": api_method,
-                }
-            )
-
-        return {
-            "success": bool(offers),
-            "offers": offers,
-            "message": False
-            if offers
-            else _(
-                "Sendcloud tiene servicios compatibles con el bulto, pero no se han podido vincular de forma segura con tarifas PUDO sincronizadas en Odoo."
-            ),
-            "integration": integration,
-        }
-
-    def _optima_pickup_get_customer_options(self, provider_code=False):
-        if provider_code not in (False, "sendcloud"):
-            return super()._optima_pickup_get_customer_options(provider_code)
-
-        self.ensure_one()
-        package = self._optima_pickup_package_profile()
-        if not package.get("success"):
-            return {
-                "success": False,
-                "provider_code": "sendcloud",
-                "groups": [],
-                "message": package.get("message")
-                or _("No se puede calcular el bulto para buscar puntos de recogida."),
-            }
-
-        offer_result = self._optima_sendcloud_customer_offers(package)
-        if not offer_result.get("success"):
-            return {
-                "success": False,
-                "provider_code": "sendcloud",
-                "groups": [],
-                "message": offer_result.get("message")
-                or _("No hay métodos Sendcloud compatibles con este pedido."),
-            }
-        offers = offer_result.get("offers") or []
-        integration = offer_result.get("integration")
-
-        partner = self.partner_shipping_id or self.partner_id
-        country = (partner.country_id.code or "").upper()
-        address = self._optima_sendcloud_customer_search_address()
-        if not country or not address:
-            return {
-                "success": False,
-                "provider_code": "sendcloud",
-                "groups": [],
-                "message": _(
-                    "La dirección de entrega necesita país y una dirección/código postal para buscar puntos cercanos."
-                ),
-            }
-
-        map_codes = sorted({offer["map_carriers"] for offer in offers if offer.get("map_carriers")})
-        # The customer, not the module, decides the distance/price/time tradeoff.
-        # Therefore discovery uses Sendcloud's maximum supported radius and
-        # returns every compatible point in that area, sorted by distance below.
-        # Keeping this to one Service Points request also avoids adding a retry
-        # chain to the checkout discovery path.
-        search_radius = 50000
-        params = {
-            "country": country,
-            "address": address,
-            "radius": search_radius,
-            "weight": max(float(package.get("weight_kg") or 0.0), 0.001),
-        }
-        if map_codes:
-            params["carrier"] = ",".join(map_codes)
-
-        point_result = self._optima_sendcloud_service_points_get(integration, params=params)
-        if not point_result.get("success"):
-            return {
-                "success": False,
-                "provider_code": "sendcloud",
-                "groups": [],
-                "message": point_result.get("message"),
-            }
-        rows = point_result.get("payload")
-        rows = rows if isinstance(rows, list) else []
-
-        offers_by_map_carrier = {}
-        for offer in offers:
-            token = self._optima_sendcloud_normalize_token(offer.get("map_carriers"))
-            if token:
-                offers_by_map_carrier.setdefault(token, []).append(offer)
-
-        groups = []
-        for point in rows:
-            if not isinstance(point, dict):
-                continue
-            # Operationally closed for the entire upcoming week means it should
-            # not be offered to a checkout customer. `is_active` is intentionally
-            # not used because Sendcloud defines it as data freshness, not opening.
-            if point.get("open_upcoming_week") is False:
-                continue
-            carrier_code = str(point.get("carrier") or "")
-            point_offers = offers_by_map_carrier.get(
-                self._optima_sendcloud_normalize_token(carrier_code), []
-            )
-            if not point_offers:
-                continue
-            point_id = point.get("id")
-            if point_id in (None, False, ""):
-                continue
-            street = " ".join(
-                str(value).strip()
-                for value in (point.get("street"), point.get("house_number"))
-                if value not in (None, "")
-            )
-            raw_point = {
-                "id": point_id,
-                "code": point.get("code") or "",
-                "name": point.get("name") or _("Punto de recogida"),
-                "street": point.get("street") or "",
-                "house_number": point.get("house_number") or "",
-                "postal_code": point.get("postal_code") or "",
-                "city": point.get("city") or "",
-                "country": point.get("country") or country,
-                "latitude": point.get("latitude") or 0.0,
-                "longitude": point.get("longitude") or 0.0,
-                "carrier": carrier_code,
-                "formatted_opening_times": point.get("formatted_opening_times") or {},
-                "open_tomorrow": point.get("open_tomorrow"),
-                "open_upcoming_week": point.get("open_upcoming_week"),
-                "general_shop_type": point.get("general_shop_type") or "",
-            }
-            public_offers = []
-            for offer in point_offers:
-                public_offers.append(
-                    {
-                        key: value
-                        for key, value in offer.items()
-                        if not key.startswith("_")
-                        and key not in {"carrier_id", "remote_method_id", "method_limits", "price_source", "warning"}
-                    }
-                )
-            try:
-                distance = float(point.get("distance"))
-            except (TypeError, ValueError):
-                distance = -1.0
-            groups.append(
-                {
-                    "id": str(point_id),
-                    "point": {
-                        **raw_point,
-                        "street_display": street,
-                        "zip_code": raw_point["postal_code"],
-                    },
-                    "distance_m": distance,
-                    "offers": public_offers,
-                }
-            )
-
-        groups.sort(
-            key=lambda group: (
-                group["distance_m"] < 0,
-                group["distance_m"] if group["distance_m"] >= 0 else 10**12,
-                (group.get("point") or {}).get("name") or "",
-            )
-        )
-        return {
-            "success": True,
-            "provider_code": "sendcloud",
-            "groups": groups,
-            "message": False,
-            "empty_label": _(
-                "No se han encontrado puntos operativos compatibles en un radio de %s km."
-            ) % int(search_radius / 1000),
-            "search_radius_m": search_radius,
-            "package": {
-                "weight_kg": package.get("weight_kg"),
-                "length_mm": package.get("length_mm"),
-                "width_mm": package.get("width_mm"),
-                "height_mm": package.get("height_mm"),
-            },
-        }
 
     def _optima_pickup_validate_package(self, provider_code=False, point=False):
         """Validate one parcel with one bounded Sendcloud API request.
@@ -1578,107 +1097,26 @@ class SaleOrder(models.Model):
                 ),
             }
 
-        # Phase 2 never chooses a service on the customer's behalf.  When the
-        # customer came from the comparison list, the opaque offer key fixes the
-        # exact local Odoo carrier/service they chose.  If the hosted map was
-        # opened in exploratory mode there is no key; in that case we may only
-        # continue automatically when the selected point has one unambiguous
-        # compatible service.
-        extra = extra or {}
-        selected_offer_key = str(
-            extra.get("selected_offer_key")
-            or self.optima_sendcloud_selected_offer_key
-            or ""
-        ).strip()
-        selected_carrier_id = False
-        selected_remote_method_id = False
-        if selected_offer_key:
-            selected_carrier_id, selected_remote_method_id = (
-                self._optima_sendcloud_parse_offer_key(selected_offer_key)
-            )
-            if not selected_carrier_id or not selected_remote_method_id:
-                return {
-                    "success": False,
-                    "message": _(
-                        "La opción de entrega elegida ya no es válida. Vuelve a comparar los puntos disponibles."
-                    ),
-                }
-
+        # From this point onward only methods belonging to the selected point's
+        # carrier are eligible. A remote method from another carrier can never
+        # win merely because its id/name mapping is stronger.
         carriers = point_carriers
-        if selected_carrier_id:
-            carriers = carriers.filtered(lambda carrier: carrier.id == selected_carrier_id)
-            if not carriers:
-                return {
-                    "success": False,
-                    "message": _(
-                        "El punto seleccionado no corresponde al transportista de la opción que elegiste. Vuelve a comparar las opciones."
-                    ),
-                }
-
         package_weight = float(package.get("weight_kg") or 0.0)
         candidates = []
         for carrier in carriers.sorted(lambda item: (item.sequence, item.id)):
-            # Local synchronized bracket remains a secondary sanity check. The
+            # Local synchronized bracket remains a secondary sanity check.  The
             # Sendcloud API has already filtered the package by weight/dimensions.
             if not self._optima_sendcloud_weight_matches(carrier, package_weight):
                 continue
-
-            scored = []
+            method_score = 0
+            matched_api_method = False
             for api_method in compatible_api_methods:
                 score = self._optima_sendcloud_api_method_match_score(carrier, api_method)
-                if score:
-                    scored.append((score, api_method))
-            if not scored:
+                if score > method_score:
+                    method_score = score
+                    matched_api_method = api_method
+            if not method_score:
                 continue
-
-            matched_api_method = False
-            method_score = 0
-            if selected_remote_method_id:
-                exact = []
-                for score, api_method in scored:
-                    try:
-                        remote_id = int(api_method.get("id") or 0)
-                    except (TypeError, ValueError):
-                        remote_id = 0
-                    if remote_id == selected_remote_method_id:
-                        exact.append((score, api_method))
-                if len(exact) == 1:
-                    method_score, matched_api_method = exact[0]
-                elif len(exact) > 1:
-                    return {
-                        "success": False,
-                        "message": _(
-                            "Sendcloud ha devuelto una coincidencia ambigua para la opción elegida. Actualiza los métodos antes de continuar."
-                        ),
-                    }
-
-            if not matched_api_method:
-                # Sendcloud method ids are not treated as a permanent identity.
-                # If the id changed between the discovery request and the final
-                # selection, recover only when the chosen local service still has
-                # one strongest, unambiguous compatible remote method.
-                best_score = max(score for score, _api_method in scored)
-                winners = [
-                    api_method for score, api_method in scored if score == best_score
-                ]
-                winner_ids = {
-                    str(api_method.get("id") or "")
-                    for api_method in winners
-                    if api_method.get("id") not in (None, False, "")
-                }
-                if len(winner_ids) != 1:
-                    continue
-                matched_api_method = winners[0]
-                method_score = best_score
-                if selected_remote_method_id:
-                    _logger.info(
-                        "Optima pickup phase2: selected Sendcloud offer %s changed remote method id; "
-                        "recovered unambiguously as %s for local carrier %s",
-                        selected_remote_method_id,
-                        matched_api_method.get("id"),
-                        carrier.display_name,
-                    )
-
             point_score = self._optima_sendcloud_carrier_match_score(
                 carrier, point_carrier_code
             )
@@ -1694,19 +1132,31 @@ class SaleOrder(models.Model):
         if not candidates:
             _logger.warning(
                 "Optima pickup: Sendcloud returned compatible remote methods %s but none maps "
-                "unambiguously to the customer-selected/synchronized Odoo PUDO method. "
-                "Point carrier=%s, offer=%s, locals=%s",
+                "unambiguously to a synchronized Odoo PUDO method. Point carrier=%s, locals=%s",
                 [m.get("id") for m in compatible_api_methods],
                 point_carrier_code,
-                selected_offer_key,
                 carriers.mapped("display_name"),
             )
             return {
                 "success": False,
                 "message": _(
-                    "La opción elegida ya no es compatible con este pedido o no se puede vincular de forma segura con un método PUDO sincronizado. Vuelve a comparar las opciones."
+                    "Sendcloud tiene un método compatible, pero no se puede vincular con un método PUDO sincronizado en Odoo. Sincroniza los métodos Sendcloud."
                 ),
             }
+
+        # Keep only the strongest remote-method mapping.  Carrier-code affinity
+        # breaks ties but can never rescue a method whose API identity did not
+        # match; this avoids selecting another service that happens to share a
+        # carrier and weight bracket.
+        best_method_score = max(item["method_score"] for item in candidates)
+        candidates = [
+            item for item in candidates if item["method_score"] == best_method_score
+        ]
+        best_point_score = max(item["point_score"] for item in candidates)
+        if best_point_score:
+            candidates = [
+                item for item in candidates if item["point_score"] == best_point_score
+            ]
 
         successful_rates = []
         errors = []
@@ -1773,33 +1223,14 @@ class SaleOrder(models.Model):
                 ),
             }
 
-        if selected_offer_key:
-            # The comparison screen fixed the service. There is exactly one
-            # local carrier candidate by construction; never substitute a
-            # cheaper service here.
-            if len(successful_rates) != 1:
-                return {
-                    "success": False,
-                    "message": _(
-                        "No se puede confirmar de forma inequívoca la opción de entrega que elegiste. Vuelve a comparar los puntos disponibles."
-                    ),
-                }
-            selected = successful_rates[0]
-            selection_origin = "customer_offer"
-        else:
-            # Exploratory map mode deliberately carries no offer key. Preserve
-            # Phase 1 convenience only when the selected point resolves to one
-            # single compatible service. If there are several, the customer must
-            # choose between price/plazo instead of the module choosing for them.
-            if len(successful_rates) > 1:
-                return {
-                    "success": False,
-                    "message": _(
-                        "Este punto admite varios métodos compatibles. Pulsa «Cambiar punto» y elige una opción concreta según distancia, precio y plazo."
-                    ),
-                }
-            selected = successful_rates[0]
-            selection_origin = "unique_point_method"
+        selected = min(
+            successful_rates,
+            key=lambda item: (
+                item["price"],
+                item["carrier"].sequence,
+                item["carrier"].id,
+            ),
+        )
         message = selected["warning"] or ""
         if (
             message
@@ -1826,7 +1257,7 @@ class SaleOrder(models.Model):
             (selected.get("api_method") or {}).get("id"),
             selected["price"],
             self.currency_id.name,
-            "%s/%s" % (selection_origin, selected.get("source")),
+            selected.get("source"),
         )
         return {
             "success": True,
@@ -1850,10 +1281,6 @@ class SaleOrder(models.Model):
             {
                 "sendcloud_service_point_address": json.dumps(point_to_store),
                 "optima_sendcloud_to_post_number": str(post_number),
-                "optima_sendcloud_selected_offer_key": str(
-                    extra.get("selected_offer_key") or ""
-                )
-                or False,
             }
         )
 
@@ -1863,6 +1290,5 @@ class SaleOrder(models.Model):
             {
                 "sendcloud_service_point_address": False,
                 "optima_sendcloud_to_post_number": False,
-                "optima_sendcloud_selected_offer_key": False,
             }
         )

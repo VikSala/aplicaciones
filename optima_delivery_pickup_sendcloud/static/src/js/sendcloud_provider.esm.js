@@ -29,17 +29,7 @@ registerPickupProvider("sendcloud", {
             city: config.city,
             language: config.language || "es-es",
         };
-        // Phase 2 can narrow the hosted picker to the concrete offer/carrier
-        // the customer is evaluating. Without this option the stable Phase 1
-        // behavior remains unchanged and Sendcloud shows every enabled carrier.
-        if (config.carriers) {
-            options.carriers = String(config.carriers);
-        }
-
-        const requestedServicePoint = Number.parseInt(config.service_point_id || "", 10);
-        if (!Number.isNaN(requestedServicePoint)) {
-            options.servicePointId = requestedServicePoint;
-        } else if (currentPoint?.provider_code === "sendcloud" && currentPoint.id) {
+        if (currentPoint?.provider_code === "sendcloud" && currentPoint.id) {
             const parsedId = Number.parseInt(currentPoint.id, 10);
             if (!Number.isNaN(parsedId)) {
                 options.servicePointId = parsedId;
@@ -49,6 +39,8 @@ registerPickupProvider("sendcloud", {
             options.postNumber = config.post_number;
         }
 
+        // Sin filtro `carriers`: Sendcloud muestra todos los carriers habilitados
+        // para Service Points en la integración.
         api.servicePoints.open(
             options,
             (servicePoint, postNumber) => {

@@ -1,10 +1,16 @@
 from collections import defaultdict
+import hashlib
+import json
+import logging
 from math import ceil
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
 from ..utils.package import estimate_single_package
+
+
+_logger = logging.getLogger(__name__)
 
 
 class SaleOrder(models.Model):
@@ -86,6 +92,16 @@ class SaleOrder(models.Model):
     optima_pickup_resolution_message = fields.Char(
         string="Diagnóstico pickup",
         copy=False,
+    )
+    optima_pickup_resolved_logistics_fingerprint = fields.Char(
+        string="Huella logística validada",
+        copy=False,
+        readonly=True,
+    )
+    optima_pickup_resolved_address_fingerprint = fields.Char(
+        string="Huella de dirección validada",
+        copy=False,
+        readonly=True,
     )
 
     # Snapshot calculado de la logística del carrito. Se mantiene genérico y
@@ -426,30 +442,180 @@ class SaleOrder(models.Model):
         }
 
 
-    def _cart_update(self, product_id, line_id=None, add_qty=0, set_qty=0, **kwargs):
-        """Keep pickup state consistent when the ecommerce cart is emptied.
+    @staticmethod
+    def _optima_pickup_hash_payload(payload):
+        encoded = json.dumps(
+            payload, sort_keys=True, ensure_ascii=True, separators=(",", ":")
+        ).encode("utf-8")
+        return hashlib.sha256(encoded).hexdigest()
 
-        Odoo keeps the same draft sale order when a logged-in customer empties
-        the cart.  Without clearing our custom pickup snapshot, the next product
-        added to that draft order could inherit the previous point, carrier and
-        price even though it belongs to a new cart contents state.
+    def _optima_pickup_logistics_fingerprint(self, profile=None):
+        """Stable signature of the physical parcel relevant to carrier checks.
 
-        Full revalidation on every quantity/product change belongs to the next
-        phase.  Here we only handle the hard boundary where the cart no longer
-        contains any deliverable product, because carrying a pickup selection
-        across that boundary is always stale.
+        We intentionally fingerprint the resulting parcel rather than sale prices:
+        pickup compatibility/rating in the current architecture depends on weight,
+        dimensions and physical-unit count. A delivery line is excluded by the
+        package profile itself.
         """
         self.ensure_one()
+        profile = profile or self._optima_pickup_package_profile()
+        payload = {
+            "success": bool(profile.get("success")),
+            "weight_kg": round(float(profile.get("weight_kg") or 0.0), 6),
+            "length_mm": round(float(profile.get("length_mm") or 0.0), 3),
+            "width_mm": round(float(profile.get("width_mm") or 0.0), 3),
+            "height_mm": round(float(profile.get("height_mm") or 0.0), 3),
+            "unit_count": int(profile.get("unit_count") or 0),
+            "missing_weight": sorted(profile.get("missing_weight") or []),
+            "missing_dimensions": sorted(profile.get("missing_dimensions") or []),
+        }
+        return self._optima_pickup_hash_payload(payload)
+
+    def _optima_pickup_address_fingerprint(self):
+        """Stable signature of the delivery destination used to choose a point.
+
+        This catches both switching to another delivery partner and editing the
+        current partner in-place (same partner id, different street/zip/city).
+        """
+        self.ensure_one()
+        partner = self.partner_shipping_id or self.partner_id
+        if not partner:
+            return self._optima_pickup_hash_payload({"partner": False})
+
+        def clean(value):
+            return " ".join(str(value or "").strip().lower().split())
+
+        payload = {
+            "partner_id": partner.id,
+            "street": clean(partner.street),
+            "street2": clean(partner.street2),
+            "zip": clean(partner.zip),
+            "city": clean(partner.city),
+            "state": clean(partner.state_id.code or partner.state_id.name),
+            "country": clean(partner.country_id.code),
+        }
+        return self._optima_pickup_hash_payload(payload)
+
+    def _optima_pickup_invalidate_for_address_change(self):
+        """Discard a pickup point chosen for a different delivery address."""
+        self.ensure_one()
+        if not self.optima_pickup_mode:
+            return
+        self.with_context(keep_pickup_location=True)._remove_delivery_line()
+        self.write({"carrier_id": False})
+        self._optima_pickup_clear_selection(keep_mode=True)
+        self.write({
+            "optima_pickup_resolution_message": _(
+                "La dirección de entrega ha cambiado. Selecciona de nuevo un punto de recogida."
+            ),
+        })
+
+    def _optima_pickup_revalidate_stored_point(self):
+        """Re-run package/provider validation without breaking cart edits.
+
+        A transient provider failure may invalidate the delivery price, but it
+        must never prevent the customer from changing products or quantities.
+        The selected point remains visible so the customer understands what must
+        be revalidated/reselected.
+        """
+        self.ensure_one()
+        if not (self.optima_pickup_mode and self.optima_pickup_external_id):
+            return self._optima_pickup_resolution_payload()
+        try:
+            return self._optima_pickup_resolve_stored_point()
+        except Exception as exc:  # pragma: no cover - last-resort checkout safety
+            _logger.exception(
+                "Optima pickup: unexpected error revalidating sale order %s", self.id
+            )
+            self._optima_pickup_clear_resolution(remove_delivery_line=True)
+            self.write({
+                "optima_pickup_resolution_message": _(
+                    "El carrito ha cambiado y no se ha podido revalidar el punto de recogida. "
+                    "Vuelve a seleccionar el punto o inténtalo de nuevo."
+                ),
+            })
+            return self._optima_pickup_resolution_payload()
+
+    def _optima_pickup_ensure_current_state(self):
+        """Fail-safe for changes that bypass normal website hooks.
+
+        Standard website cart updates and address updates are handled eagerly
+        below. This guard protects checkout/payment against custom modules or
+        direct writes that changed the cart/address without using those hooks.
+        """
+        self.ensure_one()
+        if not (
+            self.optima_pickup_mode
+            and self.optima_pickup_external_id
+            and self.optima_pickup_resolved
+        ):
+            return
+
+        current_address = self._optima_pickup_address_fingerprint()
+        validated_address = self.optima_pickup_resolved_address_fingerprint or ""
+        if validated_address and validated_address != current_address:
+            self._optima_pickup_invalidate_for_address_change()
+            return
+
+        current_logistics = self._optima_pickup_logistics_fingerprint()
+        validated_logistics = self.optima_pickup_resolved_logistics_fingerprint or ""
+        # Missing fingerprints are expected on orders resolved by pre-Phase-3
+        # versions: revalidate them once rather than trusting stale data.
+        if (
+            not validated_address
+            or not validated_logistics
+            or validated_logistics != current_logistics
+        ):
+            self._optima_pickup_revalidate_stored_point()
+
+    def _update_address(self, partner_id, fnames=None):
+        """A pickup point is tied to the address from which it was searched.
+
+        Odoo calls this method both when switching delivery addresses and after
+        editing the current address in-place. Clear the old point *before* the
+        native carrier refresh so website_sale cannot silently keep/reselect the
+        technical pickup carrier for the new destination.
+        """
+        shipping_changed = bool(
+            fnames
+            and "partner_shipping_id" in fnames
+            and self.optima_pickup_mode
+            and self.optima_pickup_external_id
+        )
+        if shipping_changed:
+            self._optima_pickup_invalidate_for_address_change()
+        return super()._update_address(partner_id, fnames)
+
+    def _cart_update(self, product_id, line_id=None, add_qty=0, set_qty=0, **kwargs):
+        """Automatically revalidate pickup after a physical cart change.
+
+        Phase 3 keeps the customer's selected point when products/quantities
+        change, but recalculates package compatibility and price. If the same
+        point is no longer valid, it remains visible as unresolved and checkout
+        confirmation stays blocked. Emptying the cart still clears pickup fully.
+        """
+        self.ensure_one()
+        had_selected_point = bool(
+            self.optima_pickup_mode and self.optima_pickup_external_id
+        )
+        before_signature = (
+            self._optima_pickup_logistics_fingerprint() if had_selected_point else False
+        )
+
         result = super()._cart_update(
             product_id, line_id=line_id, add_qty=add_qty, set_qty=set_qty, **kwargs
         )
+
         if self.optima_pickup_mode and not self._has_deliverable_products():
-            # website_sale may already have removed the delivery line when the
-            # cart became empty/only-services.  Repeat safely with the native
-            # keep flag so provider cleanup happens in one controlled place.
             self.with_context(keep_pickup_location=True)._remove_delivery_line()
             self.write({"carrier_id": False})
             self._optima_pickup_clear_selection(keep_mode=False)
+            return result
+
+        if had_selected_point and self.optima_pickup_mode and self.optima_pickup_external_id:
+            after_signature = self._optima_pickup_logistics_fingerprint()
+            if before_signature != after_signature:
+                self._optima_pickup_revalidate_stored_point()
         return result
 
     def _get_preferred_delivery_method(self, available_delivery_methods):
@@ -481,48 +647,6 @@ class SaleOrder(models.Model):
         """Adapter hook: public checkout configuration for one provider."""
         self.ensure_one()
         return False
-
-    def _optima_pickup_get_customer_options(self, provider_code=False):
-        """Adapter hook: normalized delivery choices shown before point selection.
-
-        Phase 2 deliberately separates *discovery* from *selection*.  Providers
-        can return groups (normally pickup points) with one or more concrete
-        offers containing price and estimated transit time.  The core never
-        chooses an offer on behalf of the customer.
-
-        Expected shape::
-
-            {
-                "success": True,
-                "provider_code": "provider",
-                "groups": [
-                    {
-                        "point": {...},
-                        "distance_m": 350,
-                        "offers": [
-                            {
-                                "key": "opaque-provider-key",
-                                "carrier_name": "Carrier",
-                                "method_name": "Service",
-                                "price": 4.20,
-                                "currency": "EUR",
-                                "eta_label": "24 h aprox.",
-                                "map_carriers": "carrier_code",
-                            }
-                        ],
-                    }
-                ],
-            }
-
-        The default result is empty so future adapters can opt in independently.
-        """
-        self.ensure_one()
-        return {
-            "success": True,
-            "provider_code": provider_code or "",
-            "groups": [],
-            "message": False,
-        }
 
     def _optima_pickup_get_providers(self):
         self.ensure_one()
@@ -627,6 +751,7 @@ class SaleOrder(models.Model):
 
     def _optima_pickup_checkout_values(self):
         self.ensure_one()
+        self._optima_pickup_ensure_current_state()
         providers = self._optima_pickup_get_providers()
         resolution = self._optima_pickup_resolution_payload()
         return {
@@ -657,6 +782,8 @@ class SaleOrder(models.Model):
                 "optima_pickup_resolution_message": False,
                 "optima_delivery_method_limits_carrier_id": False,
                 "optima_delivery_method_limits_snapshot": False,
+                "optima_pickup_resolved_logistics_fingerprint": False,
+                "optima_pickup_resolved_address_fingerprint": False,
             }
         )
 
@@ -684,6 +811,8 @@ class SaleOrder(models.Model):
                 "optima_pickup_resolution_message": False,
                 "optima_delivery_method_limits_carrier_id": False,
                 "optima_delivery_method_limits_snapshot": False,
+                "optima_pickup_resolved_logistics_fingerprint": False,
+                "optima_pickup_resolved_address_fingerprint": False,
             }
         )
         self._optima_pickup_after_clear()
@@ -758,6 +887,8 @@ class SaleOrder(models.Model):
                     carrier.id if method_limits else False
                 ),
                 "optima_delivery_method_limits_snapshot": method_limits or False,
+                "optima_pickup_resolved_logistics_fingerprint": self._optima_pickup_logistics_fingerprint(),
+                "optima_pickup_resolved_address_fingerprint": self._optima_pickup_address_fingerprint(),
             }
         )
         return self._optima_pickup_resolution_payload()
@@ -857,6 +988,7 @@ class SaleOrder(models.Model):
 
     def _check_cart_is_ready_to_be_paid(self):
         self.ensure_one()
+        self._optima_pickup_ensure_current_state()
         if self.optima_pickup_mode and not (
             self.optima_pickup_resolved and self.optima_pickup_delivery_carrier_id
         ):
