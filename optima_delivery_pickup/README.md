@@ -2,7 +2,7 @@
 
 Generic multi-provider pickup core for Odoo 18 ecommerce.
 
-Current development phase (18.0.0.8.2):
+Current development phase (18.0.0.8.5):
 
 - Generic `Punto de recogida` option remains intentionally always visible.
 - Product length / width / height fields in millimetres.
@@ -134,3 +134,9 @@ validation will later reject the current cart.
 - Marcadores de mapa específicos para Correos, Correos Express e InPost.
 - Los marcadores de otras compañías conservan el fallback genérico.
 - Eliminado el aviso inferior sobre precio orientativo del selector de puntos.
+
+
+## 18.0.0.8.5
+- Los filtros superiores de transportista muestran solo texto y contador, sin imágenes.
+- Las tarjetas laterales usan los mismos markers corporativos que el mapa para Correos, Correos Express e InPost.
+- Los carriers sin marker corporativo conservan el logo/fallback anterior.

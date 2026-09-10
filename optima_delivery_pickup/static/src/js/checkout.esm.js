@@ -613,7 +613,6 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
                 carriers.set(key, {
                     key,
                     name: point.carrier_name || point.carrier_code || point.provider_name || "Otros",
-                    icon: point.marker_icon || "",
                     count: 0,
                 });
             }
@@ -624,7 +623,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             return;
         }
         const options = [
-            {key: "all", name: "Todos", count: state.points.length, icon: ""},
+            {key: "all", name: "Todos", count: state.points.length},
             ...Array.from(carriers.values()).sort((a, b) => a.name.localeCompare(b.name)),
         ];
         if (!options.some((item) => item.key === state.carrierFilter)) {
@@ -635,7 +634,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             button.type = "button";
             button.className = "optima_pickup_filter_chip";
             button.classList.toggle("active", state.carrierFilter === item.key);
-            button.innerHTML = `${item.icon ? `<img src="${this._escapeAttr(item.icon)}" alt=""/>` : ""}<span>${this._escapeHtml(item.name)}</span><span class="optima_pickup_filter_count">${item.count}</span>`;
+            button.innerHTML = `<span>${this._escapeHtml(item.name)}</span><span class="optima_pickup_filter_count">${item.count}</span>`;
             button.addEventListener("click", () => {
                 state.carrierFilter = item.key;
                 this._renderUnifiedCarrierFilters();
@@ -696,9 +695,12 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             const distanceText = this._formatDistance(point.distance_m);
             const today = this._openingToday(point.opening_times);
             const type = point.shop_type === "locker" ? "Locker" : "Punto";
-            const logo = point.marker_icon
-                ? `<img class="optima_pickup_card_logo" src="${this._escapeAttr(point.marker_icon)}" alt="${this._escapeAttr(point.carrier_name || point.carrier_code || "Transportista")}"/>`
-                : `<span class="optima_pickup_card_logo optima_pickup_card_logo_fallback">${this._escapeHtml(this._carrierInitials(point))}</span>`;
+            const brandMarker = this._brandMarkerAsset(point);
+            const logo = brandMarker
+                ? `<img class="optima_pickup_card_marker" src="${this._escapeAttr(brandMarker)}" alt="${this._escapeAttr(point.carrier_name || point.carrier_code || "Transportista")}"/>`
+                : point.marker_icon
+                    ? `<img class="optima_pickup_card_logo" src="${this._escapeAttr(point.marker_icon)}" alt="${this._escapeAttr(point.carrier_name || point.carrier_code || "Transportista")}"/>`
+                    : `<span class="optima_pickup_card_logo optima_pickup_card_logo_fallback">${this._escapeHtml(this._carrierInitials(point))}</span>`;
             card.innerHTML = `
                 <div class="d-flex align-items-start gap-2">
                     ${logo}
