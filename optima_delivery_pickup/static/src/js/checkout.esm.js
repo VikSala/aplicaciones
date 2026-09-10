@@ -295,8 +295,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
                         </div>
                     </div>
                 </div>
-                <footer class="optima_pickup_map_footer">
-                    <span class="small text-muted">El precio mostrado en el mapa es orientativo; al elegir el punto se valida el método y precio exactos.</span>
+                <footer class="optima_pickup_map_footer justify-content-end">
                     <button type="button" class="btn btn-outline-secondary" data-optima-map-close>Cancelar</button>
                 </footer>
             </section>`;
@@ -742,6 +741,25 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         return name.split(/\s+/).map((part) => part[0] || "").join("").slice(0, 3).toUpperCase() || "P";
     },
 
+    _brandMarkerAsset(point) {
+        const raw = [
+            point?.carrier_code,
+            point?.carrier_name,
+            point?.provider_code,
+            point?.provider_name,
+        ].filter(Boolean).join(" ").toLowerCase().replace(/[^a-z0-9]+/g, "_");
+        if (raw.includes("correos_express")) {
+            return "/optima_delivery_pickup/static/src/img/markers/correos_express.svg";
+        }
+        if (raw.includes("correos")) {
+            return "/optima_delivery_pickup/static/src/img/markers/correos.svg";
+        }
+        if (raw.includes("inpost") || raw.includes("mondial_relay")) {
+            return "/optima_delivery_pickup/static/src/img/markers/inpost.svg";
+        }
+        return "";
+    },
+
     _renderUnifiedMapMarkers({fit = false} = {}) {
         const state = this._pickupMapState;
         const map = state?.leaflet;
@@ -760,15 +778,27 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
                 continue;
             }
             const isSelected = state.selectedKey === point.key;
-            const logo = point.marker_icon
-                ? `<img src="${this._escapeAttr(point.marker_icon)}" alt=""/>`
-                : `<span>${this._escapeHtml(this._carrierInitials(point))}</span>`;
-            const icon = window.L.divIcon({
-                className: "optima_pickup_marker_wrapper",
-                html: `<span class="optima_pickup_marker${isSelected ? " active" : ""}">${logo}</span>`,
-                iconSize: [46, 46],
-                iconAnchor: [23, 44],
-            });
+            const brandMarker = this._brandMarkerAsset(point);
+            let icon;
+            if (brandMarker) {
+                icon = window.L.divIcon({
+                    className: "optima_pickup_marker_wrapper",
+                    html: `<img class="optima_pickup_brand_marker${isSelected ? " active" : ""}" src="${this._escapeAttr(brandMarker)}" alt="${this._escapeAttr(point.carrier_name || point.carrier_code || "Transportista")}"/>`,
+                    iconSize: [39, 51],
+                    iconAnchor: [20, 49],
+                    tooltipAnchor: [0, -42],
+                });
+            } else {
+                const logo = point.marker_icon
+                    ? `<img src="${this._escapeAttr(point.marker_icon)}" alt=""/>`
+                    : `<span>${this._escapeHtml(this._carrierInitials(point))}</span>`;
+                icon = window.L.divIcon({
+                    className: "optima_pickup_marker_wrapper",
+                    html: `<span class="optima_pickup_marker${isSelected ? " active" : ""}">${logo}</span>`,
+                    iconSize: [46, 46],
+                    iconAnchor: [23, 44],
+                });
+            }
             const marker = window.L.marker([lat, lng], {icon, keyboard: true}).addTo(map);
             marker.on("click", () => this._selectUnifiedPointPreview(point));
             marker.bindTooltip(

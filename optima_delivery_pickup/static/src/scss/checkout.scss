@@ -276,6 +276,21 @@ body.optima_pickup_map_open {
     border: 0;
 }
 
+.optima_pickup_brand_marker {
+    display: block;
+    width: 39px;
+    height: 51px;
+    object-fit: contain;
+    filter: drop-shadow(0 3px 5px rgba(20, 28, 38, 0.26));
+    transform-origin: 50% 95%;
+    transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.optima_pickup_brand_marker.active {
+    transform: translateY(-4px) scale(1.16);
+    filter: drop-shadow(0 6px 8px rgba(20, 28, 38, 0.34));
+}
+
 .optima_pickup_marker {
     position: relative;
     width: 46px;

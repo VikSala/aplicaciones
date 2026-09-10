@@ -128,3 +128,9 @@ validation will later reject the current cart.
 
 ## 18.0.0.8.3
 - Mapa base OpenStreetMap sin API key ni marcas de agua de proveedor.
+
+
+## 18.0.0.8.4
+- Marcadores de mapa específicos para Correos, Correos Express e InPost.
+- Los marcadores de otras compañías conservan el fallback genérico.
+- Eliminado el aviso inferior sobre precio orientativo del selector de puntos.
