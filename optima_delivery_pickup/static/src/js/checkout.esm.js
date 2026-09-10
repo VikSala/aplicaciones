@@ -427,13 +427,13 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             attributionControl: true,
         }).setView(initialCenter || [40.4168, -3.7038], initialZoom);
 
-        // CARTO Voyager keeps the familiar OpenStreetMap street data but uses a
-        // cleaner, modern short-distance visual language than the default OSM
-        // raster style. No API key is required.
-        window.L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-            maxZoom: 20,
-            subdomains: "abcd",
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
+        // Use the official OpenStreetMap raster tiles. They do not require an
+        // API key, so the checkout cannot be polluted by provider watermarks
+        // such as "API KEY REQUIRED". The map is intentionally street-focused
+        // because pickup selection is a short-distance, neighbourhood task.
+        window.L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
         }).addTo(map);
         state.leaflet = map;
         map.on("moveend", () => this._persistPickupMapCache());

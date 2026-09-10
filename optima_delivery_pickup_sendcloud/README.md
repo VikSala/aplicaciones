@@ -81,3 +81,10 @@ Current development phase (18.0.0.6.1):
 - Añade un token de caché ligado a dirección + perfil logístico para que el frontend pueda reutilizar resultados sin conservar datos obsoletos.
 - Añade iconos visuales por transportista (InPost, Correos, Correos Express, UPS, GLS, FedEx, DHL, DPD y fallback genérico).
 - Reduce el timeout de lectura de Service Points para evitar que una búsqueda lenta bloquee el checkout durante demasiado tiempo.
+
+
+## 18.0.0.6.2
+- El mapa ya no oculta puntos que no tengan tarifa orientativa local; la validación exacta sigue al seleccionar.
+- Alias robustos para InPost ES / Mondial Relay.
+- Caché temporal por carrier + CP + bulto + dirección para evitar repetir Shipping Products al cambiar entre puntos equivalentes.
+- Fallback de precio mediante Shipping Price API cuando la ruta sincronizada no contiene una tarifa utilizable (caso de carriers zonales como Correos).

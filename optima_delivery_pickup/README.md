@@ -124,3 +124,7 @@ validation will later reject the current cart.
 - Mueve la lista de puntos a la izquierda, añade filtros por transportista y soporta logos proporcionados por cada adaptador.
 - Persiste durante 15 minutos búsqueda, radio, filtros, resultados y posición del mapa en `sessionStorage`, invalidando la caché cuando cambian dirección o bulto.
 - Si una actualización falla, conserva los últimos resultados en vez de vaciar el mapa; añade un reintento y fallback al selector oficial.
+
+
+## 18.0.0.8.3
+- Mapa base OpenStreetMap sin API key ni marcas de agua de proveedor.

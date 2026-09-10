@@ -2,6 +2,7 @@ import json
 import logging
 import re
 import unicodedata
+import time
 from math import ceil
 
 import requests
@@ -18,6 +19,11 @@ class SaleOrder(models.Model):
     optima_sendcloud_to_post_number = fields.Char(
         string="Sendcloud Post Number",
         copy=False,
+    )
+    optima_sendcloud_resolution_cache = fields.Json(
+        string="Caché temporal de resolución Sendcloud",
+        copy=False,
+        default=dict,
     )
 
     def _optima_pickup_get_provider_carriers(self):
@@ -40,6 +46,74 @@ class SaleOrder(models.Model):
         if sendcloud_carriers:
             grouped["sendcloud"] |= sendcloud_carriers
         return grouped
+
+    def _optima_sendcloud_cache_get(self, bucket, key, ttl=1800):
+        """Return a short-lived per-order Sendcloud cache entry.
+
+        Shipping method ids are volatile, so cached API-derived identities are
+        intentionally kept for at most 30 minutes. The cache key always includes
+        the destination/logistics fingerprints plus the point postcode/carrier,
+        preventing reuse after a cart/address change or across zonal destinations.
+        """
+        self.ensure_one()
+        cache = self.optima_sendcloud_resolution_cache or {}
+        data = cache.get(bucket) if isinstance(cache, dict) else {}
+        entry = data.get(key) if isinstance(data, dict) else None
+        if not isinstance(entry, dict):
+            return False
+        try:
+            age = time.time() - float(entry.get("ts") or 0.0)
+        except (TypeError, ValueError):
+            return False
+        if age < 0 or age > ttl:
+            return False
+        return entry.get("value")
+
+    def _optima_sendcloud_cache_put(self, bucket, key, value):
+        self.ensure_one()
+        cache = dict(self.optima_sendcloud_resolution_cache or {})
+        data = dict(cache.get(bucket) or {})
+        now = time.time()
+        # Keep the DB field bounded even after many searches/point changes.
+        fresh = {}
+        for existing_key, entry in data.items():
+            if not isinstance(entry, dict):
+                continue
+            try:
+                if 0 <= now - float(entry.get("ts") or 0.0) <= 3600:
+                    fresh[existing_key] = entry
+            except (TypeError, ValueError):
+                continue
+        fresh[key] = {"ts": now, "value": value}
+        if len(fresh) > 24:
+            fresh = dict(sorted(fresh.items(), key=lambda item: float(item[1].get("ts") or 0.0), reverse=True)[:24])
+        cache[bucket] = fresh
+        self.write({"optima_sendcloud_resolution_cache": cache})
+
+    def _optima_sendcloud_validation_cache_key(self, integration, point, package):
+        self.ensure_one()
+        carrier = self._optima_sendcloud_canonical_carrier(point.get("carrier_code") or "")
+        return "|".join([
+            str(integration.id or 0),
+            carrier,
+            str(point.get("zip_code") or "").strip().upper(),
+            self._optima_pickup_address_fingerprint(),
+            self._optima_pickup_logistics_fingerprint(package),
+        ])
+
+    @staticmethod
+    def _optima_sendcloud_canonical_carrier(value):
+        token = re.sub(r"[^a-z0-9]+", "", str(value or "").lower())
+        # Normalize both raw API codes and longer synchronized Odoo labels.
+        # InPost ES historically appears under both InPost and Mondial Relay
+        # identifiers depending on the Sendcloud dataset/version.
+        if "mondialrelay" in token or "inpost" in token:
+            return "inpost_es"
+        if "correosexpress" in token:
+            return "correos_express"
+        if token == "correos" or token.endswith("correos"):
+            return "correos"
+        return token
 
     def _optima_sendcloud_pickup_integration(self, carriers=None):
         self.ensure_one()
@@ -254,6 +328,9 @@ class SaleOrder(models.Model):
         aliases = {
             "inpost_es": "InPost",
             "inpost": "InPost",
+            "inpost_iberia": "InPost",
+            "mondial_relay": "InPost",
+            "mondialrelay": "InPost",
             "correos": "Correos",
             "correos_express": "Correos Express",
             "correosexpress": "Correos Express",
@@ -276,6 +353,9 @@ class SaleOrder(models.Model):
         aliases = {
             "inpost_es": "inpost",
             "inpost": "inpost",
+            "inpost_iberia": "inpost",
+            "mondial_relay": "inpost",
+            "mondialrelay": "inpost",
             "correos": "correos",
             "correos_express": "correos_express",
             "correosexpress": "correos_express",
@@ -359,8 +439,9 @@ class SaleOrder(models.Model):
                     carriers, carrier_code, package
                 )
             quote = quote_cache[carrier_code]
-            if not quote.get("compatible"):
-                continue
+            # Discovery must represent every service point returned by Sendcloud.
+            # A missing local display quote is not proof that the point is unusable;
+            # exact package/method validation happens only after customer selection.
             try:
                 latitude = float(raw.get("latitude") or 0.0)
                 longitude = float(raw.get("longitude") or 0.0)
@@ -383,7 +464,7 @@ class SaleOrder(models.Model):
                 "city": raw.get("city") or "",
                 "country": raw.get("country") or destination_country,
                 "carrier": carrier_code,
-                "carrier_name": quote.get("carrier_name") or carrier_code,
+                "carrier_name": quote.get("carrier_name") or self._optima_sendcloud_display_carrier_name(carrier_code),
                 "latitude": latitude,
                 "longitude": longitude,
                 "general_shop_type": raw.get("general_shop_type") or "",
@@ -407,7 +488,7 @@ class SaleOrder(models.Model):
                     "city": raw.get("city") or "",
                     "country_code": raw.get("country") or destination_country,
                     "carrier_code": carrier_code,
-                    "carrier_name": quote.get("carrier_name") or carrier_code,
+                    "carrier_name": quote.get("carrier_name") or self._optima_sendcloud_display_carrier_name(carrier_code),
                     "latitude": latitude,
                     "longitude": longitude,
                     "distance_m": distance_m,
@@ -562,13 +643,17 @@ class SaleOrder(models.Model):
 
     def _optima_sendcloud_carrier_match_score(self, carrier, point_carrier_code):
         point_token = self._optima_sendcloud_normalize_token(point_carrier_code)
+        point_family = self._optima_sendcloud_canonical_carrier(point_carrier_code)
         if not point_token:
             return 0
         score = 0
         for token in self._optima_sendcloud_carrier_tokens(carrier):
-            if token == point_token:
+            token_family = self._optima_sendcloud_canonical_carrier(token)
+            if point_family and token_family == point_family:
+                score = max(score, 110)
+            elif token == point_token:
                 score = max(score, 100)
-            elif point_token in token:
+            elif point_token in token or token in point_token:
                 score = max(score, 60)
         return score
 
@@ -1127,44 +1212,65 @@ class SaleOrder(models.Model):
                 ),
             }
 
-        product_result = self._optima_sendcloud_shipping_product_methods(
-            integration, point, package
-        )
-        if not product_result.get("success"):
-            return {**validation, **product_result, "package": package}
-        product_methods = product_result.get("methods") or {}
-        if not product_methods:
-            return {
-                **validation,
-                "success": False,
-                "message": _(
-                    "El bulto estimado (%s) no cumple los límites de ningún método de punto de recogida disponible en Sendcloud."
-                ) % self._optima_sendcloud_package_label(package),
-            }
-
+        cache_key = self._optima_sendcloud_validation_cache_key(integration, point, package)
+        cached_validation = self._optima_sendcloud_cache_get("validation", cache_key)
         package_weight = float(package.get("weight_kg") or 0.0)
         compatible_methods = []
         compatible_ids = []
-        for api_method in product_methods.values():
-            best_method_score = 0
-            for carrier in point_carriers:
-                if not self._optima_sendcloud_weight_matches(carrier, package_weight):
+        if isinstance(cached_validation, dict) and cached_validation.get("methods"):
+            compatible_methods = [
+                dict(method) for method in cached_validation.get("methods") or []
+                if isinstance(method, dict)
+            ]
+            compatible_ids = [
+                int(method.get("id")) for method in compatible_methods
+                if str(method.get("id") or "").isdigit()
+            ]
+            _logger.info(
+                "Optima pickup: reusing Sendcloud package/method validation for carrier=%s zip=%s",
+                point_carrier_code,
+                point.get("zip_code") or "",
+            )
+        else:
+            product_result = self._optima_sendcloud_shipping_product_methods(
+                integration, point, package
+            )
+            if not product_result.get("success"):
+                return {**validation, **product_result, "package": package}
+            product_methods = product_result.get("methods") or {}
+            if not product_methods:
+                return {
+                    **validation,
+                    "success": False,
+                    "message": _(
+                        "El bulto estimado (%s) no cumple los límites de ningún método de punto de recogida disponible en Sendcloud."
+                    ) % self._optima_sendcloud_package_label(package),
+                }
+
+            for api_method in product_methods.values():
+                best_method_score = 0
+                for carrier in point_carriers:
+                    if not self._optima_sendcloud_weight_matches(carrier, package_weight):
+                        continue
+                    best_method_score = max(
+                        best_method_score,
+                        self._optima_sendcloud_api_method_match_score(carrier, api_method),
+                    )
+                if not best_method_score:
                     continue
-                best_method_score = max(
-                    best_method_score,
-                    self._optima_sendcloud_api_method_match_score(carrier, api_method),
+                method = dict(api_method)
+                method["_optima_match_score"] = best_method_score
+                compatible_methods.append(method)
+                try:
+                    method_id = int(api_method.get("id") or 0)
+                except (TypeError, ValueError):
+                    method_id = 0
+                if method_id:
+                    compatible_ids.append(method_id)
+            if compatible_methods:
+                self._optima_sendcloud_cache_put(
+                    "validation", cache_key, {"methods": compatible_methods}
                 )
-            if not best_method_score:
-                continue
-            method = dict(api_method)
-            method["_optima_match_score"] = best_method_score
-            compatible_methods.append(method)
-            try:
-                method_id = int(api_method.get("id") or 0)
-            except (TypeError, ValueError):
-                method_id = 0
-            if method_id:
-                compatible_ids.append(method_id)
 
         if not compatible_methods:
             _logger.warning(
@@ -1310,6 +1416,88 @@ class SaleOrder(models.Model):
         # duplicates, use the lowest synchronized amount.
         price, line, _from, _to = min(candidates, key=lambda item: (item[0], item[1].id))
         return True, max(float(price), 0.0), line
+
+    def _optima_sendcloud_remote_method_price(self, integration, api_method, package, point):
+        """Fallback to Sendcloud Shipping Price for a validated method.
+
+        This is only used when the synchronized Odoo route has no usable price.
+        Zonal context (origin/destination postal codes) is always included. Results
+        are cached per method/carrier/postcode/package for 30 minutes so switching
+        between two points of the same service does not repeat the price lookup.
+        """
+        self.ensure_one()
+        try:
+            method_id = int((api_method or {}).get("id") or 0)
+        except (TypeError, ValueError):
+            method_id = 0
+        if not method_id:
+            return False
+        origin = self._optima_sendcloud_origin_data()
+        destination_country = str(point.get("country_code") or "").upper()
+        key = "|".join([
+            str(integration.id or 0),
+            str(method_id),
+            self._optima_sendcloud_canonical_carrier(point.get("carrier_code") or ""),
+            str(point.get("zip_code") or "").strip().upper(),
+            self._optima_pickup_address_fingerprint(),
+            self._optima_pickup_logistics_fingerprint(package),
+        ])
+        cached = self._optima_sendcloud_cache_get("price", key)
+        if isinstance(cached, dict) and cached.get("price") is not None:
+            return cached
+
+        params = {
+            "shipping_method_id": method_id,
+            "from_country": origin.get("country_code") or "",
+            "to_country": destination_country,
+            "weight": max(int(ceil(float(package.get("weight_kg") or 0.0) * 1000.0)), 1),
+            "weight_unit": "gram",
+        }
+        if origin.get("postal_code"):
+            params["from_postal_code"] = str(origin["postal_code"])[:12]
+        if point.get("zip_code"):
+            params["to_postal_code"] = str(point["zip_code"])[:12]
+        if not params["from_country"] or not params["to_country"]:
+            return False
+
+        result = self._optima_sendcloud_api_get(integration, "shipping-price", params=params)
+        if not result.get("success"):
+            return False
+        payload = result.get("payload")
+        rows = payload if isinstance(payload, list) else []
+        selected = False
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            row_country = str(row.get("to_country") or "").upper()
+            if destination_country and row_country and row_country != destination_country:
+                continue
+            try:
+                price = float(row.get("price"))
+            except (TypeError, ValueError):
+                continue
+            if price <= 0:
+                continue
+            currency = str(row.get("currency") or self.currency_id.name or "EUR").upper()
+            selected = {"price": price, "currency": currency}
+            break
+        if not selected:
+            return False
+
+        if selected["currency"] != (self.currency_id.name or "").upper():
+            source_currency = self.env["res.currency"].search(
+                [("name", "=", selected["currency"])], limit=1
+            )
+            if not source_currency:
+                return False
+            order_date = fields.Date.to_date(self.date_order) if self.date_order else fields.Date.context_today(self)
+            selected["price"] = source_currency._convert(
+                selected["price"], self.currency_id, self.company_id, order_date
+            )
+            selected["currency"] = self.currency_id.name
+
+        self._optima_sendcloud_cache_put("price", key, selected)
+        return selected
 
     @staticmethod
     def _optima_sendcloud_dimension_to_mm(value, unit):
@@ -1499,6 +1687,23 @@ class SaleOrder(models.Model):
                 )
                 continue
 
+            remote_price = False
+            if integration:
+                remote_price = self._optima_sendcloud_remote_method_price(
+                    integration, item.get("api_method") or {}, package, normalized
+                )
+            if remote_price:
+                successful_rates.append(
+                    {
+                        **item,
+                        "price": float(remote_price["price"]),
+                        "warning": "",
+                        "source": "sendcloud_shipping_price",
+                        "route_line": False,
+                    }
+                )
+                continue
+
             try:
                 rate = carrier.with_context(optima_pickup_force_rate=True).rate_shipment(
                     self.with_context(optima_pickup_force_rate=True)
@@ -1626,5 +1831,6 @@ class SaleOrder(models.Model):
             {
                 "sendcloud_service_point_address": False,
                 "optima_sendcloud_to_post_number": False,
+                "optima_sendcloud_resolution_cache": {},
             }
         )
