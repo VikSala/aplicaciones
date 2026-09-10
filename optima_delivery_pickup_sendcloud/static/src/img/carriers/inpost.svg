@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 40" role="img" aria-label="InPost">
+  <rect width="72" height="40" rx="8" fill="#ffcb05"/>
+  <circle cx="15" cy="20" r="8" fill="none" stroke="#111" stroke-width="2"/>
+  <path d="M15 14v12M11 18h8" stroke="#111" stroke-width="2" stroke-linecap="round"/>
+  <text x="28" y="25" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#111">InPost</text>
+</svg>

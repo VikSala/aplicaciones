@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 40" role="img" aria-label="GLS">
+  <rect width="72" height="40" rx="8" fill="#102a83"/>
+  <circle cx="16" cy="20" r="7" fill="#ffd100"/>
+  <circle cx="16" cy="20" r="3" fill="#102a83"/>
+  <text x="29" y="26" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" fill="#ffd100">GLS</text>
+</svg>

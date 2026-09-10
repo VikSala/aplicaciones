@@ -672,7 +672,7 @@ class SaleOrder(models.Model):
         ]
         return ", ".join(part for part in parts if part)
 
-    def _optima_pickup_search_points(self, provider_codes=None, query=None, radius_m=10000):
+    def _optima_pickup_search_points(self, provider_codes=None, query=None, radius_m=5000):
         """Generic multi-provider point discovery hook.
 
         Every adapter extends this method, calls ``super()`` and appends its

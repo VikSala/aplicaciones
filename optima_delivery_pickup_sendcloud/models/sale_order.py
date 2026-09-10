@@ -96,6 +96,14 @@ class SaleOrder(models.Model):
                 "city": partner.city or "",
                 "language": lang,
                 "post_number": self.optima_sendcloud_to_post_number or "",
+                "default_query": (partner.zip or self._optima_pickup_default_search_query() or "").strip(),
+                # Frontend map cache is valid only while both destination and
+                # parcel profile remain unchanged. No personal data are exposed
+                # in this token; both values are SHA-256 fingerprints.
+                "cache_token": "%s:%s" % (
+                    self._optima_pickup_address_fingerprint(),
+                    self._optima_pickup_logistics_fingerprint(),
+                ),
             },
         }
 
@@ -133,7 +141,7 @@ class SaleOrder(models.Model):
                 params=params or {},
                 auth=(public_key, secret_key),
                 headers={"X-Requested-With": "XMLHttpRequest"},
-                timeout=(3, 8),
+                timeout=(3, 6),
             )
             response.raise_for_status()
             payload = response.json()
@@ -178,13 +186,14 @@ class SaleOrder(models.Model):
                 values.extend(int(v) for v in value.values() if isinstance(v, (int, float)))
         return max(min(values), 0) if values else 0
 
-    def _optima_sendcloud_map_quote(self, carriers, api_methods, point_carrier_code, package):
-        """Return a lightweight *display* quote for a map point.
+    def _optima_sendcloud_map_quote(self, carriers, point_carrier_code, package):
+        """Return an immediate, lightweight *display* quote for map browsing.
 
-        This never replaces the authoritative point resolution performed after
-        the customer clicks a point.  It only lets the customer compare nearby
-        points by distance, expected price and lead time without issuing one
-        remote rate request per marker.
+        Phase 5 must keep point discovery fast and resilient.  The map therefore
+        uses only already-synchronised Odoo route prices and weight brackets; it
+        deliberately does *not* call Shipping Products before rendering markers.
+        Exact weight + dimensions + service-point compatibility are still checked
+        by the proven authoritative resolver after the customer chooses a point.
         """
         self.ensure_one()
         package_weight = float(package.get("weight_kg") or 0.0)
@@ -205,20 +214,10 @@ class SaleOrder(models.Model):
         for carrier in point_carriers:
             if not self._optima_sendcloud_weight_matches(carrier, package_weight):
                 continue
-            best_method = False
-            best_method_score = 0
-            for api_method in (api_methods or {}).values():
-                score = self._optima_sendcloud_api_method_match_score(carrier, api_method)
-                if score > best_method_score:
-                    best_method_score = score
-                    best_method = api_method
-            if not best_method_score:
-                continue
             route_found, route_price, _route = self._optima_sendcloud_route_price(carrier)
             candidates.append(
                 {
                     "carrier": carrier,
-                    "api_method": best_method,
                     "price": route_price if route_found else None,
                 }
             )
@@ -234,10 +233,6 @@ class SaleOrder(models.Model):
                 item["carrier"].id,
             ),
         )
-        partner = self.partner_shipping_id or self.partner_id
-        lead_hours = self._optima_sendcloud_method_lead_time_hours(
-            selected.get("api_method") or {}, partner.country_id.code or ""
-        )
         return {
             "compatible": True,
             "price": selected.get("price"),
@@ -246,7 +241,9 @@ class SaleOrder(models.Model):
             "carrier_name": self._optima_sendcloud_display_carrier_name(
                 point_carrier_code, selected["carrier"]
             ),
-            "lead_time_hours": lead_hours,
+            # Lead time is intentionally not allowed to delay map discovery.
+            # A future provider can supply it without changing the core UI.
+            "lead_time_hours": 0,
             "estimated": True,
         }
 
@@ -273,7 +270,28 @@ class SaleOrder(models.Model):
             return value.replace("_", " ").title()
         return carrier.display_name if carrier else "Sendcloud"
 
-    def _optima_pickup_search_points(self, provider_codes=None, query=None, radius_m=10000):
+    @staticmethod
+    def _optima_sendcloud_marker_metadata(carrier_code):
+        token = str(carrier_code or "").strip().lower().replace("-", "_").replace(" ", "_")
+        aliases = {
+            "inpost_es": "inpost",
+            "inpost": "inpost",
+            "correos": "correos",
+            "correos_express": "correos_express",
+            "correosexpress": "correos_express",
+            "ups": "ups",
+            "gls": "gls",
+            "fedex": "fedex",
+            "dhl": "dhl",
+            "dpd": "dpd",
+        }
+        key = aliases.get(token, "default")
+        return {
+            "marker_icon": "/optima_delivery_pickup_sendcloud/static/src/img/carriers/%s.svg" % key,
+            "marker_theme": key,
+        }
+
+    def _optima_pickup_search_points(self, provider_codes=None, query=None, radius_m=5000):
         result = super()._optima_pickup_search_points(
             provider_codes=provider_codes, query=query, radius_m=radius_m
         )
@@ -310,29 +328,15 @@ class SaleOrder(models.Model):
             )
             return result
 
-        # One package-compatibility request for the whole map.  Exact point
-        # compatibility is checked again after the customer chooses a marker.
-        product_result = self._optima_sendcloud_shipping_product_methods(
-            integration,
-            {"country_code": destination_country, "zip_code": partner.zip or ""},
-            package,
-        )
-        if not product_result.get("success"):
-            result["errors"].append(
-                {"provider_code": "sendcloud", "message": product_result.get("message") or _("No se han podido validar los métodos Sendcloud.")}
-            )
-            return result
-        api_methods = product_result.get("methods") or {}
-        if not api_methods:
-            result["errors"].append(
-                {"provider_code": "sendcloud", "message": _("No hay métodos Sendcloud de punto de recogida compatibles con el bulto actual.")}
-            )
-            return result
-
+        # Fast-path discovery: one remote request only.  The Service Points API
+        # already filters by destination/address/radius/weight.  We avoid the
+        # previous Shipping Products call here because it doubled checkout wait
+        # time and could make /search_points hit reverse-proxy timeouts. Exact
+        # dimensional compatibility remains fail-closed in set_point.
         params = {
             "country": destination_country,
-            "address": (query or self._optima_pickup_default_search_query()).strip(),
-            "radius": min(max(int(radius_m or 10000), 500), 50000),
+            "address": (query or partner.zip or self._optima_pickup_default_search_query()).strip(),
+            "radius": min(max(int(radius_m or 5000), 500), 50000),
             "weight": max(float(package.get("weight_kg") or 0.0), 0.001),
         }
         search_result = self._optima_sendcloud_servicepoints_api_get(integration, params=params)
@@ -343,15 +347,18 @@ class SaleOrder(models.Model):
             return result
 
         public_points = []
+        quote_cache = {}
         for raw in search_result.get("points") or []:
             if not isinstance(raw, dict) or not raw.get("id"):
                 continue
             if raw.get("open_upcoming_week") is False:
                 continue
             carrier_code = str(raw.get("carrier") or "")
-            quote = self._optima_sendcloud_map_quote(
-                carriers, api_methods, carrier_code, package
-            )
+            if carrier_code not in quote_cache:
+                quote_cache[carrier_code] = self._optima_sendcloud_map_quote(
+                    carriers, carrier_code, package
+                )
+            quote = quote_cache[carrier_code]
             if not quote.get("compatible"):
                 continue
             try:
@@ -366,6 +373,7 @@ class SaleOrder(models.Model):
             except (TypeError, ValueError):
                 distance_m = 0.0
 
+            marker_meta = self._optima_sendcloud_marker_metadata(carrier_code)
             raw_point = {
                 "id": raw.get("id"),
                 "name": raw.get("name") or "",
@@ -413,6 +421,7 @@ class SaleOrder(models.Model):
                         "lead_time_hours": quote.get("lead_time_hours") or 0,
                         "estimated": True,
                     },
+                    **marker_meta,
                     "raw_point": raw_point,
                     "extra": {},
                 }
@@ -427,7 +436,7 @@ class SaleOrder(models.Model):
                 point.get("name") or "",
             )
         )
-        result["points"].extend(public_points[:80])
+        result["points"].extend(public_points[:100])
         return result
 
     def _optima_pickup_prepare_point(self, provider_code, point, extra=None):

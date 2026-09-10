@@ -151,18 +151,45 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
 
     async _openUnifiedMap(providers, currentPoint) {
         this._closeUnifiedMap();
+
+        const contextKey = this._pickupMapContextKey(providers);
+        const cached = this._loadPickupMapCache(contextKey);
         const modal = this._buildUnifiedMapModal(providers);
         document.body.appendChild(modal);
         document.body.classList.add("optima_pickup_map_open");
         this._pickupMapModal = modal;
         this._pickupMapState = {
             providers,
-            currentPoint,
-            points: [],
-            selectedKey: "",
+            currentPoint: currentPoint || {},
+            points: Array.isArray(cached?.points) ? cached.points : [],
+            selectedKey: cached?.selectedKey || "",
             leaflet: null,
             markers: new Map(),
+            contextKey,
+            query: cached?.query || this._pickupMapDefaultQuery(providers),
+            radiusM: Number(cached?.radiusM || 5000),
+            sort: cached?.sort || "distance",
+            carrierFilter: cached?.carrierFilter || "all",
+            mapCenter: Array.isArray(cached?.mapCenter) ? cached.mapCenter : null,
+            mapZoom: Number(cached?.mapZoom || 0),
+            searchSequence: 0,
+            searchRunning: false,
+            needsFit: !cached?.points?.length,
         };
+
+        const state = this._pickupMapState;
+        const input = modal.querySelector("[data-optima-query]");
+        const radius = modal.querySelector("[data-optima-radius]");
+        const sort = modal.querySelector("[data-optima-sort]");
+        if (input) {
+            input.value = state.query || "";
+        }
+        if (radius) {
+            radius.value = String(state.radiusM || 5000);
+        }
+        if (sort) {
+            sort.value = state.sort || "distance";
+        }
 
         const close = () => this._closeUnifiedMap();
         modal.querySelectorAll("[data-optima-map-close]").forEach((button) => {
@@ -172,22 +199,44 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         modal.querySelector("[data-optima-search]")?.addEventListener("click", () => {
             this._searchUnifiedMapPoints();
         });
-        modal.querySelector("[data-optima-query]")?.addEventListener("keydown", (event) => {
+        input?.addEventListener("keydown", (event) => {
             if (event.key === "Enter") {
                 event.preventDefault();
                 this._searchUnifiedMapPoints();
             }
         });
-        modal.querySelector("[data-optima-sort]")?.addEventListener("change", () => {
+        radius?.addEventListener("change", () => this._searchUnifiedMapPoints());
+        sort?.addEventListener("change", () => {
+            state.sort = sort.value || "distance";
             this._renderUnifiedMapPointList();
+            this._persistPickupMapCache();
         });
 
-        // The list remains fully usable if the map library/CDN is unavailable.
-        this._loadLeaflet().then(() => this._initUnifiedLeafletMap()).catch(() => {
+        this._renderUnifiedCarrierFilters();
+        this._renderUnifiedMapPointList();
+        if (state.points.length) {
+            const status = modal.querySelector("[data-optima-result-status]");
+            if (status) {
+                status.textContent = `${state.points.length} puntos guardados para esta búsqueda`;
+            }
+            this._setUnifiedMapLoading(false);
+        } else {
+            this._setUnifiedMapLoading(true, `Buscando puntos cerca de ${state.query || "tu dirección"}…`);
+        }
+
+        // Load the map library in parallel, but never show a zoomed-out view of
+        // the whole country while the first provider search is still running.
+        const leafletPromise = this._loadLeaflet().catch(() => false);
+        if (!state.points.length) {
+            await this._searchUnifiedMapPoints({initial: true});
+        }
+        const leafletReady = await leafletPromise;
+        if (leafletReady === false || !window.L?.map) {
             modal.querySelector("[data-optima-map-canvas]")?.classList.add("d-none");
             modal.querySelector("[data-optima-map-fallback]")?.classList.remove("d-none");
-        });
-        await this._searchUnifiedMapPoints();
+            return;
+        }
+        this._initUnifiedLeafletMap();
     },
 
     _buildUnifiedMapModal(providers) {
@@ -205,20 +254,20 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
                     <button type="button" class="btn-close" aria-label="Cerrar" data-optima-map-close></button>
                 </header>
                 <div class="optima_pickup_map_toolbar">
-                    <div class="input-group">
+                    <div class="input-group optima_pickup_search_group">
+                        <span class="input-group-text bg-white"><i class="fa fa-search" aria-hidden="true"></i></span>
                         <input type="text" class="form-control" data-optima-query placeholder="Dirección, ciudad o código postal"/>
                         <select class="form-select optima_pickup_radius" data-optima-radius aria-label="Radio de búsqueda">
-                            <option value="5000">5 km</option>
-                            <option value="10000" selected>10 km</option>
+                            <option value="5000" selected>5 km</option>
+                            <option value="10000">10 km</option>
                             <option value="20000">20 km</option>
                             <option value="50000">50 km</option>
                         </select>
-                        <button type="button" class="btn btn-primary" data-optima-search>
-                            <i class="fa fa-search me-1" aria-hidden="true"></i>Buscar
-                        </button>
+                        <button type="button" class="btn btn-primary" data-optima-search>Buscar</button>
                     </div>
+                    <div class="optima_pickup_filter_row mt-2" data-optima-carrier-filters></div>
                     <div class="d-flex align-items-center gap-2 mt-2">
-                        <span class="small text-muted flex-grow-1" data-optima-result-status>Buscando puntos…</span>
+                        <span class="small text-muted flex-grow-1" data-optima-result-status>Preparando búsqueda…</span>
                         <label class="small text-muted mb-0" for="optima_pickup_sort">Ordenar:</label>
                         <select id="optima_pickup_sort" class="form-select form-select-sm optima_pickup_sort" data-optima-sort>
                             <option value="distance">Distancia</option>
@@ -228,18 +277,23 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
                     </div>
                 </div>
                 <div class="optima_pickup_map_body">
+                    <aside class="optima_pickup_point_panel">
+                        <div class="optima_pickup_search_error alert alert-warning d-none" data-optima-search-error></div>
+                        <div class="optima_pickup_point_list" data-optima-point-list></div>
+                    </aside>
                     <div class="optima_pickup_map_visual">
                         <div class="optima_pickup_map_canvas" data-optima-map-canvas></div>
+                        <div class="optima_pickup_map_loading" data-optima-map-loading>
+                            <div class="spinner-border text-primary mb-2" role="status" aria-hidden="true"></div>
+                            <div class="fw-semibold" data-optima-map-loading-label>Buscando puntos cercanos…</div>
+                            <div class="small text-muted mt-1">Mostraremos primero los puntos más próximos.</div>
+                        </div>
                         <div class="optima_pickup_map_fallback d-none" data-optima-map-fallback>
                             <i class="fa fa-map-o fa-2x mb-2" aria-hidden="true"></i>
                             <div>El mapa no ha podido cargarse.</div>
                             <div class="small text-muted">Puedes elegir el punto desde la lista.</div>
                         </div>
                     </div>
-                    <aside class="optima_pickup_point_panel">
-                        <div class="optima_pickup_search_error alert alert-warning d-none" data-optima-search-error></div>
-                        <div class="optima_pickup_point_list" data-optima-point-list></div>
-                    </aside>
                 </div>
                 <footer class="optima_pickup_map_footer">
                     <span class="small text-muted">El precio mostrado en el mapa es orientativo; al elegir el punto se valida el método y precio exactos.</span>
@@ -249,9 +303,77 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         return root;
     },
 
+    _pickupMapDefaultQuery(providers) {
+        for (const provider of providers || []) {
+            const config = provider.config || {};
+            if (config.default_query) {
+                return String(config.default_query);
+            }
+            if (config.postal_code) {
+                return String(config.postal_code);
+            }
+            const cityQuery = [config.postal_code, config.city].filter(Boolean).join(" ").trim();
+            if (cityQuery) {
+                return cityQuery;
+            }
+        }
+        return "";
+    },
+
+    _pickupMapContextKey(providers) {
+        return (providers || []).map((provider) => {
+            const config = provider.config || {};
+            const token = config.cache_token || [config.country, config.postal_code, config.city].filter(Boolean).join(":");
+            return `${provider.code || ""}:${token}`;
+        }).sort().join("|");
+    },
+
+    _loadPickupMapCache(contextKey) {
+        try {
+            const raw = window.sessionStorage.getItem("optima_pickup_map_cache_v2");
+            if (!raw) {
+                return null;
+            }
+            const cached = JSON.parse(raw);
+            const age = Date.now() - Number(cached.savedAt || 0);
+            if (cached.contextKey !== contextKey || age < 0 || age > 15 * 60 * 1000) {
+                return null;
+            }
+            return cached;
+        } catch {
+            return null;
+        }
+    },
+
+    _persistPickupMapCache() {
+        const state = this._pickupMapState;
+        if (!state?.contextKey) {
+            return;
+        }
+        try {
+            const mapCenter = state.leaflet?.getCenter();
+            const payload = {
+                savedAt: Date.now(),
+                contextKey: state.contextKey,
+                query: state.query || "",
+                radiusM: Number(state.radiusM || 5000),
+                sort: state.sort || "distance",
+                carrierFilter: state.carrierFilter || "all",
+                selectedKey: state.selectedKey || "",
+                points: (state.points || []).slice(0, 100),
+                mapCenter: mapCenter ? [mapCenter.lat, mapCenter.lng] : state.mapCenter,
+                mapZoom: state.leaflet?.getZoom() || state.mapZoom || 0,
+            };
+            window.sessionStorage.setItem("optima_pickup_map_cache_v2", JSON.stringify(payload));
+        } catch {
+            // sessionStorage may be unavailable in hardened browsers. The map
+            // still works; it simply loses reopen persistence.
+        }
+    },
+
     async _loadLeaflet() {
         if (window.L?.map) {
-            return;
+            return true;
         }
         if (!document.querySelector('link[data-optima-leaflet="1"]')) {
             const link = document.createElement("link");
@@ -288,6 +410,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         if (!window.L?.map) {
             throw new Error("Leaflet no disponible");
         }
+        return true;
     },
 
     _initUnifiedLeafletMap() {
@@ -296,20 +419,62 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         if (!state || !canvas || state.leaflet || !window.L?.map) {
             return;
         }
-        const map = window.L.map(canvas, {zoomControl: true}).setView([40.4168, -3.7038], 6);
-        window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            maxZoom: 19,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
+
+        const initialCenter = this._preferredUnifiedMapCenter();
+        const initialZoom = state.mapZoom || (initialCenter ? 14 : 6);
+        const map = window.L.map(canvas, {
+            zoomControl: true,
+            attributionControl: true,
+        }).setView(initialCenter || [40.4168, -3.7038], initialZoom);
+
+        // CARTO Voyager keeps the familiar OpenStreetMap street data but uses a
+        // cleaner, modern short-distance visual language than the default OSM
+        // raster style. No API key is required.
+        window.L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+            maxZoom: 20,
+            subdomains: "abcd",
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
         }).addTo(map);
         state.leaflet = map;
-        window.setTimeout(() => map.invalidateSize(), 50);
-        this._renderUnifiedMapMarkers();
+        map.on("moveend", () => this._persistPickupMapCache());
+        window.setTimeout(() => {
+            map.invalidateSize();
+            this._renderUnifiedMapMarkers({fit: state.needsFit});
+            state.needsFit = false;
+        }, 50);
     },
 
-    async _searchUnifiedMapPoints() {
+    _preferredUnifiedMapCenter() {
+        const state = this._pickupMapState;
+        if (Array.isArray(state?.mapCenter) && state.mapCenter.length === 2) {
+            return state.mapCenter;
+        }
+        const selected = (state?.points || []).find((point) => point.key === state.selectedKey);
+        const current = selected || state?.currentPoint || {};
+        const currentLat = Number(current.latitude || current.lat || 0);
+        const currentLng = Number(current.longitude || current.lng || current.lon || 0);
+        if (currentLat && currentLng) {
+            return [currentLat, currentLng];
+        }
+        const nearest = [...(state?.points || [])]
+            .filter((point) => Number(point.latitude) && Number(point.longitude))
+            .sort((a, b) => Number(a.distance_m || Number.MAX_SAFE_INTEGER) - Number(b.distance_m || Number.MAX_SAFE_INTEGER))[0];
+        return nearest ? [Number(nearest.latitude), Number(nearest.longitude)] : null;
+    },
+
+    _setUnifiedMapLoading(loading, label = "Buscando puntos cercanos…") {
+        const overlay = this._pickupMapModal?.querySelector("[data-optima-map-loading]");
+        const labelNode = this._pickupMapModal?.querySelector("[data-optima-map-loading-label]");
+        if (labelNode) {
+            labelNode.textContent = label;
+        }
+        overlay?.classList.toggle("d-none", !loading);
+    },
+
+    async _searchUnifiedMapPoints({initial = false} = {}) {
         const modal = this._pickupMapModal;
         const state = this._pickupMapState;
-        if (!modal || !state) {
+        if (!modal || !state || state.searchRunning) {
             return;
         }
         const input = modal.querySelector("[data-optima-query]");
@@ -317,20 +482,38 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         const status = modal.querySelector("[data-optima-result-status]");
         const errorBox = modal.querySelector("[data-optima-search-error]");
         const searchButton = modal.querySelector("[data-optima-search]");
-        status.textContent = "Buscando puntos compatibles…";
+        const query = (input?.value || state.query || this._pickupMapDefaultQuery(state.providers) || "").trim();
+        const radiusM = Number.parseInt(radius?.value || String(state.radiusM || 5000), 10) || 5000;
+        const sequence = ++state.searchSequence;
+
+        state.searchRunning = true;
+        state.query = query;
+        state.radiusM = radiusM;
+        status.textContent = state.points.length ? "Actualizando puntos cercanos…" : "Buscando puntos compatibles…";
         errorBox.classList.add("d-none");
-        errorBox.textContent = "";
+        errorBox.replaceChildren();
         searchButton.disabled = true;
+        if (!state.points.length || initial) {
+            this._setUnifiedMapLoading(true, `Buscando puntos cerca de ${query || "tu dirección"}…`);
+        }
+
         try {
-            const result = await rpc("/shop/optima_pickup/search_points", {
+            const result = await this._searchPointsRpcWithRetry({
                 provider_codes: state.providers.map((provider) => provider.code),
-                query: input.value || "",
-                radius_m: Number.parseInt(radius.value || "10000", 10),
+                query,
+                radius_m: radiusM,
             });
-            if (!input.value && result.query) {
-                input.value = result.query;
+            if (sequence !== state.searchSequence || !this._pickupMapState) {
+                return;
+            }
+            if (result.query) {
+                state.query = result.query;
+                if (input) {
+                    input.value = result.query;
+                }
             }
             state.points = Array.isArray(result.points) ? result.points : [];
+            state.needsFit = true;
             if (state.currentPoint?.id) {
                 const currentProvider = state.currentPoint.provider_code || "";
                 const match = state.points.find(
@@ -345,26 +528,135 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
                 errorBox.classList.remove("d-none");
             }
             status.textContent = state.points.length
-                ? `${state.points.length} puntos compatibles encontrados`
+                ? `${state.points.length} puntos encontrados en ${Math.round(radiusM / 1000)} km`
                 : "No se han encontrado puntos compatibles en este radio.";
+            this._renderUnifiedCarrierFilters();
             this._renderUnifiedMapPointList();
-            this._renderUnifiedMapMarkers();
+            this._renderUnifiedMapMarkers({fit: true});
+            state.needsFit = !state.leaflet;
+            this._persistPickupMapCache();
         } catch (error) {
-            state.points = [];
-            this._renderUnifiedMapPointList();
-            this._renderUnifiedMapMarkers();
-            status.textContent = "No se ha podido completar la búsqueda.";
-            errorBox.textContent = this._errorMessage(error);
+            if (sequence !== state.searchSequence || !this._pickupMapState) {
+                return;
+            }
+            // Never destroy already useful results because a refresh timed out.
+            // Closing/reopening therefore remains instant and resilient.
+            if (state.points.length) {
+                status.textContent = `${state.points.length} puntos guardados · no se ha podido actualizar ahora`;
+                errorBox.textContent = "No se ha podido actualizar la búsqueda. Se mantienen los últimos puntos encontrados.";
+            } else {
+                status.textContent = "No se ha podido completar la búsqueda.";
+                errorBox.textContent = this._isConnectionError(error)
+                    ? "La búsqueda ha tardado demasiado. Reintenta o usa el selector oficial de Sendcloud."
+                    : this._errorMessage(error);
+            }
             errorBox.classList.remove("d-none");
+            this._appendOfficialSelectorFallback(errorBox);
         } finally {
-            searchButton.disabled = false;
+            if (this._pickupMapState && sequence === state.searchSequence) {
+                state.searchRunning = false;
+                searchButton.disabled = false;
+                this._setUnifiedMapLoading(false);
+            }
         }
     },
 
-    _sortedUnifiedPoints() {
+    async _searchPointsRpcWithRetry(payload) {
+        try {
+            return await rpc("/shop/optima_pickup/search_points", payload);
+        } catch (error) {
+            if (!this._isConnectionError(error)) {
+                throw error;
+            }
+            await new Promise((resolve) => window.setTimeout(resolve, 300));
+            return await rpc("/shop/optima_pickup/search_points", payload);
+        }
+    },
+
+    _appendOfficialSelectorFallback(container) {
         const state = this._pickupMapState;
-        const sort = this._pickupMapModal?.querySelector("[data-optima-sort]")?.value || "distance";
-        const points = [...(state?.points || [])];
+        if (!container || !state || container.querySelector("[data-optima-official-fallback]")) {
+            return;
+        }
+        const descriptor = state.providers.length === 1 ? state.providers[0] : null;
+        const provider = descriptor ? pickupProviderRegistry.get(descriptor.code) : null;
+        if (!descriptor || !provider?.open) {
+            return;
+        }
+        const wrapper = document.createElement("div");
+        wrapper.className = "mt-2";
+        wrapper.innerHTML = `<button type="button" class="btn btn-sm btn-outline-primary" data-optima-official-fallback>Usar selector oficial de ${this._escapeHtml(descriptor.name || descriptor.code)}</button>`;
+        wrapper.querySelector("button").addEventListener("click", async () => {
+            const currentPoint = state.currentPoint || {};
+            this._closeUnifiedMap();
+            await provider.open({
+                config: descriptor.config || {},
+                currentPoint,
+                onSelect: async (rawPoint, extra = {}) => {
+                    await this._savePoint(descriptor.code, rawPoint, extra);
+                },
+                onError: (message) => this._showError(this._getLivePickupContainer(), message),
+            });
+        });
+        container.appendChild(wrapper);
+    },
+
+    _renderUnifiedCarrierFilters() {
+        const container = this._pickupMapModal?.querySelector("[data-optima-carrier-filters]");
+        const state = this._pickupMapState;
+        if (!container || !state) {
+            return;
+        }
+        const carriers = new Map();
+        for (const point of state.points || []) {
+            const key = point.carrier_code || point.carrier_name || point.provider_code || "other";
+            if (!carriers.has(key)) {
+                carriers.set(key, {
+                    key,
+                    name: point.carrier_name || point.carrier_code || point.provider_name || "Otros",
+                    icon: point.marker_icon || "",
+                    count: 0,
+                });
+            }
+            carriers.get(key).count += 1;
+        }
+        container.replaceChildren();
+        if (carriers.size <= 1) {
+            return;
+        }
+        const options = [
+            {key: "all", name: "Todos", count: state.points.length, icon: ""},
+            ...Array.from(carriers.values()).sort((a, b) => a.name.localeCompare(b.name)),
+        ];
+        if (!options.some((item) => item.key === state.carrierFilter)) {
+            state.carrierFilter = "all";
+        }
+        for (const item of options) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "optima_pickup_filter_chip";
+            button.classList.toggle("active", state.carrierFilter === item.key);
+            button.innerHTML = `${item.icon ? `<img src="${this._escapeAttr(item.icon)}" alt=""/>` : ""}<span>${this._escapeHtml(item.name)}</span><span class="optima_pickup_filter_count">${item.count}</span>`;
+            button.addEventListener("click", () => {
+                state.carrierFilter = item.key;
+                this._renderUnifiedCarrierFilters();
+                this._renderUnifiedMapPointList();
+                this._renderUnifiedMapMarkers({fit: true});
+                this._persistPickupMapCache();
+            });
+            container.appendChild(button);
+        }
+    },
+
+    _visibleUnifiedPoints() {
+        const state = this._pickupMapState;
+        const filter = state?.carrierFilter || "all";
+        const points = filter === "all"
+            ? [...(state?.points || [])]
+            : (state?.points || []).filter(
+                (point) => (point.carrier_code || point.carrier_name || point.provider_code || "other") === filter
+            );
+        const sort = state?.sort || this._pickupMapModal?.querySelector("[data-optima-sort]")?.value || "distance";
         const missing = Number.MAX_SAFE_INTEGER;
         const score = (point) => {
             if (sort === "price") {
@@ -372,9 +664,11 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
                 return value === null || value === undefined ? missing : Number(value);
             }
             if (sort === "eta") {
-                return Number(point.quote?.lead_time_hours || missing);
+                const value = Number(point.quote?.lead_time_hours || 0);
+                return value > 0 ? value : missing;
             }
-            return Number(point.distance_m || missing);
+            const value = Number(point.distance_m || 0);
+            return value > 0 ? value : missing;
         };
         points.sort((a, b) => score(a) - score(b) || Number(a.distance_m || missing) - Number(b.distance_m || missing));
         return points;
@@ -386,7 +680,8 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             return;
         }
         list.replaceChildren();
-        for (const point of this._sortedUnifiedPoints()) {
+        const points = this._visibleUnifiedPoints();
+        for (const point of points) {
             const card = document.createElement("button");
             card.type = "button";
             card.className = "optima_pickup_point_card text-start";
@@ -402,17 +697,20 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             const distanceText = this._formatDistance(point.distance_m);
             const today = this._openingToday(point.opening_times);
             const type = point.shop_type === "locker" ? "Locker" : "Punto";
+            const logo = point.marker_icon
+                ? `<img class="optima_pickup_card_logo" src="${this._escapeAttr(point.marker_icon)}" alt="${this._escapeAttr(point.carrier_name || point.carrier_code || "Transportista")}"/>`
+                : `<span class="optima_pickup_card_logo optima_pickup_card_logo_fallback">${this._escapeHtml(this._carrierInitials(point))}</span>`;
             card.innerHTML = `
                 <div class="d-flex align-items-start gap-2">
-                    <span class="optima_pickup_provider_dot" aria-hidden="true"></span>
+                    ${logo}
                     <div class="flex-grow-1 min-w-0">
                         <div class="d-flex justify-content-between gap-2">
                             <strong class="text-truncate">${this._escapeHtml(point.name || "Punto de recogida")}</strong>
                             <span class="text-nowrap fw-semibold">${this._escapeHtml(priceText)}</span>
                         </div>
                         <div class="small text-muted">${this._escapeHtml(point.carrier_name || point.carrier_code || point.provider_name || "")}</div>
-                        <div class="small">${this._escapeHtml(point.street || "")} · ${this._escapeHtml([point.zip_code, point.city].filter(Boolean).join(" "))}</div>
-                        <div class="optima_pickup_point_meta small mt-1">
+                        <div class="small mt-1">${this._escapeHtml(point.street || "")}<br/>${this._escapeHtml([point.zip_code, point.city].filter(Boolean).join(" "))}</div>
+                        <div class="optima_pickup_point_meta small mt-2">
                             <span><i class="fa fa-location-arrow me-1"></i>${this._escapeHtml(distanceText)}</span>
                             <span><i class="fa fa-clock-o me-1"></i>${this._escapeHtml(etaText)}</span>
                             <span>${this._escapeHtml(type)}</span>
@@ -423,17 +721,28 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             card.addEventListener("click", () => this._selectUnifiedPointPreview(point));
             list.appendChild(card);
         }
+        if (!points.length && !this._pickupMapState?.searchRunning) {
+            const empty = document.createElement("div");
+            empty.className = "text-muted small p-3";
+            empty.textContent = "No hay puntos para el filtro seleccionado.";
+            list.appendChild(empty);
+        }
         if (this._pickupMapState?.selectedKey) {
-            const selected = this._pickupMapState.points.find(
+            const selected = (this._pickupMapState.points || []).find(
                 (point) => point.key === this._pickupMapState.selectedKey
             );
-            if (selected) {
+            if (selected && this._findUnifiedPointCard(selected.key)) {
                 this._showUnifiedPointConfirm(selected);
             }
         }
     },
 
-    _renderUnifiedMapMarkers() {
+    _carrierInitials(point) {
+        const name = String(point.carrier_name || point.carrier_code || "P").trim();
+        return name.split(/\s+/).map((part) => part[0] || "").join("").slice(0, 3).toUpperCase() || "P";
+    },
+
+    _renderUnifiedMapMarkers({fit = false} = {}) {
         const state = this._pickupMapState;
         const map = state?.leaflet;
         if (!map || !window.L) {
@@ -444,27 +753,38 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         }
         state.markers.clear();
         const bounds = [];
-        for (const point of state.points || []) {
+        for (const point of this._visibleUnifiedPoints()) {
             const lat = Number(point.latitude || 0);
             const lng = Number(point.longitude || 0);
             if (!lat || !lng) {
                 continue;
             }
+            const isSelected = state.selectedKey === point.key;
+            const logo = point.marker_icon
+                ? `<img src="${this._escapeAttr(point.marker_icon)}" alt=""/>`
+                : `<span>${this._escapeHtml(this._carrierInitials(point))}</span>`;
             const icon = window.L.divIcon({
                 className: "optima_pickup_marker_wrapper",
-                html: `<span class="optima_pickup_marker"><b></b></span>`,
-                iconSize: [34, 34],
-                iconAnchor: [17, 34],
+                html: `<span class="optima_pickup_marker${isSelected ? " active" : ""}">${logo}</span>`,
+                iconSize: [46, 46],
+                iconAnchor: [23, 44],
             });
-            const marker = window.L.marker([lat, lng], {icon}).addTo(map);
+            const marker = window.L.marker([lat, lng], {icon, keyboard: true}).addTo(map);
             marker.on("click", () => this._selectUnifiedPointPreview(point));
+            marker.bindTooltip(
+                `<strong>${this._escapeHtml(point.name || "Punto")}</strong><br/>${this._escapeHtml(point.carrier_name || point.carrier_code || "")} · ${this._escapeHtml(this._formatDistance(point.distance_m))}`,
+                {direction: "top", offset: [0, -36]}
+            );
             state.markers.set(point.key, marker);
             bounds.push([lat, lng]);
         }
+        if (!fit || !bounds.length) {
+            return;
+        }
         if (bounds.length === 1) {
-            map.setView(bounds[0], 15);
-        } else if (bounds.length > 1) {
-            map.fitBounds(bounds, {padding: [25, 25], maxZoom: 15});
+            map.setView(bounds[0], 16);
+        } else {
+            map.fitBounds(bounds, {padding: [38, 38], maxZoom: 15});
         }
     },
 
@@ -475,13 +795,17 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         }
         state.selectedKey = point.key;
         this._renderUnifiedMapPointList();
+        this._renderUnifiedMapMarkers({fit: false});
         const marker = state.markers.get(point.key);
         if (marker && state.leaflet) {
-            state.leaflet.panTo(marker.getLatLng());
+            const zoom = Math.max(state.leaflet.getZoom(), 16);
+            state.leaflet.setView(marker.getLatLng(), zoom, {animate: true});
+            marker.openTooltip();
         }
         const selectedCard = this._findUnifiedPointCard(point.key);
         selectedCard?.scrollIntoView({block: "nearest", behavior: "smooth"});
         this._showUnifiedPointConfirm(point);
+        this._persistPickupMapCache();
     },
 
     _findUnifiedPointCard(key) {
@@ -502,6 +826,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             event.stopPropagation();
             const rawPoint = point.raw_point || point;
             const extra = point.extra || {};
+            this._persistPickupMapCache();
             this._closeUnifiedMap();
             await this._savePoint(point.provider_code, rawPoint, extra);
         });
@@ -509,6 +834,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
     },
 
     _closeUnifiedMap() {
+        this._persistPickupMapCache();
         if (this._pickupMapState?.leaflet) {
             this._pickupMapState.leaflet.remove();
         }
@@ -532,7 +858,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
     _formatLeadTime(hours) {
         const value = Number(hours || 0);
         if (!value) {
-            return "Plazo no disponible";
+            return "Plazo al seleccionar";
         }
         if (value < 24) {
             return `≈ ${Math.round(value)} h`;
@@ -554,6 +880,14 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         const div = document.createElement("div");
         div.textContent = String(value ?? "");
         return div.innerHTML;
+    },
+
+    _escapeAttr(value) {
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;");
     },
 
     async _savePoint(providerCode, rawPoint, extra) {

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 40" role="img" aria-label="DPD">
+  <rect width="72" height="40" rx="8" fill="#fff" stroke="#e5e7eb"/>
+  <path d="M11 12l10-5 10 5-10 6zM11 14l10 6v12l-10-6zM31 14l-8 5v12l8-5z" fill="#dc0032"/>
+  <text x="38" y="26" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#414042">DPD</text>
+</svg>

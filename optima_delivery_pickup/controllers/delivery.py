@@ -99,7 +99,7 @@ class OptimaPickupDelivery(Delivery):
         website=True,
     )
     def optima_pickup_search_points(
-        self, provider_codes=None, query=None, radius_m=10000
+        self, provider_codes=None, query=None, radius_m=5000
     ):
         order_sudo = request.website.sale_get_order()
         if not order_sudo:
@@ -116,9 +116,9 @@ class OptimaPickupDelivery(Delivery):
             requested_codes = sorted(available_codes)
 
         try:
-            radius = int(radius_m or 10000)
+            radius = int(radius_m or 5000)
         except (TypeError, ValueError):
-            radius = 10000
+            radius = 5000
         radius = min(max(radius, 500), 50000)
         search_query = (query or order_sudo._optima_pickup_default_search_query() or "").strip()
         if not search_query:

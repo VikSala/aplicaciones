@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 40" role="img" aria-label="Correos">
+  <rect width="72" height="40" rx="8" fill="#ffd400"/>
+  <path d="M10 15h16M12 19h12M14 23h8" stroke="#0047ba" stroke-width="2.4" stroke-linecap="round"/>
+  <circle cx="18" cy="12" r="3" fill="none" stroke="#0047ba" stroke-width="1.8"/>
+  <text x="30" y="25" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" fill="#0047ba">Correos</text>
+</svg>

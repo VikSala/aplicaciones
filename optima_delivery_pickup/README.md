@@ -2,7 +2,7 @@
 
 Generic multi-provider pickup core for Odoo 18 ecommerce.
 
-Current development phase (18.0.0.8.0):
+Current development phase (18.0.0.8.2):
 
 - Generic `Punto de recogida` option remains intentionally always visible.
 - Product length / width / height fields in millimetres.
@@ -114,3 +114,13 @@ validation will later reject the current cart.
 ## 18.0.0.8.1
 - Corrige la compilación SCSS de Odoo 18 evitando `min()` entre unidades `px` y `vw/vh` en el modal del mapa unificado.
 - Mantiene el mismo tamaño visual mediante `width/height` + `max-width/max-height`.
+
+
+## 18.0.0.8.2 — Fase 5 mejorada
+
+- El mapa abre por defecto con radio de 5 km y usa el CP del cliente como búsqueda inicial.
+- Oculta la vista nacional durante la primera carga y centra/encuadra el mapa sobre los puntos realmente encontrados.
+- Cambia a cartografía CARTO Voyager sobre OpenStreetMap para una lectura más moderna a corta distancia.
+- Mueve la lista de puntos a la izquierda, añade filtros por transportista y soporta logos proporcionados por cada adaptador.
+- Persiste durante 15 minutos búsqueda, radio, filtros, resultados y posición del mapa en `sessionStorage`, invalidando la caché cuando cambian dirección o bulto.
+- Si una actualización falla, conserva los últimos resultados en vez de vaciar el mapa; añade un reintento y fallback al selector oficial.

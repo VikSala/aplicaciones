@@ -1,7 +1,7 @@
 {
     "name": "Optima Delivery Pickup - Sendcloud",
     "summary": "Adaptador Sendcloud para Optima Delivery Pickup",
-    "version": "18.0.0.6.0",
+    "version": "18.0.0.6.1",
     "category": "Website/eCommerce",
     "author": "Optima",
     "license": "LGPL-3",
