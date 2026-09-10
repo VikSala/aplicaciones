@@ -15,6 +15,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
 
     start() {
         const result = this._super.apply(this, arguments);
+        this._pickupPrewarmJobs = new Map();
         const pickupRadio = this._getPickupRadio();
         if (pickupRadio?.checked) {
             this._markPickupSelected();
@@ -177,6 +178,10 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         };
 
         const state = this._pickupMapState;
+        // Keep the fingerprint available after the modal closes: _savePoint runs
+        // after _closeUnifiedMap(), but still needs to find the warm-up job that
+        // belongs to this exact address/logistics context.
+        this._pickupPrewarmContextKey = contextKey;
         const input = modal.querySelector("[data-optima-query]");
         const radius = modal.querySelector("[data-optima-radius]");
         if (input) {
@@ -205,6 +210,9 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         this._renderUnifiedCarrierFilters();
         this._renderUnifiedMapPointList();
         if (state.points.length) {
+            // Warm the nearest likely choice while the customer is looking at
+            // cached map results. This is best-effort and never blocks the map.
+            this._prewarmNearestUnifiedPoint();
             const status = modal.querySelector("[data-optima-result-status]");
             if (status) {
                 status.textContent = `${state.points.length} puntos guardados para esta búsqueda`;
@@ -513,6 +521,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             this._renderUnifiedMapMarkers({fit: true});
             state.needsFit = !state.leaflet;
             this._persistPickupMapCache();
+            this._prewarmNearestUnifiedPoint();
         } catch (error) {
             if (sequence !== state.searchSequence || !this._pickupMapState) {
                 return;
@@ -689,6 +698,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
                 this._renderUnifiedMapPointList();
                 this._renderUnifiedMapMarkers({fit: true});
                 this._persistPickupMapCache();
+                this._prewarmNearestUnifiedPoint();
             });
             container.appendChild(button);
         }
@@ -865,6 +875,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             return;
         }
         state.selectedKey = point.key;
+        this._startPickupPointPrewarm(point);
         this._renderUnifiedMapPointList();
         this._renderUnifiedMapMarkers({fit: false});
         const marker = state.markers.get(point.key);
@@ -877,6 +888,70 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         selectedCard?.scrollIntoView({block: "nearest", behavior: "smooth"});
         this._showUnifiedPointConfirm(point);
         this._persistPickupMapCache();
+    },
+
+    _pickupPointPrewarmKey(providerCode, point = {}) {
+        const carrier = String(point.carrier || point.carrier_code || "").trim().toLowerCase();
+        const postalCode = String(point.postal_code || point.zip_code || "").trim().toUpperCase();
+        const contextKey = this._pickupMapState?.contextKey || this._pickupPrewarmContextKey || "";
+        return [contextKey, providerCode || "", carrier, postalCode].join("|");
+    },
+
+    _startPickupPointPrewarm(point) {
+        if (!point?.provider_code) {
+            return null;
+        }
+        const rawPoint = point.raw_point || point;
+        const extra = point.extra || {};
+        const key = this._pickupPointPrewarmKey(point.provider_code, rawPoint);
+        if (!key || this._pickupPrewarmJobs?.has(key)) {
+            return this._pickupPrewarmJobs?.get(key) || null;
+        }
+        if (!this._pickupPrewarmJobs) {
+            this._pickupPrewarmJobs = new Map();
+        }
+
+        // Do not surface warm-up errors: final set_point is still authoritative
+        // and will show the normal checkout error if Sendcloud is unavailable.
+        const job = rpc("/shop/optima_pickup/prewarm_point", {
+            provider_code: point.provider_code,
+            point: rawPoint,
+            extra,
+        })
+            .catch(() => ({success: false, prepared: false}))
+            .then((result) => {
+                // Failed warm-ups may be retried shortly; successful ones are
+                // remembered only while the corresponding server cache is fresh.
+                const retention = result?.prepared ? 20 * 60 * 1000 : 1500;
+                window.setTimeout(() => {
+                    if (this._pickupPrewarmJobs?.get(key) === job) {
+                        this._pickupPrewarmJobs.delete(key);
+                    }
+                }, retention);
+                return result;
+            });
+        this._pickupPrewarmJobs.set(key, job);
+        return job;
+    },
+
+    _prewarmNearestUnifiedPoint() {
+        const point = this._visibleUnifiedPoints()[0];
+        if (point) {
+            this._startPickupPointPrewarm(point);
+        }
+    },
+
+    async _awaitPickupPointPrewarm(providerCode, rawPoint) {
+        const key = this._pickupPointPrewarmKey(providerCode, rawPoint);
+        const job = this._pickupPrewarmJobs?.get(key);
+        if (!job) {
+            return;
+        }
+        try {
+            await job;
+        } catch {
+            // Final resolution below remains the source of truth.
+        }
     },
 
     _findUnifiedPointCard(key) {
@@ -977,6 +1052,11 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         };
 
         try {
+            // If this exact carrier/postcode was already being prepared while the
+            // customer looked at the map, let that request finish first. The real
+            // set_point call then reuses its server-side caches instead of issuing
+            // the same Sendcloud requests a second time.
+            await this._awaitPickupPointPrewarm(providerCode, rawPoint);
             const result = await this._setPointWithRecovery(payload, rawPoint);
             if (!result?.success) {
                 throw new Error("No se ha podido guardar y calcular el punto de recogida.");

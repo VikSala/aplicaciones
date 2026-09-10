@@ -683,6 +683,18 @@ class SaleOrder(models.Model):
         self.ensure_one()
         return {"points": [], "errors": []}
 
+    def _optima_pickup_prewarm_point(self, provider_code, point, extra=None):
+        """Adapter hook for best-effort pickup pricing prewarming.
+
+        This hook must not change the selected point, delivery carrier or order
+        total. Provider adapters may perform the same remote compatibility/rate
+        work used by final resolution and populate only short-lived caches.
+        Checkout never trusts this hook as authoritative: ``set_point`` still
+        executes the normal validation/resolution path afterwards.
+        """
+        self.ensure_one()
+        return {"success": False, "prepared": False}
+
     def _optima_pickup_prepare_point(self, provider_code, point, extra=None):
         """Adapter hook: validate provider payload and normalize it.
 

@@ -2,7 +2,7 @@
 
 Sendcloud adapter for `optima_delivery_pickup`.
 
-Current development phase (18.0.0.6.1):
+Current development phase (18.0.0.6.4):
 
 - Opens Sendcloud's hosted Service Point Picker.
 - Normalizes and persists the selected service point.
@@ -94,3 +94,11 @@ Current development phase (18.0.0.6.1):
 - La búsqueda Sendcloud del mapa usa directamente desde el navegador el `access_token` público de la integración.
 - Evita el salto navegador -> Odoo -> Sendcloud para la exploración del mapa y mantiene el resolver exacto de precio en servidor al seleccionar el punto.
 - Si la búsqueda directa no está disponible, el core conserva el endpoint Odoo como fallback.
+
+## 18.0.0.6.4
+
+- Separa la caché de `shipping-products` del transportista: para el mismo CP, dirección y bulto, Correos, Correos Express e InPost reutilizan una única validación base de Sendcloud.
+- Añade precalentamiento de compatibilidad y tarifa mientras el cliente examina/previsualiza el punto en el mapa.
+- Las escrituras de caché del precálculo se acumulan en memoria y se fusionan al final con un bloqueo de fila corto, evitando mantener el pedido bloqueado durante llamadas remotas.
+- El precálculo omite el fallback pesado `rate_shipment`; si ruta sincronizada y `shipping-price` no bastan, `set_point` conserva el fallback autoritativo existente.
+

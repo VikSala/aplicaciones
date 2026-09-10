@@ -51,11 +51,17 @@ class SaleOrder(models.Model):
         """Return a short-lived per-order Sendcloud cache entry.
 
         Shipping method ids are volatile, so cached API-derived identities are
-        intentionally kept for at most 30 minutes. The cache key always includes
-        the destination/logistics fingerprints plus the point postcode/carrier,
-        preventing reuse after a cart/address change or across zonal destinations.
+        intentionally kept for at most 30 minutes. A prewarm request may collect
+        cache writes in memory until all remote I/O has finished; consult that
+        collector first so the same request can immediately reuse its own work.
         """
         self.ensure_one()
+        collector = self.env.context.get("optima_sendcloud_cache_collector")
+        if isinstance(collector, dict):
+            bucket_values = collector.get(bucket) or {}
+            if key in bucket_values:
+                return bucket_values[key]
+
         cache = self.optima_sendcloud_resolution_cache or {}
         data = cache.get(bucket) if isinstance(cache, dict) else {}
         entry = data.get(key) if isinstance(data, dict) else None
@@ -69,26 +75,75 @@ class SaleOrder(models.Model):
             return False
         return entry.get("value")
 
+    def _optima_sendcloud_cache_merge(self, entries):
+        """Merge one or more cache entries with a very short row lock.
+
+        Prewarming can overlap a real ``set_point`` request. Remote Sendcloud I/O
+        therefore happens before this method; only the final JSON merge is locked.
+        Refreshing the field after ``FOR UPDATE`` prevents two concurrent warm-ups
+        from overwriting each other's freshly-created cache buckets.
+        """
+        self.ensure_one()
+        if not isinstance(entries, dict) or not any(entries.values()):
+            return
+
+        self.env.cr.execute(
+            "SELECT id FROM %s WHERE id = %%s FOR UPDATE" % self._table,
+            [self.id],
+        )
+        self.invalidate_recordset(["optima_sendcloud_resolution_cache"])
+        cache = dict(self.optima_sendcloud_resolution_cache or {})
+        now = time.time()
+        for bucket, values in entries.items():
+            if not isinstance(values, dict) or not values:
+                continue
+            data = dict(cache.get(bucket) or {})
+            fresh = {}
+            for existing_key, entry in data.items():
+                if not isinstance(entry, dict):
+                    continue
+                try:
+                    if 0 <= now - float(entry.get("ts") or 0.0) <= 3600:
+                        fresh[existing_key] = entry
+                except (TypeError, ValueError):
+                    continue
+            for key, value in values.items():
+                fresh[key] = {"ts": now, "value": value}
+            if len(fresh) > 24:
+                fresh = dict(
+                    sorted(
+                        fresh.items(),
+                        key=lambda item: float(item[1].get("ts") or 0.0),
+                        reverse=True,
+                    )[:24]
+                )
+            cache[bucket] = fresh
+        self.write({"optima_sendcloud_resolution_cache": cache})
+
     def _optima_sendcloud_cache_put(self, bucket, key, value):
         self.ensure_one()
-        cache = dict(self.optima_sendcloud_resolution_cache or {})
-        data = dict(cache.get(bucket) or {})
-        now = time.time()
-        # Keep the DB field bounded even after many searches/point changes.
-        fresh = {}
-        for existing_key, entry in data.items():
-            if not isinstance(entry, dict):
-                continue
-            try:
-                if 0 <= now - float(entry.get("ts") or 0.0) <= 3600:
-                    fresh[existing_key] = entry
-            except (TypeError, ValueError):
-                continue
-        fresh[key] = {"ts": now, "value": value}
-        if len(fresh) > 24:
-            fresh = dict(sorted(fresh.items(), key=lambda item: float(item[1].get("ts") or 0.0), reverse=True)[:24])
-        cache[bucket] = fresh
-        self.write({"optima_sendcloud_resolution_cache": cache})
+        collector = self.env.context.get("optima_sendcloud_cache_collector")
+        if isinstance(collector, dict):
+            collector.setdefault(bucket, {})[key] = value
+            return
+        self._optima_sendcloud_cache_merge({bucket: {key: value}})
+
+    def _optima_sendcloud_products_cache_key(self, integration, point, package):
+        """Cache key for Shipping Products, intentionally independent of carrier.
+
+        Sendcloud filters this request by route, parcel and service-point last mile;
+        the selected Correos/InPost/etc. carrier is not one of its request inputs.
+        Keeping this cache carrier-neutral lets the first point of a second carrier
+        reuse the same expensive package compatibility query.
+        """
+        self.ensure_one()
+        return "|".join([
+            str(integration.id or 0),
+            str(point.get("country_code") or "").strip().upper(),
+            str(point.get("zip_code") or "").strip().upper(),
+            self._optima_pickup_address_fingerprint(),
+            self._optima_pickup_logistics_fingerprint(package),
+        ])
 
     def _optima_sendcloud_validation_cache_key(self, integration, point, package):
         self.ensure_one()
@@ -849,6 +904,27 @@ class SaleOrder(models.Model):
                 ),
             }
 
+        cache_key = self._optima_sendcloud_products_cache_key(
+            integration, point, package
+        )
+        cached = self._optima_sendcloud_cache_get("products", cache_key)
+        if isinstance(cached, dict) and "methods" in cached:
+            methods = {}
+            for method in cached.get("methods") or []:
+                if not isinstance(method, dict):
+                    continue
+                try:
+                    method_id = int(method.get("id") or 0)
+                except (TypeError, ValueError):
+                    method_id = 0
+                if method_id:
+                    methods[method_id] = dict(method)
+            _logger.info(
+                "Optima pickup: reusing carrier-neutral Shipping Products cache for zip=%s",
+                point.get("zip_code") or "",
+            )
+            return {"success": True, "methods": methods}
+
         params = {
             "from_country": origin["country_code"],
             "to_country": destination_country,
@@ -886,6 +962,11 @@ class SaleOrder(models.Model):
                 except (TypeError, ValueError):
                     continue
                 methods[method_id] = method
+        self._optima_sendcloud_cache_put(
+            "products",
+            cache_key,
+            {"methods": [dict(method) for method in methods.values()]},
+        )
         return {"success": True, "methods": methods}
 
     def _optima_sendcloud_point_methods(self, integration, point):
@@ -1708,6 +1789,13 @@ class SaleOrder(models.Model):
                 )
                 continue
 
+            if self.env.context.get("optima_pickup_prewarm"):
+                # Prewarming must stay bounded. Route prices and the dedicated
+                # shipping-price endpoint cover the fast path; the legacy
+                # rate_shipment fallback remains available to authoritative
+                # set_point resolution if those two sources cannot price it.
+                continue
+
             try:
                 rate = carrier.with_context(optima_pickup_force_rate=True).rate_shipment(
                     self.with_context(optima_pickup_force_rate=True)
@@ -1800,6 +1888,58 @@ class SaleOrder(models.Model):
             "method_limits": self._optima_sendcloud_method_limits_snapshot(
                 selected.get("api_method") or {}
             ),
+        }
+
+    def _optima_pickup_prewarm_point(self, provider_code, point, extra=None):
+        """Warm Sendcloud compatibility/rating caches without changing checkout.
+
+        The customer naturally previews a map card before confirming it. We use
+        that think-time to run the same Shipping Products + price resolution in
+        advance. Cache writes are collected in memory and merged only after all
+        remote calls finish, so a concurrent real selection is never held behind
+        a Sendcloud network request.
+        """
+        if provider_code != "sendcloud":
+            return super()._optima_pickup_prewarm_point(provider_code, point, extra)
+
+        self.ensure_one()
+        try:
+            normalized = self._optima_pickup_prepare_point(
+                provider_code, point, extra or {}
+            )
+        except ValidationError as exc:
+            return {"success": False, "prepared": False, "message": str(exc)}
+
+        collector = {}
+        warm_order = self.with_context(
+            optima_sendcloud_cache_collector=collector,
+            optima_pickup_prewarm=True,
+        )
+        validation = warm_order._optima_pickup_validate_package(
+            provider_code=provider_code, point=normalized
+        ) or {}
+        resolution = {}
+        if validation.get("success"):
+            resolve_extra = dict(extra or {})
+            resolve_extra["_optima_package_validation"] = validation
+            resolution = warm_order._optima_pickup_resolve_delivery(
+                provider_code, normalized, point, resolve_extra
+            ) or {}
+
+        # Commit all warmed buckets at once, after Sendcloud I/O has completed.
+        # This keeps the sale-order row lock extremely short and makes concurrent
+        # prewarm/set_point requests safe.
+        if collector:
+            self._optima_sendcloud_cache_merge(collector)
+
+        prepared = bool(
+            validation.get("success")
+            and (resolution.get("success") or collector)
+        )
+        return {
+            "success": bool(validation.get("success")),
+            "prepared": prepared,
+            "message": resolution.get("message") or validation.get("message") or False,
         }
 
     def _optima_pickup_after_store_point(self, provider_code, normalized, raw_point, extra):

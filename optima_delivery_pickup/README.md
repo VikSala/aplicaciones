@@ -147,3 +147,10 @@ validation will later reject the current cart.
 - Permite búsqueda directa por adaptador con fallback al endpoint Odoo.
 - Elimina el selector de orden: los puntos quedan siempre ordenados por distancia.
 - Elimina el footer inferior del modal para aprovechar toda la altura útil.
+
+## 18.0.0.8.7
+
+- Añade precalentamiento de resolución al punto más cercano y al punto que el cliente está previsualizando en el mapa.
+- Al confirmar, el checkout espera el precálculo exacto que ya estuviera en curso para reutilizar las cachés servidor y evitar repetir la misma consulta remota.
+- El precálculo es best-effort: nunca sustituye la validación final de `set_point` ni modifica por sí solo punto, transportista, precio o total del pedido.
+

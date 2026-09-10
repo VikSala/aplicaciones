@@ -153,6 +153,47 @@ class OptimaPickupDelivery(Delivery):
         return {"success": True}
 
     @route(
+        "/shop/optima_pickup/prewarm_point",
+        type="json",
+        auth="public",
+        methods=["POST"],
+        website=True,
+    )
+    def optima_pickup_prewarm_point(self, provider_code=None, point=None, extra=None):
+        """Best-effort warm-up for the point the customer is considering.
+
+        This endpoint deliberately never stores the point or changes the order
+        total. It only lets the provider adapter perform expensive remote work
+        a little earlier, while the customer is still looking at the map.
+        """
+        order_sudo = request.website.sale_get_order()
+        if not order_sudo or not order_sudo.optima_pickup_mode:
+            return {"success": False, "prepared": False}
+        if not provider_code or not isinstance(point, dict):
+            return {"success": False, "prepared": False}
+
+        available_codes = {
+            provider["code"] for provider in order_sudo._optima_pickup_get_providers()
+        }
+        if provider_code not in available_codes:
+            return {"success": False, "prepared": False}
+
+        try:
+            result = order_sudo._optima_pickup_prewarm_point(
+                provider_code, point, extra or {}
+            ) or {}
+        except (UserError, ValidationError) as exc:
+            return {"success": False, "prepared": False, "message": str(exc)}
+        except Exception:
+            # Prewarming is an optimization only. Never make map browsing fail
+            # because a provider warm-up failed unexpectedly.
+            return {"success": False, "prepared": False}
+        return {
+            "success": bool(result.get("success")),
+            "prepared": bool(result.get("prepared")),
+        }
+
+    @route(
         "/shop/optima_pickup/set_point",
         type="json",
         auth="public",
