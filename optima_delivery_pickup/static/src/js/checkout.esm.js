@@ -168,7 +168,6 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             contextKey,
             query: cached?.query || this._pickupMapDefaultQuery(providers),
             radiusM: Number(cached?.radiusM || 5000),
-            sort: cached?.sort || "distance",
             carrierFilter: cached?.carrierFilter || "all",
             mapCenter: Array.isArray(cached?.mapCenter) ? cached.mapCenter : null,
             mapZoom: Number(cached?.mapZoom || 0),
@@ -180,15 +179,11 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         const state = this._pickupMapState;
         const input = modal.querySelector("[data-optima-query]");
         const radius = modal.querySelector("[data-optima-radius]");
-        const sort = modal.querySelector("[data-optima-sort]");
         if (input) {
             input.value = state.query || "";
         }
         if (radius) {
             radius.value = String(state.radiusM || 5000);
-        }
-        if (sort) {
-            sort.value = state.sort || "distance";
         }
 
         const close = () => this._closeUnifiedMap();
@@ -206,11 +201,6 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             }
         });
         radius?.addEventListener("change", () => this._searchUnifiedMapPoints());
-        sort?.addEventListener("change", () => {
-            state.sort = sort.value || "distance";
-            this._renderUnifiedMapPointList();
-            this._persistPickupMapCache();
-        });
 
         this._renderUnifiedCarrierFilters();
         this._renderUnifiedMapPointList();
@@ -224,19 +214,22 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             this._setUnifiedMapLoading(true, `Buscando puntos cerca de ${state.query || "tu dirección"}…`);
         }
 
-        // Load the map library in parallel, but never show a zoomed-out view of
-        // the whole country while the first provider search is still running.
+        // Start map assets and point discovery at the same time.  The map is
+        // initialized as soon as Leaflet is available, while the loading overlay
+        // hides the generic fallback center until nearby points arrive.
         const leafletPromise = this._loadLeaflet().catch(() => false);
-        if (!state.points.length) {
-            await this._searchUnifiedMapPoints({initial: true});
-        }
+        const searchPromise = !state.points.length
+            ? this._searchUnifiedMapPoints({initial: true})
+            : Promise.resolve();
         const leafletReady = await leafletPromise;
         if (leafletReady === false || !window.L?.map) {
             modal.querySelector("[data-optima-map-canvas]")?.classList.add("d-none");
             modal.querySelector("[data-optima-map-fallback]")?.classList.remove("d-none");
+            await searchPromise;
             return;
         }
         this._initUnifiedLeafletMap();
+        await searchPromise;
     },
 
     _buildUnifiedMapModal(providers) {
@@ -266,14 +259,8 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
                         <button type="button" class="btn btn-primary" data-optima-search>Buscar</button>
                     </div>
                     <div class="optima_pickup_filter_row mt-2" data-optima-carrier-filters></div>
-                    <div class="d-flex align-items-center gap-2 mt-2">
+                    <div class="d-flex align-items-center mt-2">
                         <span class="small text-muted flex-grow-1" data-optima-result-status>Preparando búsqueda…</span>
-                        <label class="small text-muted mb-0" for="optima_pickup_sort">Ordenar:</label>
-                        <select id="optima_pickup_sort" class="form-select form-select-sm optima_pickup_sort" data-optima-sort>
-                            <option value="distance">Distancia</option>
-                            <option value="price">Precio</option>
-                            <option value="eta">Entrega</option>
-                        </select>
                     </div>
                 </div>
                 <div class="optima_pickup_map_body">
@@ -295,9 +282,6 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
                         </div>
                     </div>
                 </div>
-                <footer class="optima_pickup_map_footer justify-content-end">
-                    <button type="button" class="btn btn-outline-secondary" data-optima-map-close>Cancelar</button>
-                </footer>
             </section>`;
         return root;
     },
@@ -356,7 +340,6 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
                 contextKey: state.contextKey,
                 query: state.query || "",
                 radiusM: Number(state.radiusM || 5000),
-                sort: state.sort || "distance",
                 carrierFilter: state.carrierFilter || "all",
                 selectedKey: state.selectedKey || "",
                 points: (state.points || []).slice(0, 100),
@@ -497,11 +480,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         }
 
         try {
-            const result = await this._searchPointsRpcWithRetry({
-                provider_codes: state.providers.map((provider) => provider.code),
-                query,
-                radius_m: radiusM,
-            });
+            const result = await this._searchUnifiedProviderPoints({query, radiusM});
             if (sequence !== state.searchSequence || !this._pickupMapState) {
                 return;
             }
@@ -560,16 +539,85 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         }
     },
 
-    async _searchPointsRpcWithRetry(payload) {
-        try {
-            return await rpc("/shop/optima_pickup/search_points", payload);
-        } catch (error) {
-            if (!this._isConnectionError(error)) {
-                throw error;
-            }
-            await new Promise((resolve) => window.setTimeout(resolve, 300));
-            return await rpc("/shop/optima_pickup/search_points", payload);
+    async _searchUnifiedProviderPoints({query, radiusM}) {
+        const state = this._pickupMapState;
+        if (!state) {
+            return {query, points: [], errors: []};
         }
+
+        // Providers may expose a browser-side discovery method.  This is ideal
+        // for APIs such as Sendcloud Service Points that explicitly support a
+        // public API key: it avoids routing the discovery request through the
+        // Odoo worker/reverse proxy.  Providers without such an API continue to
+        // use the generic server-side hook.  All providers run in parallel.
+        const jobs = (state.providers || []).map(async (descriptor) => {
+            const provider = pickupProviderRegistry.get(descriptor.code);
+            if (!provider?.searchPoints) {
+                return {code: descriptor.code, fallback: true};
+            }
+            try {
+                const result = await provider.searchPoints({
+                    config: descriptor.config || {},
+                    query,
+                    radiusM,
+                });
+                return {
+                    code: descriptor.code,
+                    direct: true,
+                    result: result || {},
+                };
+            } catch (error) {
+                return {code: descriptor.code, fallback: true, error};
+            }
+        });
+
+        const settled = await Promise.all(jobs);
+        const points = [];
+        const errors = [];
+        const fallbackCodes = [];
+        for (const item of settled) {
+            if (item.direct) {
+                if (Array.isArray(item.result.points)) {
+                    points.push(...item.result.points);
+                }
+                if (Array.isArray(item.result.errors)) {
+                    errors.push(...item.result.errors);
+                }
+            } else if (item.code) {
+                fallbackCodes.push(item.code);
+            }
+        }
+
+        if (fallbackCodes.length) {
+            try {
+                const fallback = await rpc("/shop/optima_pickup/search_points", {
+                    provider_codes: fallbackCodes,
+                    query,
+                    radius_m: radiusM,
+                });
+                if (Array.isArray(fallback?.points)) {
+                    points.push(...fallback.points);
+                }
+                if (Array.isArray(fallback?.errors)) {
+                    errors.push(...fallback.errors);
+                }
+            } catch (error) {
+                // If no provider returned anything directly, preserve the old
+                // connection error semantics so the official selector fallback
+                // remains available.
+                if (!points.length) {
+                    throw error;
+                }
+                errors.push({message: "No se han podido actualizar algunos proveedores."});
+            }
+        }
+
+        points.sort((a, b) => {
+            const da = Number(a.distance_m || Number.MAX_SAFE_INTEGER);
+            const db = Number(b.distance_m || Number.MAX_SAFE_INTEGER);
+            return da - db || String(a.name || "").localeCompare(String(b.name || ""));
+        });
+        return {query, points: points.slice(0, 100), errors};
     },
 
     _appendOfficialSelectorFallback(container) {
@@ -654,21 +702,12 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             : (state?.points || []).filter(
                 (point) => (point.carrier_code || point.carrier_name || point.provider_code || "other") === filter
             );
-        const sort = state?.sort || this._pickupMapModal?.querySelector("[data-optima-sort]")?.value || "distance";
         const missing = Number.MAX_SAFE_INTEGER;
-        const score = (point) => {
-            if (sort === "price") {
-                const value = point.quote?.price;
-                return value === null || value === undefined ? missing : Number(value);
-            }
-            if (sort === "eta") {
-                const value = Number(point.quote?.lead_time_hours || 0);
-                return value > 0 ? value : missing;
-            }
+        const distance = (point) => {
             const value = Number(point.distance_m || 0);
             return value > 0 ? value : missing;
         };
-        points.sort((a, b) => score(a) - score(b) || Number(a.distance_m || missing) - Number(b.distance_m || missing));
+        points.sort((a, b) => distance(a) - distance(b) || String(a.name || "").localeCompare(String(b.name || "")));
         return points;
     },
 

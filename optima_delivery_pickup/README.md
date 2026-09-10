@@ -140,3 +140,10 @@ validation will later reject the current cart.
 - Los filtros superiores de transportista muestran solo texto y contador, sin imágenes.
 - Las tarjetas laterales usan los mismos markers corporativos que el mapa para Correos, Correos Express e InPost.
 - Los carriers sin marker corporativo conservan el logo/fallback anterior.
+
+## 18.0.0.8.6
+
+- El mapa lanza carga de Leaflet y búsqueda de puntos en paralelo.
+- Permite búsqueda directa por adaptador con fallback al endpoint Odoo.
+- Elimina el selector de orden: los puntos quedan siempre ordenados por distancia.
+- Elimina el footer inferior del modal para aprovechar toda la altura útil.

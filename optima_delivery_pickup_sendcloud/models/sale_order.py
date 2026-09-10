@@ -157,6 +157,9 @@ class SaleOrder(models.Model):
         if lang not in {"en-us", "de-de", "en-gb", "es-es", "fr-fr", "it-it", "nl-nl"}:
             lang = "en-us"
 
+        package = self._optima_pickup_package_profile()
+        package_weight = float(package.get("weight_kg") or 0.0) if package.get("success") else 0.0
+
         return {
             "code": "sendcloud",
             "name": "Sendcloud",
@@ -170,6 +173,7 @@ class SaleOrder(models.Model):
                 "city": partner.city or "",
                 "language": lang,
                 "post_number": self.optima_sendcloud_to_post_number or "",
+                "weight_kg": package_weight,
                 "default_query": (partner.zip or self._optima_pickup_default_search_query() or "").strip(),
                 # Frontend map cache is valid only while both destination and
                 # parcel profile remain unchanged. No personal data are exposed

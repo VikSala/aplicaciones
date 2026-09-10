@@ -88,3 +88,9 @@ Current development phase (18.0.0.6.1):
 - Alias robustos para InPost ES / Mondial Relay.
 - Caché temporal por carrier + CP + bulto + dirección para evitar repetir Shipping Products al cambiar entre puntos equivalentes.
 - Fallback de precio mediante Shipping Price API cuando la ruta sincronizada no contiene una tarifa utilizable (caso de carriers zonales como Correos).
+
+## 18.0.0.6.3
+
+- La búsqueda Sendcloud del mapa usa directamente desde el navegador el `access_token` público de la integración.
+- Evita el salto navegador -> Odoo -> Sendcloud para la exploración del mapa y mantiene el resolver exacto de precio en servidor al seleccionar el punto.
+- Si la búsqueda directa no está disponible, el core conserva el endpoint Odoo como fallback.

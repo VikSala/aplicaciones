@@ -61,8 +61,7 @@ body.optima_pickup_map_open {
     overflow: hidden;
 }
 
-.optima_pickup_map_header,
-.optima_pickup_map_footer {
+.optima_pickup_map_header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -76,9 +75,6 @@ body.optima_pickup_map_open {
     border-bottom: 1px solid #e5e9ef;
 }
 
-.optima_pickup_map_footer {
-    border-top: 1px solid #e5e9ef;
-}
 
 .optima_pickup_map_toolbar {
     padding: 0.75rem 1rem 0.7rem;
@@ -101,10 +97,6 @@ body.optima_pickup_map_open {
     max-width: 105px;
 }
 
-.optima_pickup_sort {
-    width: auto;
-    min-width: 118px;
-}
 
 .optima_pickup_filter_row {
     display: flex;
@@ -384,14 +376,10 @@ body.optima_pickup_map_open {
         border-top: 1px solid #e5e9ef;
     }
 
-    .optima_pickup_map_footer {
-        align-items: flex-start;
-    }
 }
 
 @media (max-width: 575.98px) {
-    .optima_pickup_map_header,
-    .optima_pickup_map_footer {
+    .optima_pickup_map_header {
         padding: 0.75rem;
     }
 
