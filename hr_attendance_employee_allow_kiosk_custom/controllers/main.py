@@ -1,10 +1,33 @@
 from odoo import http
 from odoo.addons.hr_attendance.controllers.main import HrAttendance as HrAttendanceBase
 from odoo.http import request
+from odoo.tools import py_to_js_locale
 from odoo.tools.image import image_data_uri
 
 
 class HrAttendance(HrAttendanceBase):
+    @http.route()
+    def open_kiosk_mode(self, token, from_trial_mode=False):
+        response = super().open_kiosk_mode(token, from_trial_mode=from_trial_mode)
+
+        # Para las URLs personales usamos, por orden, el idioma del usuario
+        # vinculado al empleado, el de su contacto de trabajo y finalmente el
+        # de la compañía. De este modo el quiosco personal no depende del
+        # idioma del usuario público ni del navegador.
+        employee = self._get_employee_from_kiosk_token(token)
+        if employee and getattr(response, "is_qweb", False):
+            lang = (
+                employee.user_id.lang
+                or employee.work_contact_id.lang
+                or employee.company_id.partner_id.lang
+                or request.env.lang
+            )
+            kiosk_backend_info = response.qcontext.get("kiosk_backend_info")
+            if kiosk_backend_info is not None:
+                kiosk_backend_info["lang"] = py_to_js_locale(lang)
+
+        return response
+
     @staticmethod
     def _get_employee_from_kiosk_token(token):
         if not token:

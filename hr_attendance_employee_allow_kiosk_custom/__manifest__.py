@@ -3,7 +3,7 @@
 
 {
     "name": "HR Attendance Employee Allow Kiosk",
-    "version": "18.0.1.1.0",
+    "version": "18.0.1.1.3",
     'category': 'Operations',
     "website": "https://github.com/OCA/hr-attendance",
     "author": "ForgeFlow S.L., Odoo Community Association (OCA)",
@@ -12,6 +12,11 @@
     "data": [
         "views/hr_employee_view.xml",
     ],
+    "assets": {
+        "hr_attendance.assets_public_attendance": [
+            "hr_attendance_employee_allow_kiosk_custom/static/src/components/greetings/greetings.xml",
+        ],
+    },
     "application": False,
     "installable": True,
 }

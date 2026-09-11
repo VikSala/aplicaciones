@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_gls_asm_manifest_wizard_user,gls.asm.manifest.wizard.user,model_gls_asm_minifest_wizard,base.group_user,1,1,1,1
+access_gls_asm_parcelshop_search_wizard_user,gls.asm.parcelshop.search.wizard.user,model_gls_asm_parcelshop_search_wizard,base.group_user,1,1,1,1
+access_gls_asm_parcelshop_search_line_user,gls.asm.parcelshop.search.line.user,model_gls_asm_parcelshop_search_line,base.group_user,1,1,1,1

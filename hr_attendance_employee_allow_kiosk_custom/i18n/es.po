@@ -57,3 +57,15 @@ msgstr "Clave URL del quiosco"
 #: model:ir.model.fields,help:hr_attendance_employee_allow_kiosk.field_hr_employee__employee_kiosk_url
 msgid "URL individual para que este empleado pueda acceder al quiosco de asistencia."
 msgstr "URL individual para que este empleado pueda acceder al quiosco de asistencia."
+
+#. module: hr_attendance_employee_allow_kiosk_custom
+#. odoo-javascript
+#: code:addons/hr_attendance_employee_allow_kiosk_custom/static/src/components/greetings/greetings.xml:0
+msgid "Goodbye"
+msgstr "Adiós"
+
+#. module: hr_attendance_employee_allow_kiosk_custom
+#. odoo-javascript
+#: code:addons/hr_attendance_employee_allow_kiosk_custom/static/src/components/greetings/greetings.xml:0
+msgid "Welcome"
+msgstr "Bienvenido"

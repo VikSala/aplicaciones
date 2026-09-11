@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <!--
+        Simplifica la pantalla de confirmación del quiosco.
+
+        En la tarjeta quedan únicamente el avatar/icono del empleado,
+        el mensaje "Bienvenido" / "Adiós" y su nombre.
+
+        El h5 se redefine expresamente para que las dos cadenas de saludo
+        pertenezcan también a este módulo y podamos garantizar sus traducciones
+        en el bundle público del quiosco.
+    -->
+    <t t-name="hr_attendance_employee_allow_kiosk_custom.public_kiosk_greetings_simplified"
+       t-inherit="hr_attendance.public_kiosk_greetings"
+       t-inherit-mode="extension">
+
+        <xpath expr="//h5[contains(concat(' ', normalize-space(@class), ' '), ' text-muted ')]"
+               position="replace">
+            <h5 class="text-muted mt-2 mb-0">
+                <t t-if="attendance.check_out">Goodbye</t>
+                <t t-else="">Welcome</t>
+            </h5>
+        </xpath>
+
+        <xpath expr="//div[contains(concat(' ', normalize-space(@class), ' '), ' o_hr_attendance_kiosk_card_bottom ')]"
+               position="replace"/>
+    </t>
+</templates>

@@ -35,3 +35,15 @@ msgid ""
 "If enabled, the employee is selectable in the kiosk for attendance "
 "registration."
 msgstr ""
+
+#. module: hr_attendance_employee_allow_kiosk_custom
+#. odoo-javascript
+#: code:addons/hr_attendance_employee_allow_kiosk_custom/static/src/components/greetings/greetings.xml:0
+msgid "Goodbye"
+msgstr ""
+
+#. module: hr_attendance_employee_allow_kiosk_custom
+#. odoo-javascript
+#: code:addons/hr_attendance_employee_allow_kiosk_custom/static/src/components/greetings/greetings.xml:0
+msgid "Welcome"
+msgstr ""
