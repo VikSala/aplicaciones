@@ -20,6 +20,7 @@ from .gls_asm_master_data import (
     GLS_TRACKING_LINKS,
 )
 from .gls_asm_request import GlsAsmRequest
+from .gls_asm_parcelshop_request import GlsAsmParcelShopRequest
 
 _logger = logging.getLogger(__name__)
 
@@ -69,258 +70,6 @@ class DeliveryCarrier(models.Model):
             "the customer receiving the delivery also has a package to return."
         ),
     )
-    gls_parcelshop_api_url = fields.Char(
-        string="GLS ParcelShop API URL",
-        help=(
-            "Base URL of the GLS ShipIT ParcelShop REST service supplied by GLS. "
-            "It normally ends in /backend/rs/parcelshop."
-        ),
-        copy=False,
-    )
-    gls_parcelshop_username = fields.Char(
-        string="GLS ParcelShop User",
-        help="HTTP Basic username supplied by GLS for the ShipIT ParcelShop service.",
-        copy=False,
-    )
-    gls_parcelshop_password = fields.Char(
-        string="GLS ParcelShop Password",
-        help="HTTP Basic password supplied by GLS for the ShipIT ParcelShop service.",
-        copy=False,
-    )
-
-    def action_open_gls_parcelshop_search(self):
-        """Open a small diagnostic wizard to search GLS ParcelShops by ZIP code."""
-        self.ensure_one()
-        if self.delivery_type != "gls_asm":
-            raise UserError(_("This action is only available for GLS ASM carriers."))
-        return {
-            "type": "ir.actions.act_window",
-            "name": _("Search GLS ParcelShops"),
-            "res_model": "gls.asm.parcelshop.search.wizard",
-            "view_mode": "form",
-            "target": "new",
-            "context": {
-                "default_carrier_id": self.id,
-                "default_country_code": "ES",
-            },
-        }
-
-    def _gls_parcelshop_search(
-        self,
-        zip_code,
-        country_code="ES",
-        distance=30,
-        max_results=10,
-        parcelshop_type=None,
-    ):
-        """Search GLS ShipIT ParcelShops near a postal code.
-
-        GLS documents ``findNearestParcelShopForAddress`` as a POST to the
-        ``/address`` sub-path of the ParcelShop REST service. ZIPCode and
-        CountryCode are the minimum accepted search location attributes.
-
-        The central ShipIT hostname is deliberately not hard-coded: GLS states
-        that this endpoint is supplied to each customer together with the
-        credentials.
-        """
-        self.ensure_one()
-        base_url = (self.gls_parcelshop_api_url or "").strip().rstrip("/")
-        username = (self.gls_parcelshop_username or "").strip()
-        password = self.gls_parcelshop_password or ""
-        zip_code = (zip_code or "").strip()
-        country_code = (country_code or "ES").strip().upper()
-
-        if not base_url:
-            raise UserError(
-                _(
-                    "GLS ParcelShop API URL is not configured. GLS ShipIT does not "
-                    "publish the central hostname; GLS must provide it for your "
-                    "account. Configure the URL in the GLS Configuration tab."
-                )
-            )
-        if not username or not password:
-            raise UserError(
-                _(
-                    "GLS ParcelShop credentials are not configured. Set the user "
-                    "and password in the GLS Configuration tab."
-                )
-            )
-        if not zip_code:
-            raise UserError(_("Enter a postal code to search GLS ParcelShops."))
-        if len(country_code) != 2:
-            raise UserError(_("Country code must contain exactly 2 letters."))
-
-        try:
-            distance = int(distance or 30)
-            max_results = int(max_results or 10)
-        except (TypeError, ValueError) as exc:
-            raise UserError(_("Distance and maximum results must be numbers.")) from exc
-        if not 1 <= distance <= 50:
-            raise UserError(_("GLS ParcelShop search distance must be between 1 and 50 km."))
-        if not 1 <= max_results <= 100:
-            raise UserError(_("Maximum ParcelShop results must be between 1 and 100."))
-
-        payload = {
-            "CountryCode": country_code,
-            "ZIPCode": zip_code,
-            "Distance": distance,
-            "MaxNumberOfShops": max_results,
-        }
-        if parcelshop_type:
-            payload["ParcelShopType"] = parcelshop_type
-
-        url = base_url if base_url.endswith("/address") else f"{base_url}/address"
-        headers = {
-            "Accept": "application/glsVersion1+json, application/json",
-            "Content-Type": "application/glsVersion1+json",
-        }
-        try:
-            response = requests.post(
-                url,
-                json=payload,
-                headers=headers,
-                auth=(username, password),
-                timeout=30,
-            )
-        except requests.RequestException as exc:
-            _logger.exception("GLS ParcelShop connection error for %s", url)
-            raise UserError(
-                _("Could not connect to the GLS ParcelShop service: %s") % str(exc)
-            ) from exc
-
-        if response.status_code == 401:
-            raise UserError(_("GLS ParcelShop authentication failed (HTTP 401)."))
-        if response.status_code == 403:
-            raise UserError(
-                _("GLS ParcelShop access was denied (HTTP 403). Check that the service is enabled for this account.")
-            )
-        if response.status_code == 490:
-            raise UserError(
-                _("GLS ShipIT reports that the backend/account is inactive (HTTP 490).")
-            )
-        if not response.ok:
-            detail = (response.text or "").strip().replace("\n", " ")[:500]
-            raise UserError(
-                _("GLS ParcelShop search failed (HTTP %(status)s): %(detail)s")
-                % {"status": response.status_code, "detail": detail or response.reason}
-            )
-
-        try:
-            data = response.json()
-        except ValueError as exc:
-            detail = (response.text or "").strip().replace("\n", " ")[:500]
-            raise UserError(
-                _("GLS ParcelShop returned a non-JSON response: %s") % detail
-            ) from exc
-
-        shops = data.get("ParcelShop", []) if isinstance(data, dict) else []
-        if isinstance(shops, dict):
-            shops = [shops]
-        if not isinstance(shops, list):
-            shops = []
-
-        result = [self._gls_parcelshop_normalize(shop) for shop in shops]
-        result = [shop for shop in result if shop.get("parcelshop_id")]
-        return sorted(
-            result,
-            key=lambda shop: (
-                shop.get("distance") is None,
-                shop.get("distance") if shop.get("distance") is not None else 999999,
-            ),
-        )[:max_results]
-
-    @api.model
-    def _gls_parcelshop_normalize(self, shop):
-        """Normalize a ShipIT ParcelShop JSON object for Odoo consumers."""
-        if not isinstance(shop, dict):
-            return {}
-        address = shop.get("Address") or {}
-        location = shop.get("Location") or {}
-        street = " ".join(
-            value
-            for value in [address.get("Street"), address.get("StreetNumber")]
-            if value
-        ).strip()
-        address_text = ", ".join(
-            value
-            for value in [
-                street,
-                " ".join(
-                    value
-                    for value in [address.get("ZIPCode"), address.get("City")]
-                    if value
-                ).strip(),
-                address.get("CountryCode"),
-            ]
-            if value
-        )
-        try:
-            airline_distance = float(shop.get("AirlineDistance"))
-        except (TypeError, ValueError):
-            airline_distance = None
-        try:
-            latitude = float(location.get("Latitude"))
-        except (TypeError, ValueError):
-            latitude = 0.0
-        try:
-            longitude = float(location.get("Longitude"))
-        except (TypeError, ValueError):
-            longitude = 0.0
-        return {
-            "parcelshop_id": shop.get("ParcelShopID") or "",
-            "shop_type": shop.get("Type") or "",
-            "name": address.get("Name1") or address.get("Name2") or "",
-            "address": address_text,
-            "street": street,
-            "zip_code": address.get("ZIPCode") or "",
-            "city": address.get("City") or "",
-            "country_code": address.get("CountryCode") or "",
-            "latitude": latitude,
-            "longitude": longitude,
-            "distance": airline_distance,
-            "opening_hours": self._gls_parcelshop_format_hours(shop.get("WorkingDay")),
-        }
-
-    @api.model
-    def _gls_parcelshop_format_hours(self, working_days):
-        if not working_days:
-            return ""
-        if isinstance(working_days, dict):
-            working_days = [working_days]
-        rows = []
-        for working_day in working_days:
-            if not isinstance(working_day, dict):
-                continue
-            periods = (working_day.get("OpeningHours") or {}).get("OpeningHours", [])
-            if isinstance(periods, dict):
-                periods = [periods]
-            formatted = []
-            for period in periods:
-                if not isinstance(period, dict):
-                    continue
-                start = self._gls_parcelshop_ms_to_time(period.get("From"))
-                end = self._gls_parcelshop_ms_to_time(period.get("To"))
-                if start and end:
-                    formatted.append(f"{start}-{end}")
-            if formatted:
-                rows.append(f"{working_day.get('DayOfWeek') or ''}: {' | '.join(formatted)}")
-        return "\n".join(rows)
-
-    @api.model
-    def _gls_parcelshop_ms_to_time(self, value):
-        """Convert ShipIT milliseconds to display time.
-
-        GLS documents the ParcelShop hour format as milliseconds since midnight
-        with an offset of +1 hour (28800000 => 09:00).
-        """
-        try:
-            value = int(value)
-        except (TypeError, ValueError):
-            return ""
-        if value < 0:
-            return ""
-        total_minutes = value // 60000 + 60
-        return f"{(total_minutes // 60) % 24:02d}:{total_minutes % 60:02d}"
 
     @api.depends("gls_asm_service")
     def _compute_gls_pickup_service(self):
@@ -852,6 +601,42 @@ class DeliveryCarrier(models.Model):
             "res_model": "gls.asm.minifest.wizard",
             "view_id": view_id,
             "views": [(view_id, "form")],
+            "target": "new",
+            "res_id": wizard.id,
+            "context": self.env.context,
+        }
+
+    def gls_asm_search_parcelshops(self, postal_code, country_code="ES", networks="1"):
+        """Search GLS ParcelShops near a postal code.
+
+        This public model method is intentionally reusable by future website/checkout
+        modules.  GLS Spain documents postal code, town or full address in the same
+        ``direccion`` parameter of ``GetParcelShopProximosV3``.
+        """
+        self.ensure_one()
+        if self.delivery_type != "gls_asm":
+            raise UserError(_("This action is only available for GLS ASM carriers."))
+        request = GlsAsmParcelShopRequest()
+        return request.search(
+            direccion=postal_code,
+            redes=networks or "1",
+            pais=country_code or "ES",
+        )
+
+    def action_gls_asm_search_parcelshops(self):
+        """Open the manual ParcelShop search wizard from the carrier form."""
+        self.ensure_one()
+        wizard = self.env["gls.asm.parcelshop.search.wizard"].create(
+            {"carrier_id": self.id}
+        )
+        view = self.env.ref("delivery_gls_asm.gls_asm_parcelshop_search_wizard_form")
+        return {
+            "name": _("GLS ParcelShop Search"),
+            "type": "ir.actions.act_window",
+            "view_mode": "form",
+            "res_model": "gls.asm.parcelshop.search.wizard",
+            "view_id": view.id,
+            "views": [(view.id, "form")],
             "target": "new",
             "res_id": wizard.id,
             "context": self.env.context,

@@ -1129,3 +1129,100 @@ msgstr "dPRO"
 #~ "No hay respuesta del servidor obteniendo manifisto para GLS.\n"
 #~ "Rastrear:\n"
 #~ "%(error)s"
+
+#. module: delivery_gls_asm
+msgid "GLS ParcelShop Search"
+msgstr "Búsqueda de ParcelShops GLS"
+
+#. module: delivery_gls_asm
+msgid "Search GLS ParcelShops"
+msgstr "Buscar ParcelShops GLS"
+
+#. module: delivery_gls_asm
+msgid "Postal Code"
+msgstr "Código postal"
+
+#. module: delivery_gls_asm
+msgid "ParcelShop Networks"
+msgstr "Redes ParcelShop"
+
+#. module: delivery_gls_asm
+msgid "GLS Point Code"
+msgstr "Código del punto GLS"
+
+#. module: delivery_gls_asm
+msgid "Opening Hours"
+msgstr "Horario"
+
+#. module: delivery_gls_asm
+msgid "Full Address"
+msgstr "Dirección completa"
+
+#. module: delivery_gls_asm
+msgid "Results"
+msgstr "Resultados"
+
+#. module: delivery_gls_asm
+msgid "Network"
+msgstr "Red"
+
+#. module: delivery_gls_asm
+msgid "Country"
+msgstr "País"
+
+#. module: delivery_gls_asm
+msgid "Carrier"
+msgstr "Transportista"
+
+#. module: delivery_gls_asm
+msgid "Search"
+msgstr "Buscar"
+
+#. module: delivery_gls_asm
+msgid "Close"
+msgstr "Cerrar"
+
+#. module: delivery_gls_asm
+msgid "Name"
+msgstr "Nombre"
+
+#. module: delivery_gls_asm
+msgid "Address"
+msgstr "Dirección"
+
+
+#. module: delivery_gls_asm
+msgid "Latitude"
+msgstr "Latitud"
+
+#. module: delivery_gls_asm
+msgid "Longitude"
+msgstr "Longitud"
+
+#. module: delivery_gls_asm
+msgid "Distance"
+msgstr "Distancia"
+
+#. module: delivery_gls_asm
+msgid "Monday"
+msgstr "Lunes"
+
+#. module: delivery_gls_asm
+msgid "Tuesday"
+msgstr "Martes"
+
+#. module: delivery_gls_asm
+msgid "Wednesday"
+msgstr "Miércoles"
+
+#. module: delivery_gls_asm
+msgid "Thursday"
+msgstr "Jueves"
+
+#. module: delivery_gls_asm
+msgid "Friday"
+msgstr "Viernes"
+
+#. module: delivery_gls_asm
+msgid "Saturday"
+msgstr "Sábado"

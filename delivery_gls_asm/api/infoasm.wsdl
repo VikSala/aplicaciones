@@ -1,0 +1,1339 @@
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+ xmlns:s="http://www.w3.org/2001/XMLSchema"
+ xmlns:tns="http://www.asmred.com/"
+ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+ xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/"
+ xmlns:http="http://schemas.xmlsoap.org/wsdl/http/"
+ xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/"
+ targetNamespace="http://www.asmred.com/">
+<wsdl:types>
+<s:schema elementFormDefault="qualified" targetNamespace="http://www.asmred.com/">
+<s:element name="InfoPlaza">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="1" maxOccurs="1" name="codplaza" nillable="true" type="s:short"/>
+<s:element minOccurs="0" maxOccurs="1" name="nemonico" type="s:string"/>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="InfoPlazaResponse">
+</s:element>
+<s:element name="Plazas">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="direccion" type="s:string"/>
+<s:element minOccurs="1" maxOccurs="1" name="codpais" type="s:short"/>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="PlazasResponse">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="PlazasResult">
+<s:complexType mixed="true">
+<s:sequence>
+<s:any/>
+</s:sequence>
+</s:complexType>
+</s:element>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="PlazasPorDistancia">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="direccion" type="s:string"/>
+<s:element minOccurs="1" maxOccurs="1" name="codpais" type="s:short"/>
+<s:element minOccurs="1" maxOccurs="1" name="cantidad" type="s:short"/>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="PlazasPorDistanciaResponse">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="PlazasPorDistanciaResult">
+<s:complexType mixed="true">
+<s:sequence>
+<s:any/>
+</s:sequence>
+</s:complexType>
+</s:element>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="KMLPlazas">
+<s:complexType/>
+</s:element>
+<s:element name="KMLPlazasResponse">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="KMLPlazasResult">
+<s:complexType mixed="true">
+<s:sequence>
+<s:any/>
+</s:sequence>
+</s:complexType>
+</s:element>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="KMLPlazas2">
+<s:complexType/>
+</s:element>
+<s:element name="KMLPlazas2Response">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="KMLPlazas2Result">
+<s:complexType mixed="true">
+<s:sequence>
+<s:any/>
+</s:sequence>
+</s:complexType>
+</s:element>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="ScriptPlazas">
+<s:complexType/>
+</s:element>
+<s:element name="ScriptPlazasResponse">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="ScriptPlazasResult" type="s:string"/>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="UrlExpedicion">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="codigo" type="s:string"/>
+<s:element minOccurs="0" maxOccurs="1" name="cpDestino" type="s:string"/>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="UrlExpedicionResponse">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="UrlExpedicionResult" type="s:string"/>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="PlazaExport">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="codplaza" type="s:string"/>
+<s:element minOccurs="0" maxOccurs="1" name="cp" type="s:string"/>
+<s:element minOccurs="0" maxOccurs="1" name="pais" type="s:string"/>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="PlazaExportResponse">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="PlazaExportResult">
+<s:complexType mixed="true">
+<s:sequence>
+<s:any/>
+</s:sequence>
+</s:complexType>
+</s:element>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="ExpedicionTracking">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="docIn">
+<s:complexType mixed="true">
+<s:sequence>
+<s:any/>
+</s:sequence>
+</s:complexType>
+</s:element>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="ExpedicionTrackingResponse">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="ExpedicionTrackingResult">
+<s:complexType mixed="true">
+<s:sequence>
+<s:any/>
+</s:sequence>
+</s:complexType>
+</s:element>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="PuntosEnvio">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="CodigoPostal" type="s:string"/>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="PuntosEnvioResponse">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="PuntosEnvioResult">
+<s:complexType mixed="true">
+<s:sequence>
+<s:any/>
+</s:sequence>
+</s:complexType>
+</s:element>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="PuntoEnvioTarifa">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="cuenta" type="s:string"/>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="PuntoEnvioTarifaResponse">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="PuntoEnvioTarifaResult">
+<s:complexType mixed="true">
+<s:sequence>
+<s:any/>
+</s:sequence>
+</s:complexType>
+</s:element>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="TmpExpedicionTracking">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="cuenta" type="s:string"/>
+<s:element minOccurs="0" maxOccurs="1" name="cod" type="s:string"/>
+<s:element minOccurs="0" maxOccurs="1" name="cp" type="s:string"/>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="TmpExpedicionTrackingResponse">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="TmpExpedicionTrackingResult">
+<s:complexType mixed="true">
+<s:sequence>
+<s:any/>
+</s:sequence>
+</s:complexType>
+</s:element>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="GetParcelShopProximos">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="direccion" type="s:string"/>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="GetParcelShopProximosResponse">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="GetParcelShopProximosResult">
+<s:complexType mixed="true">
+<s:sequence>
+<s:any/>
+</s:sequence>
+</s:complexType>
+</s:element>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="GetParcelShopProximosV2">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="direccion" type="s:string"/>
+<s:element minOccurs="0" maxOccurs="1" name="redes" type="s:string"/>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="GetParcelShopProximosV2Response">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="GetParcelShopProximosV2Result">
+<s:complexType mixed="true">
+<s:sequence>
+<s:any/>
+</s:sequence>
+</s:complexType>
+</s:element>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="GetParcelShopProximosV3">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="direccion" type="s:string"/>
+<s:element minOccurs="0" maxOccurs="1" name="redes" type="s:string"/>
+<s:element minOccurs="0" maxOccurs="1" name="pais" type="s:string"/>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="GetParcelShopProximosV3Response">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="GetParcelShopProximosV3Result">
+<s:complexType mixed="true">
+<s:sequence>
+<s:any/>
+</s:sequence>
+</s:complexType>
+</s:element>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="GetParcelShopRecogidasProximos">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="direccion" type="s:string"/>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="GetParcelShopRecogidasProximosResponse">
+<s:complexType>
+<s:sequence>
+<s:element minOccurs="0" maxOccurs="1" name="GetParcelShopRecogidasProximosResult">
+<s:complexType mixed="true">
+<s:sequence>
+<s:any/>
+</s:sequence>
+</s:complexType>
+</s:element>
+</s:sequence>
+</s:complexType>
+</s:element>
+<s:element name="string" nillable="true" type="s:string"/>
+</s:schema>
+</wsdl:types>
+<wsdl:message name="InfoPlazaSoapIn">
+<wsdl:part name="parameters" element="tns:InfoPlaza"/>
+</wsdl:message>
+<wsdl:message name="InfoPlazaSoapOut">
+<wsdl:part name="parameters" element="tns:InfoPlazaResponse"/>
+</wsdl:message>
+<wsdl:message name="PlazasSoapIn">
+<wsdl:part name="parameters" element="tns:Plazas"/>
+</wsdl:message>
+<wsdl:message name="PlazasSoapOut">
+<wsdl:part name="parameters" element="tns:PlazasResponse"/>
+</wsdl:message>
+<wsdl:message name="PlazasPorDistanciaSoapIn">
+<wsdl:part name="parameters" element="tns:PlazasPorDistancia"/>
+</wsdl:message>
+<wsdl:message name="PlazasPorDistanciaSoapOut">
+<wsdl:part name="parameters" element="tns:PlazasPorDistanciaResponse"/>
+</wsdl:message>
+<wsdl:message name="KMLPlazasSoapIn">
+<wsdl:part name="parameters" element="tns:KMLPlazas"/>
+</wsdl:message>
+<wsdl:message name="KMLPlazasSoapOut">
+<wsdl:part name="parameters" element="tns:KMLPlazasResponse"/>
+</wsdl:message>
+<wsdl:message name="KMLPlazas2SoapIn">
+<wsdl:part name="parameters" element="tns:KMLPlazas2"/>
+</wsdl:message>
+<wsdl:message name="KMLPlazas2SoapOut">
+<wsdl:part name="parameters" element="tns:KMLPlazas2Response"/>
+</wsdl:message>
+<wsdl:message name="ScriptPlazasSoapIn">
+<wsdl:part name="parameters" element="tns:ScriptPlazas"/>
+</wsdl:message>
+<wsdl:message name="ScriptPlazasSoapOut">
+<wsdl:part name="parameters" element="tns:ScriptPlazasResponse"/>
+</wsdl:message>
+<wsdl:message name="UrlExpedicionSoapIn">
+<wsdl:part name="parameters" element="tns:UrlExpedicion"/>
+</wsdl:message>
+<wsdl:message name="UrlExpedicionSoapOut">
+<wsdl:part name="parameters" element="tns:UrlExpedicionResponse"/>
+</wsdl:message>
+<wsdl:message name="PlazaExportSoapIn">
+<wsdl:part name="parameters" element="tns:PlazaExport"/>
+</wsdl:message>
+<wsdl:message name="PlazaExportSoapOut">
+<wsdl:part name="parameters" element="tns:PlazaExportResponse"/>
+</wsdl:message>
+<wsdl:message name="ExpedicionTrackingSoapIn">
+<wsdl:part name="parameters" element="tns:ExpedicionTracking"/>
+</wsdl:message>
+<wsdl:message name="ExpedicionTrackingSoapOut">
+<wsdl:part name="parameters" element="tns:ExpedicionTrackingResponse"/>
+</wsdl:message>
+<wsdl:message name="PuntosEnvioSoapIn">
+<wsdl:part name="parameters" element="tns:PuntosEnvio"/>
+</wsdl:message>
+<wsdl:message name="PuntosEnvioSoapOut">
+<wsdl:part name="parameters" element="tns:PuntosEnvioResponse"/>
+</wsdl:message>
+<wsdl:message name="PuntoEnvioTarifaSoapIn">
+<wsdl:part name="parameters" element="tns:PuntoEnvioTarifa"/>
+</wsdl:message>
+<wsdl:message name="PuntoEnvioTarifaSoapOut">
+<wsdl:part name="parameters" element="tns:PuntoEnvioTarifaResponse"/>
+</wsdl:message>
+<wsdl:message name="TmpExpedicionTrackingSoapIn">
+<wsdl:part name="parameters" element="tns:TmpExpedicionTracking"/>
+</wsdl:message>
+<wsdl:message name="TmpExpedicionTrackingSoapOut">
+<wsdl:part name="parameters" element="tns:TmpExpedicionTrackingResponse"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopProximosSoapIn">
+<wsdl:part name="parameters" element="tns:GetParcelShopProximos"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopProximosSoapOut">
+<wsdl:part name="parameters" element="tns:GetParcelShopProximosResponse"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopProximosV2SoapIn">
+<wsdl:part name="parameters" element="tns:GetParcelShopProximosV2"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopProximosV2SoapOut">
+<wsdl:part name="parameters" element="tns:GetParcelShopProximosV2Response"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopProximosV3SoapIn">
+<wsdl:part name="parameters" element="tns:GetParcelShopProximosV3"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopProximosV3SoapOut">
+<wsdl:part name="parameters" element="tns:GetParcelShopProximosV3Response"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopRecogidasProximosSoapIn">
+<wsdl:part name="parameters" element="tns:GetParcelShopRecogidasProximos"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopRecogidasProximosSoapOut">
+<wsdl:part name="parameters" element="tns:GetParcelShopRecogidasProximosResponse"/>
+</wsdl:message>
+<wsdl:message name="PlazasHttpGetIn">
+<wsdl:part name="direccion" type="s:string"/>
+<wsdl:part name="codpais" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="PlazasHttpGetOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="PlazasPorDistanciaHttpGetIn">
+<wsdl:part name="direccion" type="s:string"/>
+<wsdl:part name="codpais" type="s:string"/>
+<wsdl:part name="cantidad" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="PlazasPorDistanciaHttpGetOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="KMLPlazasHttpGetIn"/>
+<wsdl:message name="KMLPlazasHttpGetOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="KMLPlazas2HttpGetIn"/>
+<wsdl:message name="KMLPlazas2HttpGetOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="ScriptPlazasHttpGetIn"/>
+<wsdl:message name="ScriptPlazasHttpGetOut">
+<wsdl:part name="Body" element="tns:string"/>
+</wsdl:message>
+<wsdl:message name="UrlExpedicionHttpGetIn">
+<wsdl:part name="codigo" type="s:string"/>
+<wsdl:part name="cpDestino" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="UrlExpedicionHttpGetOut">
+<wsdl:part name="Body" element="tns:string"/>
+</wsdl:message>
+<wsdl:message name="PlazaExportHttpGetIn">
+<wsdl:part name="codplaza" type="s:string"/>
+<wsdl:part name="cp" type="s:string"/>
+<wsdl:part name="pais" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="PlazaExportHttpGetOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="PuntosEnvioHttpGetIn">
+<wsdl:part name="CodigoPostal" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="PuntosEnvioHttpGetOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="PuntoEnvioTarifaHttpGetIn">
+<wsdl:part name="cuenta" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="PuntoEnvioTarifaHttpGetOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="TmpExpedicionTrackingHttpGetIn">
+<wsdl:part name="cuenta" type="s:string"/>
+<wsdl:part name="cod" type="s:string"/>
+<wsdl:part name="cp" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="TmpExpedicionTrackingHttpGetOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopProximosHttpGetIn">
+<wsdl:part name="direccion" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopProximosHttpGetOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopProximosV2HttpGetIn">
+<wsdl:part name="direccion" type="s:string"/>
+<wsdl:part name="redes" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopProximosV2HttpGetOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopProximosV3HttpGetIn">
+<wsdl:part name="direccion" type="s:string"/>
+<wsdl:part name="redes" type="s:string"/>
+<wsdl:part name="pais" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopProximosV3HttpGetOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopRecogidasProximosHttpGetIn">
+<wsdl:part name="direccion" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopRecogidasProximosHttpGetOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="PlazasHttpPostIn">
+<wsdl:part name="direccion" type="s:string"/>
+<wsdl:part name="codpais" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="PlazasHttpPostOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="PlazasPorDistanciaHttpPostIn">
+<wsdl:part name="direccion" type="s:string"/>
+<wsdl:part name="codpais" type="s:string"/>
+<wsdl:part name="cantidad" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="PlazasPorDistanciaHttpPostOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="KMLPlazasHttpPostIn"/>
+<wsdl:message name="KMLPlazasHttpPostOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="KMLPlazas2HttpPostIn"/>
+<wsdl:message name="KMLPlazas2HttpPostOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="ScriptPlazasHttpPostIn"/>
+<wsdl:message name="ScriptPlazasHttpPostOut">
+<wsdl:part name="Body" element="tns:string"/>
+</wsdl:message>
+<wsdl:message name="UrlExpedicionHttpPostIn">
+<wsdl:part name="codigo" type="s:string"/>
+<wsdl:part name="cpDestino" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="UrlExpedicionHttpPostOut">
+<wsdl:part name="Body" element="tns:string"/>
+</wsdl:message>
+<wsdl:message name="PlazaExportHttpPostIn">
+<wsdl:part name="codplaza" type="s:string"/>
+<wsdl:part name="cp" type="s:string"/>
+<wsdl:part name="pais" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="PlazaExportHttpPostOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="PuntosEnvioHttpPostIn">
+<wsdl:part name="CodigoPostal" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="PuntosEnvioHttpPostOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="PuntoEnvioTarifaHttpPostIn">
+<wsdl:part name="cuenta" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="PuntoEnvioTarifaHttpPostOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="TmpExpedicionTrackingHttpPostIn">
+<wsdl:part name="cuenta" type="s:string"/>
+<wsdl:part name="cod" type="s:string"/>
+<wsdl:part name="cp" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="TmpExpedicionTrackingHttpPostOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopProximosHttpPostIn">
+<wsdl:part name="direccion" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopProximosHttpPostOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopProximosV2HttpPostIn">
+<wsdl:part name="direccion" type="s:string"/>
+<wsdl:part name="redes" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopProximosV2HttpPostOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopProximosV3HttpPostIn">
+<wsdl:part name="direccion" type="s:string"/>
+<wsdl:part name="redes" type="s:string"/>
+<wsdl:part name="pais" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopProximosV3HttpPostOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopRecogidasProximosHttpPostIn">
+<wsdl:part name="direccion" type="s:string"/>
+</wsdl:message>
+<wsdl:message name="GetParcelShopRecogidasProximosHttpPostOut">
+<wsdl:part name="Body"/>
+</wsdl:message>
+<wsdl:portType name="infoASMSoap">
+<wsdl:operation name="InfoPlaza">
+<wsdl:input message="tns:InfoPlazaSoapIn"/>
+<wsdl:output message="tns:InfoPlazaSoapOut"/>
+</wsdl:operation>
+<wsdl:operation name="Plazas">
+<wsdl:input message="tns:PlazasSoapIn"/>
+<wsdl:output message="tns:PlazasSoapOut"/>
+</wsdl:operation>
+<wsdl:operation name="PlazasPorDistancia">
+<wsdl:input message="tns:PlazasPorDistanciaSoapIn"/>
+<wsdl:output message="tns:PlazasPorDistanciaSoapOut"/>
+</wsdl:operation>
+<wsdl:operation name="KMLPlazas">
+<wsdl:input message="tns:KMLPlazasSoapIn"/>
+<wsdl:output message="tns:KMLPlazasSoapOut"/>
+</wsdl:operation>
+<wsdl:operation name="KMLPlazas2">
+<wsdl:input message="tns:KMLPlazas2SoapIn"/>
+<wsdl:output message="tns:KMLPlazas2SoapOut"/>
+</wsdl:operation>
+<wsdl:operation name="ScriptPlazas">
+<wsdl:input message="tns:ScriptPlazasSoapIn"/>
+<wsdl:output message="tns:ScriptPlazasSoapOut"/>
+</wsdl:operation>
+<wsdl:operation name="UrlExpedicion">
+<wsdl:input message="tns:UrlExpedicionSoapIn"/>
+<wsdl:output message="tns:UrlExpedicionSoapOut"/>
+</wsdl:operation>
+<wsdl:operation name="PlazaExport">
+<wsdl:input message="tns:PlazaExportSoapIn"/>
+<wsdl:output message="tns:PlazaExportSoapOut"/>
+</wsdl:operation>
+<wsdl:operation name="ExpedicionTracking">
+<wsdl:input message="tns:ExpedicionTrackingSoapIn"/>
+<wsdl:output message="tns:ExpedicionTrackingSoapOut"/>
+</wsdl:operation>
+<wsdl:operation name="PuntosEnvio">
+<wsdl:input message="tns:PuntosEnvioSoapIn"/>
+<wsdl:output message="tns:PuntosEnvioSoapOut"/>
+</wsdl:operation>
+<wsdl:operation name="PuntoEnvioTarifa">
+<wsdl:input message="tns:PuntoEnvioTarifaSoapIn"/>
+<wsdl:output message="tns:PuntoEnvioTarifaSoapOut"/>
+</wsdl:operation>
+<wsdl:operation name="TmpExpedicionTracking">
+<wsdl:input message="tns:TmpExpedicionTrackingSoapIn"/>
+<wsdl:output message="tns:TmpExpedicionTrackingSoapOut"/>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopProximos">
+<wsdl:input message="tns:GetParcelShopProximosSoapIn"/>
+<wsdl:output message="tns:GetParcelShopProximosSoapOut"/>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopProximosV2">
+<wsdl:input message="tns:GetParcelShopProximosV2SoapIn"/>
+<wsdl:output message="tns:GetParcelShopProximosV2SoapOut"/>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopProximosV3">
+<wsdl:input message="tns:GetParcelShopProximosV3SoapIn"/>
+<wsdl:output message="tns:GetParcelShopProximosV3SoapOut"/>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopRecogidasProximos">
+<wsdl:input message="tns:GetParcelShopRecogidasProximosSoapIn"/>
+<wsdl:output message="tns:GetParcelShopRecogidasProximosSoapOut"/>
+</wsdl:operation>
+</wsdl:portType>
+<wsdl:portType name="infoASMHttpGet">
+<wsdl:operation name="Plazas">
+<wsdl:input message="tns:PlazasHttpGetIn"/>
+<wsdl:output message="tns:PlazasHttpGetOut"/>
+</wsdl:operation>
+<wsdl:operation name="PlazasPorDistancia">
+<wsdl:input message="tns:PlazasPorDistanciaHttpGetIn"/>
+<wsdl:output message="tns:PlazasPorDistanciaHttpGetOut"/>
+</wsdl:operation>
+<wsdl:operation name="KMLPlazas">
+<wsdl:input message="tns:KMLPlazasHttpGetIn"/>
+<wsdl:output message="tns:KMLPlazasHttpGetOut"/>
+</wsdl:operation>
+<wsdl:operation name="KMLPlazas2">
+<wsdl:input message="tns:KMLPlazas2HttpGetIn"/>
+<wsdl:output message="tns:KMLPlazas2HttpGetOut"/>
+</wsdl:operation>
+<wsdl:operation name="ScriptPlazas">
+<wsdl:input message="tns:ScriptPlazasHttpGetIn"/>
+<wsdl:output message="tns:ScriptPlazasHttpGetOut"/>
+</wsdl:operation>
+<wsdl:operation name="UrlExpedicion">
+<wsdl:input message="tns:UrlExpedicionHttpGetIn"/>
+<wsdl:output message="tns:UrlExpedicionHttpGetOut"/>
+</wsdl:operation>
+<wsdl:operation name="PlazaExport">
+<wsdl:input message="tns:PlazaExportHttpGetIn"/>
+<wsdl:output message="tns:PlazaExportHttpGetOut"/>
+</wsdl:operation>
+<wsdl:operation name="PuntosEnvio">
+<wsdl:input message="tns:PuntosEnvioHttpGetIn"/>
+<wsdl:output message="tns:PuntosEnvioHttpGetOut"/>
+</wsdl:operation>
+<wsdl:operation name="PuntoEnvioTarifa">
+<wsdl:input message="tns:PuntoEnvioTarifaHttpGetIn"/>
+<wsdl:output message="tns:PuntoEnvioTarifaHttpGetOut"/>
+</wsdl:operation>
+<wsdl:operation name="TmpExpedicionTracking">
+<wsdl:input message="tns:TmpExpedicionTrackingHttpGetIn"/>
+<wsdl:output message="tns:TmpExpedicionTrackingHttpGetOut"/>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopProximos">
+<wsdl:input message="tns:GetParcelShopProximosHttpGetIn"/>
+<wsdl:output message="tns:GetParcelShopProximosHttpGetOut"/>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopProximosV2">
+<wsdl:input message="tns:GetParcelShopProximosV2HttpGetIn"/>
+<wsdl:output message="tns:GetParcelShopProximosV2HttpGetOut"/>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopProximosV3">
+<wsdl:input message="tns:GetParcelShopProximosV3HttpGetIn"/>
+<wsdl:output message="tns:GetParcelShopProximosV3HttpGetOut"/>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopRecogidasProximos">
+<wsdl:input message="tns:GetParcelShopRecogidasProximosHttpGetIn"/>
+<wsdl:output message="tns:GetParcelShopRecogidasProximosHttpGetOut"/>
+</wsdl:operation>
+</wsdl:portType>
+<wsdl:portType name="infoASMHttpPost">
+<wsdl:operation name="Plazas">
+<wsdl:input message="tns:PlazasHttpPostIn"/>
+<wsdl:output message="tns:PlazasHttpPostOut"/>
+</wsdl:operation>
+<wsdl:operation name="PlazasPorDistancia">
+<wsdl:input message="tns:PlazasPorDistanciaHttpPostIn"/>
+<wsdl:output message="tns:PlazasPorDistanciaHttpPostOut"/>
+</wsdl:operation>
+<wsdl:operation name="KMLPlazas">
+<wsdl:input message="tns:KMLPlazasHttpPostIn"/>
+<wsdl:output message="tns:KMLPlazasHttpPostOut"/>
+</wsdl:operation>
+<wsdl:operation name="KMLPlazas2">
+<wsdl:input message="tns:KMLPlazas2HttpPostIn"/>
+<wsdl:output message="tns:KMLPlazas2HttpPostOut"/>
+</wsdl:operation>
+<wsdl:operation name="ScriptPlazas">
+<wsdl:input message="tns:ScriptPlazasHttpPostIn"/>
+<wsdl:output message="tns:ScriptPlazasHttpPostOut"/>
+</wsdl:operation>
+<wsdl:operation name="UrlExpedicion">
+<wsdl:input message="tns:UrlExpedicionHttpPostIn"/>
+<wsdl:output message="tns:UrlExpedicionHttpPostOut"/>
+</wsdl:operation>
+<wsdl:operation name="PlazaExport">
+<wsdl:input message="tns:PlazaExportHttpPostIn"/>
+<wsdl:output message="tns:PlazaExportHttpPostOut"/>
+</wsdl:operation>
+<wsdl:operation name="PuntosEnvio">
+<wsdl:input message="tns:PuntosEnvioHttpPostIn"/>
+<wsdl:output message="tns:PuntosEnvioHttpPostOut"/>
+</wsdl:operation>
+<wsdl:operation name="PuntoEnvioTarifa">
+<wsdl:input message="tns:PuntoEnvioTarifaHttpPostIn"/>
+<wsdl:output message="tns:PuntoEnvioTarifaHttpPostOut"/>
+</wsdl:operation>
+<wsdl:operation name="TmpExpedicionTracking">
+<wsdl:input message="tns:TmpExpedicionTrackingHttpPostIn"/>
+<wsdl:output message="tns:TmpExpedicionTrackingHttpPostOut"/>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopProximos">
+<wsdl:input message="tns:GetParcelShopProximosHttpPostIn"/>
+<wsdl:output message="tns:GetParcelShopProximosHttpPostOut"/>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopProximosV2">
+<wsdl:input message="tns:GetParcelShopProximosV2HttpPostIn"/>
+<wsdl:output message="tns:GetParcelShopProximosV2HttpPostOut"/>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopProximosV3">
+<wsdl:input message="tns:GetParcelShopProximosV3HttpPostIn"/>
+<wsdl:output message="tns:GetParcelShopProximosV3HttpPostOut"/>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopRecogidasProximos">
+<wsdl:input message="tns:GetParcelShopRecogidasProximosHttpPostIn"/>
+<wsdl:output message="tns:GetParcelShopRecogidasProximosHttpPostOut"/>
+</wsdl:operation>
+</wsdl:portType>
+<wsdl:binding name="infoASMSoap" type="tns:infoASMSoap">
+<soap:binding transport="http://schemas.xmlsoap.org/soap/http"/>
+<wsdl:operation name="InfoPlaza">
+<soap:operation soapAction="http://www.asmred.com/InfoPlaza" style="document"/>
+<wsdl:input>
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="Plazas">
+<soap:operation soapAction="http://www.asmred.com/Plazas" style="document"/>
+<wsdl:input>
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="PlazasPorDistancia">
+<soap:operation soapAction="http://www.asmred.com/PlazasPorDistancia" style="document"/>
+<wsdl:input>
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="KMLPlazas">
+<soap:operation soapAction="http://www.asmred.com/KMLPlazas" style="document"/>
+<wsdl:input>
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="KMLPlazas2">
+<soap:operation soapAction="http://www.asmred.com/KMLPlazas2" style="document"/>
+<wsdl:input>
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="ScriptPlazas">
+<soap:operation soapAction="http://www.asmred.com/ScriptPlazas" style="document"/>
+<wsdl:input>
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="UrlExpedicion">
+<soap:operation soapAction="http://www.asmred.com/UrlExpedicion" style="document"/>
+<wsdl:input>
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="PlazaExport">
+<soap:operation soapAction="http://www.asmred.com/PlazaExport" style="document"/>
+<wsdl:input>
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="ExpedicionTracking">
+<soap:operation soapAction="http://www.asmred.com/ExpedicionTracking" style="document"/>
+<wsdl:input>
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="PuntosEnvio">
+<soap:operation soapAction="http://www.asmred.com/PuntosEnvio" style="document"/>
+<wsdl:input>
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="PuntoEnvioTarifa">
+<soap:operation soapAction="http://www.asmred.com/PuntoEnvioTarifa" style="document"/>
+<wsdl:input>
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="TmpExpedicionTracking">
+<soap:operation soapAction="http://www.asmred.com/TmpExpedicionTracking" style="document"/>
+<wsdl:input>
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopProximos">
+<soap:operation soapAction="http://www.asmred.com/GetParcelShopProximos" style="document"/>
+<wsdl:input>
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopProximosV2">
+<soap:operation soapAction="http://www.asmred.com/GetParcelShopProximosV2" style="document"/>
+<wsdl:input>
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopProximosV3">
+<soap:operation soapAction="http://www.asmred.com/GetParcelShopProximosV3" style="document"/>
+<wsdl:input>
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopRecogidasProximos">
+<soap:operation soapAction="http://www.asmred.com/GetParcelShopRecogidasProximos" style="document"/>
+<wsdl:input>
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+</wsdl:binding>
+<wsdl:binding name="infoASMSoap12" type="tns:infoASMSoap">
+<soap12:binding transport="http://schemas.xmlsoap.org/soap/http"/>
+<wsdl:operation name="InfoPlaza">
+<soap12:operation soapAction="http://www.asmred.com/InfoPlaza" style="document"/>
+<wsdl:input>
+<soap12:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap12:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="Plazas">
+<soap12:operation soapAction="http://www.asmred.com/Plazas" style="document"/>
+<wsdl:input>
+<soap12:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap12:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="PlazasPorDistancia">
+<soap12:operation soapAction="http://www.asmred.com/PlazasPorDistancia" style="document"/>
+<wsdl:input>
+<soap12:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap12:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="KMLPlazas">
+<soap12:operation soapAction="http://www.asmred.com/KMLPlazas" style="document"/>
+<wsdl:input>
+<soap12:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap12:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="KMLPlazas2">
+<soap12:operation soapAction="http://www.asmred.com/KMLPlazas2" style="document"/>
+<wsdl:input>
+<soap12:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap12:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="ScriptPlazas">
+<soap12:operation soapAction="http://www.asmred.com/ScriptPlazas" style="document"/>
+<wsdl:input>
+<soap12:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap12:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="UrlExpedicion">
+<soap12:operation soapAction="http://www.asmred.com/UrlExpedicion" style="document"/>
+<wsdl:input>
+<soap12:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap12:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="PlazaExport">
+<soap12:operation soapAction="http://www.asmred.com/PlazaExport" style="document"/>
+<wsdl:input>
+<soap12:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap12:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="ExpedicionTracking">
+<soap12:operation soapAction="http://www.asmred.com/ExpedicionTracking" style="document"/>
+<wsdl:input>
+<soap12:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap12:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="PuntosEnvio">
+<soap12:operation soapAction="http://www.asmred.com/PuntosEnvio" style="document"/>
+<wsdl:input>
+<soap12:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap12:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="PuntoEnvioTarifa">
+<soap12:operation soapAction="http://www.asmred.com/PuntoEnvioTarifa" style="document"/>
+<wsdl:input>
+<soap12:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap12:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="TmpExpedicionTracking">
+<soap12:operation soapAction="http://www.asmred.com/TmpExpedicionTracking" style="document"/>
+<wsdl:input>
+<soap12:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap12:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopProximos">
+<soap12:operation soapAction="http://www.asmred.com/GetParcelShopProximos" style="document"/>
+<wsdl:input>
+<soap12:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap12:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopProximosV2">
+<soap12:operation soapAction="http://www.asmred.com/GetParcelShopProximosV2" style="document"/>
+<wsdl:input>
+<soap12:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap12:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopProximosV3">
+<soap12:operation soapAction="http://www.asmred.com/GetParcelShopProximosV3" style="document"/>
+<wsdl:input>
+<soap12:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap12:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopRecogidasProximos">
+<soap12:operation soapAction="http://www.asmred.com/GetParcelShopRecogidasProximos" style="document"/>
+<wsdl:input>
+<soap12:body use="literal"/>
+</wsdl:input>
+<wsdl:output>
+<soap12:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+</wsdl:binding>
+<wsdl:binding name="infoASMHttpGet" type="tns:infoASMHttpGet">
+<http:binding verb="GET"/>
+<wsdl:operation name="Plazas">
+<http:operation location="/Plazas"/>
+<wsdl:input>
+<http:urlEncoded/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="PlazasPorDistancia">
+<http:operation location="/PlazasPorDistancia"/>
+<wsdl:input>
+<http:urlEncoded/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="KMLPlazas">
+<http:operation location="/KMLPlazas"/>
+<wsdl:input>
+<http:urlEncoded/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="KMLPlazas2">
+<http:operation location="/KMLPlazas2"/>
+<wsdl:input>
+<http:urlEncoded/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="ScriptPlazas">
+<http:operation location="/ScriptPlazas"/>
+<wsdl:input>
+<http:urlEncoded/>
+</wsdl:input>
+<wsdl:output>
+<mime:mimeXml part="Body"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="UrlExpedicion">
+<http:operation location="/UrlExpedicion"/>
+<wsdl:input>
+<http:urlEncoded/>
+</wsdl:input>
+<wsdl:output>
+<mime:mimeXml part="Body"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="PlazaExport">
+<http:operation location="/PlazaExport"/>
+<wsdl:input>
+<http:urlEncoded/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="PuntosEnvio">
+<http:operation location="/PuntosEnvio"/>
+<wsdl:input>
+<http:urlEncoded/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="PuntoEnvioTarifa">
+<http:operation location="/PuntoEnvioTarifa"/>
+<wsdl:input>
+<http:urlEncoded/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="TmpExpedicionTracking">
+<http:operation location="/TmpExpedicionTracking"/>
+<wsdl:input>
+<http:urlEncoded/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopProximos">
+<http:operation location="/GetParcelShopProximos"/>
+<wsdl:input>
+<http:urlEncoded/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopProximosV2">
+<http:operation location="/GetParcelShopProximosV2"/>
+<wsdl:input>
+<http:urlEncoded/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopProximosV3">
+<http:operation location="/GetParcelShopProximosV3"/>
+<wsdl:input>
+<http:urlEncoded/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopRecogidasProximos">
+<http:operation location="/GetParcelShopRecogidasProximos"/>
+<wsdl:input>
+<http:urlEncoded/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+</wsdl:binding>
+<wsdl:binding name="infoASMHttpPost" type="tns:infoASMHttpPost">
+<http:binding verb="POST"/>
+<wsdl:operation name="Plazas">
+<http:operation location="/Plazas"/>
+<wsdl:input>
+<mime:content type="application/x-www-form-urlencoded"/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="PlazasPorDistancia">
+<http:operation location="/PlazasPorDistancia"/>
+<wsdl:input>
+<mime:content type="application/x-www-form-urlencoded"/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="KMLPlazas">
+<http:operation location="/KMLPlazas"/>
+<wsdl:input>
+<mime:content type="application/x-www-form-urlencoded"/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="KMLPlazas2">
+<http:operation location="/KMLPlazas2"/>
+<wsdl:input>
+<mime:content type="application/x-www-form-urlencoded"/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="ScriptPlazas">
+<http:operation location="/ScriptPlazas"/>
+<wsdl:input>
+<mime:content type="application/x-www-form-urlencoded"/>
+</wsdl:input>
+<wsdl:output>
+<mime:mimeXml part="Body"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="UrlExpedicion">
+<http:operation location="/UrlExpedicion"/>
+<wsdl:input>
+<mime:content type="application/x-www-form-urlencoded"/>
+</wsdl:input>
+<wsdl:output>
+<mime:mimeXml part="Body"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="PlazaExport">
+<http:operation location="/PlazaExport"/>
+<wsdl:input>
+<mime:content type="application/x-www-form-urlencoded"/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="PuntosEnvio">
+<http:operation location="/PuntosEnvio"/>
+<wsdl:input>
+<mime:content type="application/x-www-form-urlencoded"/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="PuntoEnvioTarifa">
+<http:operation location="/PuntoEnvioTarifa"/>
+<wsdl:input>
+<mime:content type="application/x-www-form-urlencoded"/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="TmpExpedicionTracking">
+<http:operation location="/TmpExpedicionTracking"/>
+<wsdl:input>
+<mime:content type="application/x-www-form-urlencoded"/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopProximos">
+<http:operation location="/GetParcelShopProximos"/>
+<wsdl:input>
+<mime:content type="application/x-www-form-urlencoded"/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopProximosV2">
+<http:operation location="/GetParcelShopProximosV2"/>
+<wsdl:input>
+<mime:content type="application/x-www-form-urlencoded"/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopProximosV3">
+<http:operation location="/GetParcelShopProximosV3"/>
+<wsdl:input>
+<mime:content type="application/x-www-form-urlencoded"/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="GetParcelShopRecogidasProximos">
+<http:operation location="/GetParcelShopRecogidasProximos"/>
+<wsdl:input>
+<mime:content type="application/x-www-form-urlencoded"/>
+</wsdl:input>
+<wsdl:output>
+<mime:content part="Body" type="text/xml"/>
+</wsdl:output>
+</wsdl:operation>
+</wsdl:binding>
+<wsdl:service name="infoASM">
+<wsdl:port name="infoASMSoap" binding="tns:infoASMSoap">
+<soap:address location="https://ws-customer.gls-spain.es/infoasm.asmx"/>
+</wsdl:port>
+<wsdl:port name="infoASMSoap12" binding="tns:infoASMSoap12">
+<soap12:address location="https://ws-customer.gls-spain.es/infoasm.asmx"/>
+</wsdl:port>
+<wsdl:port name="infoASMHttpGet" binding="tns:infoASMHttpGet">
+<http:address location="https://ws-customer.gls-spain.es/infoasm.asmx"/>
+</wsdl:port>
+<wsdl:port name="infoASMHttpPost" binding="tns:infoASMHttpPost">
+<http:address location="https://ws-customer.gls-spain.es/infoasm.asmx"/>
+</wsdl:port>
+</wsdl:service>
+</wsdl:definitions>

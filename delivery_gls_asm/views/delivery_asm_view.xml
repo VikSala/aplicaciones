@@ -28,18 +28,11 @@
                             />
                             <field name="gls_asm_cash_on_delivery" />
                             <field name="gls_asm_with_return" />
-                            <separator string="GLS ParcelShop / ShipIT" />
-                            <field
-                                name="gls_parcelshop_api_url"
-                                placeholder="https://.../backend/rs/parcelshop"
-                            />
-                            <field name="gls_parcelshop_username" />
-                            <field name="gls_parcelshop_password" password="True" />
                             <button
-                                name="action_open_gls_parcelshop_search"
-                                string="Search ParcelShops by Postal Code"
+                                name="action_gls_asm_search_parcelshops"
+                                string="Search GLS ParcelShops"
                                 type="object"
-                                class="oe_highlight"
+                                class="btn-secondary"
                                 icon="fa-map-marker"
                             />
                         </group>

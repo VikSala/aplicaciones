@@ -1,50 +1,40 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
-    <record id="gls_asm_parcelshop_search_wizard_view_form" model="ir.ui.view">
+    <record id="gls_asm_parcelshop_search_wizard_form" model="ir.ui.view">
         <field name="name">gls.asm.parcelshop.search.wizard.form</field>
         <field name="model">gls.asm.parcelshop.search.wizard</field>
         <field name="arch" type="xml">
-            <form string="Search GLS ParcelShops">
+            <form string="GLS ParcelShop Search">
                 <group>
-                    <field name="carrier_id" invisible="1" />
                     <group>
-                        <field name="zip_code" placeholder="03001" />
-                        <field name="country_code" />
+                        <field name="carrier_id" />
+                        <field name="postal_code" placeholder="03001" />
+                        <field name="country_id" options="{'no_create': True}" />
                     </group>
                     <group>
-                        <field name="distance" />
-                        <field name="max_results" />
-                        <field name="parcelshop_type" />
+                        <field name="networks" />
+                        <field name="result_count" invisible="not search_done" />
                     </group>
                 </group>
-                <separator string="Results" />
-                <field name="line_ids" nolabel="1">
-                    <list create="0" delete="0" edit="0">
-                        <field name="parcelshop_id" />
-                        <field name="shop_type" />
+                <div class="alert alert-info" role="alert">
+                    Enter a postal code and press Search. Network 1 searches all GLS
+                    ParcelShop networks documented for the selected country.
+                </div>
+                <div class="alert alert-warning" role="alert" invisible="not search_done or result_count != 0">
+                    GLS did not return any ParcelShop for this search.
+                </div>
+                <field name="line_ids" nolabel="1" readonly="1" invisible="not search_done">
+                    <list create="0" delete="0">
+                        <field name="sequence" column_invisible="True" />
+                        <field name="code" />
+                        <field name="network_id" optional="show" />
                         <field name="name" />
-                        <field name="address" />
-                        <field name="distance" />
+                        <field name="full_address" />
+                        <field name="distance" optional="show" />
+                        <field name="schedule" optional="show" />
                         <field name="latitude" optional="hide" />
                         <field name="longitude" optional="hide" />
-                        <field name="opening_hours" optional="hide" />
                     </list>
-                    <form string="GLS ParcelShop">
-                        <group>
-                            <group>
-                                <field name="parcelshop_id" />
-                                <field name="shop_type" />
-                                <field name="name" />
-                                <field name="address" />
-                                <field name="distance" />
-                            </group>
-                            <group>
-                                <field name="latitude" />
-                                <field name="longitude" />
-                                <field name="opening_hours" />
-                            </group>
-                        </group>
-                    </form>
                 </field>
                 <footer>
                     <button
@@ -52,9 +42,8 @@
                         string="Search"
                         type="object"
                         class="oe_highlight"
-                        icon="fa-search"
                     />
-                    <button string="Close" special="cancel" class="btn-secondary" />
+                    <button string="Close" special="cancel" />
                 </footer>
             </form>
         </field>
