@@ -496,6 +496,71 @@ class SaleOrder(models.Model):
         }
         return self._optima_pickup_hash_payload(payload)
 
+    @staticmethod
+    def _optima_pickup_normalized_text(value):
+        return " ".join(str(value or "").strip().lower().split())
+
+    def _optima_pickup_location_data_integrity_error(self):
+        """Return a diagnostic when Odoo pickup data diverges from our snapshot."""
+        self.ensure_one()
+        data = self.pickup_location_data
+        if not isinstance(data, dict) or not data:
+            return _("Faltan los datos estándar de la ubicación de recogida en el pedido.")
+
+        expected = {
+            "id": self.optima_pickup_external_id,
+            "name": self.optima_pickup_name,
+            "street": self.optima_pickup_street,
+            "zip_code": self.optima_pickup_zip,
+            "city": self.optima_pickup_city,
+            "country_code": self.optima_pickup_country_code,
+            "provider_code": self.optima_pickup_provider_code,
+            "carrier_code": self.optima_pickup_carrier_code,
+        }
+        for key, expected_value in expected.items():
+            if not expected_value:
+                continue
+            actual_value = data.get(key)
+            if self._optima_pickup_normalized_text(actual_value) != self._optima_pickup_normalized_text(expected_value):
+                return _(
+                    "Los datos estándar del punto de recogida ya no coinciden con la selección validada."
+                )
+        return False
+
+    def _optima_pickup_delivery_line_integrity_error(self):
+        """Verify that the validated carrier/rate still has its delivery line."""
+        self.ensure_one()
+        carrier = self.optima_pickup_delivery_carrier_id
+        delivery_lines = self.order_line.filtered("is_delivery")
+        if len(delivery_lines) != 1:
+            return _(
+                "La línea de transporte validada para el punto de recogida ya no está presente de forma única."
+            )
+        line = delivery_lines[:1]
+        if not carrier or line.product_id != carrier.product_id:
+            return _(
+                "La línea de transporte ya no corresponde al método validado para el punto de recogida."
+            )
+
+        # stock_delivery intentionally stores 0 on the line for carriers billed
+        # at real cost. For all other policies, the checkout line must preserve
+        # the exact rate that was accepted during pickup resolution.
+        if getattr(carrier, "invoice_policy", False) != "real":
+            try:
+                price_changed = bool(
+                    self.currency_id.compare_amounts(
+                        float(line.price_unit or 0.0),
+                        float(self.optima_pickup_delivery_price or 0.0),
+                    )
+                )
+            except (TypeError, ValueError):
+                price_changed = True
+            if price_changed:
+                return _(
+                    "El precio de la línea de transporte ya no coincide con el precio validado para el punto de recogida."
+                )
+        return False
+
     def _optima_pickup_invalidate_for_address_change(self):
         """Discard a pickup point chosen for a different delivery address."""
         self.ensure_one()
@@ -704,6 +769,21 @@ class SaleOrder(models.Model):
         self.ensure_one()
         return False
 
+    def _optima_pickup_verify_point(self, provider_code, normalized, raw_point, extra=None):
+        """Adapter hook for authoritative server-side point verification.
+
+        Browser/provider payloads are never assumed trustworthy by the core. A
+        provider may override this hook to re-fetch the point from its own API
+        and return canonical data. The default keeps backward compatibility for
+        adapters whose point payload is already validated by another mechanism.
+        """
+        self.ensure_one()
+        return {
+            "success": True,
+            "normalized": normalized,
+            "raw_point": raw_point,
+        }
+
     def _optima_pickup_after_store_point(self, provider_code, normalized, raw_point, extra):
         """Adapter hook executed after the generic pickup snapshot is stored."""
         self.ensure_one()
@@ -741,6 +821,11 @@ class SaleOrder(models.Model):
         """Adapter hook to clear provider-specific fields."""
         self.ensure_one()
         return None
+
+    def _optima_pickup_provider_confirmation_error(self):
+        """Adapter hook for no-I/O provider snapshot integrity checks."""
+        self.ensure_one()
+        return False
 
     def _optima_pickup_selected_point(self):
         self.ensure_one()
@@ -933,6 +1018,20 @@ class SaleOrder(models.Model):
         if not normalized:
             raise ValidationError(_("El proveedor de puntos de recogida no está soportado."))
 
+        verification = self._optima_pickup_verify_point(
+            provider_code, normalized, raw_point, extra
+        ) or {}
+        if not verification.get("success"):
+            raise ValidationError(
+                verification.get("message")
+                or _("No se ha podido verificar el punto de recogida seleccionado.")
+            )
+        normalized = verification.get("normalized") or normalized
+        if "raw_point" in verification:
+            raw_point = verification.get("raw_point")
+        if not isinstance(normalized, dict) or not isinstance(raw_point, dict):
+            raise ValidationError(_("El proveedor ha devuelto datos no válidos para el punto de recogida."))
+
         required = ("id", "name", "street", "zip_code", "city", "country_code")
         missing = [key for key in required if not normalized.get(key)]
         if missing:
@@ -1047,10 +1146,17 @@ class SaleOrder(models.Model):
             raise ValidationError(_(
                 "El método de entrega ya no coincide con el método validado para el punto de recogida."
             ))
-        if not isinstance(self.pickup_location_data, dict) or not self.pickup_location_data:
-            raise ValidationError(_(
-                "Faltan los datos estándar de la ubicación de recogida en el pedido."
-            ))
+        location_error = self._optima_pickup_location_data_integrity_error()
+        if location_error:
+            raise ValidationError(location_error)
+
+        delivery_line_error = self._optima_pickup_delivery_line_integrity_error()
+        if delivery_line_error:
+            raise ValidationError(delivery_line_error)
+
+        provider_error = self._optima_pickup_provider_confirmation_error()
+        if provider_error:
+            raise ValidationError(provider_error)
 
         profile = self._optima_pickup_package_profile()
         if not profile.get("success"):
@@ -1139,10 +1245,10 @@ class SaleOrder(models.Model):
     def _check_cart_is_ready_to_be_paid(self):
         self.ensure_one()
         self._optima_pickup_ensure_current_state()
-        if self.optima_pickup_mode and not (
-            self.optima_pickup_resolved and self.optima_pickup_delivery_carrier_id
-        ):
-            raise ValidationError(_(
-                "El punto de recogida todavía no tiene un método y precio de entrega válidos."
-            ))
+        if self.optima_pickup_mode:
+            # Run the same strict local guard used by final order confirmation.
+            # This is intentionally no-I/O: remote validation already happened
+            # at set_point, while payment must only accept the exact validated
+            # local snapshot and delivery line.
+            self._optima_delivery_confirmation_guard()
         return super()._check_cart_is_ready_to_be_paid()

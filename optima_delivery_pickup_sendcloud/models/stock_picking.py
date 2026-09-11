@@ -59,52 +59,109 @@ class StockPicking(models.Model):
             vals[name] = payload_text
 
     def _optima_sendcloud_sync_service_point_from_sale(self):
-        """Copy the website-selected Sendcloud point into the outgoing picking."""
+        """Prepare OCA fields from the immutable confirmed Sendcloud snapshot.
+
+        At order confirmation the snapshot does not exist yet, so it is created
+        once from the sale order. On later ``send_to_shipper`` preflights the
+        already-confirmed picking snapshot is authoritative and is never replaced
+        from mutable sale-order fields.
+        """
         self.ensure_one()
         sale = self.sale_id
         if not sale or self.optima_delivery_pickup_provider_code != "sendcloud":
             return False
 
-        source = False
-        if "sendcloud_service_point_address" in sale._fields:
-            source = sale.sendcloud_service_point_address
-        payload, payload_text = self._optima_sendcloud_json_payload(source)
+        snapshot_text = self.optima_sendcloud_service_point_payload_snapshot or ""
+        snapshot_payload, parsed_snapshot_text = self._optima_sendcloud_json_payload(
+            snapshot_text
+        )
+        using_confirmed_snapshot = bool(
+            self.optima_sendcloud_service_point_synced and snapshot_text
+        )
 
-        # Fallback to the provider raw snapshot. This should normally not be
-        # needed because the website adapter already keeps the OCA sale field
-        # synchronized, but it makes the shipping bridge self-healing.
-        if not payload_text:
-            raw = sale.optima_pickup_raw_data or {}
-            if isinstance(raw, dict):
-                payload = dict(raw)
-                payload_text = json.dumps(payload)
+        if using_confirmed_snapshot:
+            if not snapshot_payload:
+                raise ValidationError(_(
+                    "El snapshot Sendcloud confirmado del albarán no contiene datos válidos."
+                ))
+            payload = dict(snapshot_payload)
+            payload_text = parsed_snapshot_text
+        else:
+            source = False
+            if "sendcloud_service_point_address" in sale._fields:
+                source = sale.sendcloud_service_point_address
+            payload, payload_text = self._optima_sendcloud_json_payload(source)
 
-        if not payload_text:
-            self.write({
-                "optima_sendcloud_service_point_payload_snapshot": False,
-                "optima_sendcloud_post_number_snapshot": False,
-                "optima_sendcloud_service_point_synced": False,
-            })
+            # Backfill for pickings created before the provider snapshot existed.
+            if not payload:
+                raw = sale.optima_pickup_raw_data or {}
+                if isinstance(raw, dict):
+                    payload = dict(raw)
+                    payload_text = json.dumps(payload)
+
+        if not payload or not payload_text:
+            if not using_confirmed_snapshot:
+                self.write({
+                    "optima_sendcloud_service_point_payload_snapshot": False,
+                    "optima_sendcloud_post_number_snapshot": False,
+                    "optima_sendcloud_service_point_synced": False,
+                })
             return False
 
         point_id = str(
             payload.get("id")
             or payload.get("service_point_id")
-            or sale.optima_pickup_external_id
             or ""
         )
-        expected_id = str(sale.optima_pickup_external_id or "")
-        if expected_id and point_id and expected_id != point_id:
+        expected_id = str(self.optima_delivery_pickup_external_id or "")
+        if not expected_id and not using_confirmed_snapshot:
+            expected_id = str(sale.optima_pickup_external_id or "")
+        if not point_id or (expected_id and expected_id != point_id):
             raise ValidationError(_(
                 "Los datos Sendcloud del albarán no corresponden al punto de recogida confirmado."
             ))
 
+        # When backfilling from the sale order, ensure the mutable sale record
+        # still refers to the same point captured by the generic picking snapshot.
+        if not using_confirmed_snapshot:
+            sale_point_id = str(sale.optima_pickup_external_id or "")
+            if expected_id and sale_point_id and sale_point_id != expected_id:
+                raise ValidationError(_(
+                    "El punto Sendcloud del pedido cambió después de confirmar el albarán."
+                ))
+
+        # The provider payload and the generic picking snapshot are two
+        # independent immutable views of the same confirmed point. Require them
+        # to agree before exposing the data to the carrier connector. This also
+        # catches coordinated edits to the picking destination + generic fields.
+        raw_country = payload.get("country") or payload.get("country_code") or ""
+        if isinstance(raw_country, dict):
+            raw_country = raw_country.get("iso_2") or raw_country.get("code") or ""
+        payload_street = " ".join(
+            str(value).strip()
+            for value in (payload.get("street"), payload.get("house_number"))
+            if value not in (None, "")
+        )
+        snapshot_checks = (
+            (payload_street, self.optima_delivery_pickup_street),
+            (payload.get("postal_code") or payload.get("zip_code"), self.optima_delivery_pickup_zip),
+            (payload.get("city"), self.optima_delivery_pickup_city),
+            (raw_country, self.optima_delivery_pickup_country_code),
+            (payload.get("carrier") or payload.get("carrier_code"), self.optima_delivery_pickup_carrier_code),
+        )
+        for actual, expected in snapshot_checks:
+            if expected and self._optima_normalized_text(actual) != self._optima_normalized_text(expected):
+                raise ValidationError(_(
+                    "El snapshot Sendcloud del albarán ya no coincide con el punto de recogida confirmado."
+                ))
+
         post_number = str(
             payload.get("post_number")
-            or sale.optima_sendcloud_to_post_number
+            or (self.optima_sendcloud_post_number_snapshot if using_confirmed_snapshot else False)
+            or (sale.optima_sendcloud_to_post_number if not using_confirmed_snapshot else False)
             or ""
         )
-        if post_number and isinstance(payload, dict) and not payload.get("post_number"):
+        if post_number and not payload.get("post_number"):
             payload = dict(payload)
             payload["post_number"] = post_number
             payload_text = json.dumps(payload)
@@ -115,9 +172,9 @@ class StockPicking(models.Model):
             "optima_sendcloud_service_point_synced": True,
         }
 
-        # The common OCA field name is synchronized if the installed 18.0
-        # connector exposes it on stock.picking. Compatible forks using a JSON
-        # variant are supported as well.
+        # Re-apply the immutable snapshot to the fields consumed by the installed
+        # OCA connector. This self-heals accidental edits on connector fields
+        # without ever consulting mutable sale-order point data again.
         self._optima_sendcloud_write_oca_field(
             vals,
             "sendcloud_service_point_address",
@@ -131,10 +188,8 @@ class StockPicking(models.Model):
             payload_text,
         )
 
-        # Some connector revisions expose primitive service-point/post-number
-        # fields instead of a single payload. Only write type-compatible fields.
         id_field = self._fields.get("sendcloud_service_point_id")
-        if id_field and self._optima_sendcloud_field_is_writable(id_field) and point_id:
+        if id_field and self._optima_sendcloud_field_is_writable(id_field):
             if id_field.type in ("char", "text"):
                 vals["sendcloud_service_point_id"] = point_id
             elif id_field.type == "integer" and point_id.isdigit():

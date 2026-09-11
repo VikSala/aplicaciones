@@ -891,10 +891,11 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
     },
 
     _pickupPointPrewarmKey(providerCode, point = {}) {
+        const pointId = String(point.id || point.service_point_id || "").trim();
         const carrier = String(point.carrier || point.carrier_code || "").trim().toLowerCase();
         const postalCode = String(point.postal_code || point.zip_code || "").trim().toUpperCase();
         const contextKey = this._pickupMapState?.contextKey || this._pickupPrewarmContextKey || "";
-        return [contextKey, providerCode || "", carrier, postalCode].join("|");
+        return [contextKey, providerCode || "", pointId, carrier, postalCode].join("|");
     },
 
     _startPickupPointPrewarm(point) {

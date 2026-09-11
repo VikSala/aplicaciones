@@ -2,7 +2,7 @@
 
 Sendcloud adapter for `optima_delivery_pickup`.
 
-Current development phase (18.0.0.6.4):
+Current development phase (18.0.0.7.0):
 
 - Opens Sendcloud's hosted Service Point Picker.
 - Normalizes and persists the selected service point.
@@ -101,4 +101,15 @@ Current development phase (18.0.0.6.4):
 - Añade precalentamiento de compatibilidad y tarifa mientras el cliente examina/previsualiza el punto en el mapa.
 - Las escrituras de caché del precálculo se acumulan en memoria y se fusionan al final con un bloqueo de fila corto, evitando mantener el pedido bloqueado durante llamadas remotas.
 - El precálculo omite el fallback pesado `rate_shipment`; si ruta sincronizada y `shipping-price` no bastan, `set_point` conserva el fallback autoritativo existente.
+
+## 18.0.0.7.0 — Fase 6: blindaje final
+
+- Cada selección Sendcloud se vuelve a obtener en servidor por su `service_point_id`; nombre, dirección, carrier y coordenadas enviados por el navegador dejan de ser autoritativos.
+- La verificación exacta del punto se precalienta y cachea para que normalmente no añada latencia al `set_point` definitivo.
+- Las cachés de Shipping Products y validación incluyen el origen real (país + CP de almacén), evitando reutilizar compatibilidad tras un cambio de almacén/origen.
+- La caché de Shipping Price incluye además país destino, moneda y fecha de conversión para impedir reutilizaciones económicas incorrectas.
+- El guard de confirmación comprueba que `sendcloud_service_point_address` sigue correspondiendo al punto validado.
+- El albarán usa como autoridad el snapshot Sendcloud creado al confirmar; en preflight lo vuelve a aplicar a los campos OCA sin releer datos mutables del pedido.
+- Los albaranes antiguos sin snapshot conservan un backfill controlado, siempre que el ID del pedido siga coincidiendo con el snapshot genérico del albarán.
+- Añade tests puros para alias de carriers, conversión de dimensiones y parseo seguro del snapshot JSON.
 

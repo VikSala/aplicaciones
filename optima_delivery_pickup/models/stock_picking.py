@@ -159,12 +159,16 @@ class StockPicking(models.Model):
         actual_zip = self._optima_normalized_text(self.partner_id.zip)
         expected_city = self._optima_normalized_text(self.optima_delivery_pickup_city)
         actual_city = self._optima_normalized_text(self.partner_id.city)
+        expected_street = self._optima_normalized_text(self.optima_delivery_pickup_street)
+        actual_street = self._optima_normalized_text(self.partner_id.street)
         if expected_country and actual_country != expected_country:
             return _("El país de la expedición ya no coincide con el punto seleccionado.")
         if expected_zip and actual_zip != expected_zip:
             return _("El código postal de la expedición ya no coincide con el punto seleccionado.")
         if expected_city and actual_city != expected_city:
             return _("La ciudad de la expedición ya no coincide con el punto seleccionado.")
+        if expected_street and actual_street != expected_street:
+            return _("La dirección de la expedición ya no coincide con el punto seleccionado.")
         return False
 
     @api.depends(
@@ -178,6 +182,7 @@ class StockPicking(models.Model):
         "carrier_id",
         "optima_delivery_method_snapshot_id",
         "partner_id",
+        "partner_id.street",
         "partner_id.zip",
         "partner_id.city",
         "partner_id.country_id",

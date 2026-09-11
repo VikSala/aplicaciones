@@ -2,7 +2,7 @@
 
 Generic multi-provider pickup core for Odoo 18 ecommerce.
 
-Current development phase (18.0.0.8.5):
+Current development phase (18.0.0.9.0):
 
 - Generic `Punto de recogida` option remains intentionally always visible.
 - Product length / width / height fields in millimetres.
@@ -153,4 +153,29 @@ validation will later reject the current cart.
 - Añade precalentamiento de resolución al punto más cercano y al punto que el cliente está previsualizando en el mapa.
 - Al confirmar, el checkout espera el precálculo exacto que ya estuviera en curso para reutilizar las cachés servidor y evitar repetir la misma consulta remota.
 - El precálculo es best-effort: nunca sustituye la validación final de `set_point` ni modifica por sí solo punto, transportista, precio o total del pedido.
+
+## 18.0.0.9.0 — Fase 6: blindaje final
+
+- Añade un hook genérico de verificación autoritativa del punto antes de persistirlo; los adaptadores pueden sustituir el payload del navegador por datos recuperados en servidor.
+- Antes de pago y confirmación comprueba que `pickup_location_data` sigue coincidiendo campo a campo con el punto validado.
+- Verifica que existe una única línea de transporte, que corresponde al carrier validado y, salvo métodos facturados a coste real, que conserva el precio resuelto.
+- Añade un hook no-I/O para que cada proveedor valide la integridad de sus snapshots justo antes del pago/confirmación.
+- El preflight de almacén comprueba también la calle del punto, además de país, CP y ciudad.
+- El precalentamiento frontend se identifica por ID exacto de punto para no confundir dos oficinas de la misma compañía y CP.
+- Amplía los tests puros del estimador de embalaje con cantidades fraccionarias, vacíos, dimensiones inválidas, grids con huecos y claves defensivas.
+
+### Matriz de aceptación de Fase 6
+
+1. Selección normal de un punto: spinner -> método/precio -> Confirmar habilitado.
+2. Segundo punto de la misma compañía: reutiliza compatibilidad/precio, pero verifica el ID exacto del nuevo punto.
+3. Cambio de compañía: reutiliza la parte común del bulto cuando corresponda y resuelve la tarifa correcta.
+4. Punto inexistente/manipulado: debe quedar sin resolver y Confirmar bloqueado.
+5. Cambio de cantidad/producto: revalida el mismo punto o lo deja pendiente si deja de ser compatible.
+6. Cambio de dirección: elimina la selección anterior y obliga a escoger otro punto.
+7. Carrito vacío y reutilizado: no hereda punto, carrier ni precio anteriores.
+8. Caída/timeout del proveedor: falla cerrado sin perder la posibilidad de editar el carrito.
+9. Línea de transporte eliminada/cambiada tras resolver: pago y confirmación quedan bloqueados.
+10. `pickup_location_data` alterado tras resolver: pago y confirmación quedan bloqueados.
+11. Dirección del albarán modificada tras confirmar: `send_to_shipper` queda bloqueado, incluida una modificación solo de la calle.
+12. Datos del pedido modificados después de confirmar: el albarán conserva y reutiliza el snapshot confirmado, no los datos mutables posteriores.
 

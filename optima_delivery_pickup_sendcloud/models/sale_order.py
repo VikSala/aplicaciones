@@ -128,6 +128,15 @@ class SaleOrder(models.Model):
             return
         self._optima_sendcloud_cache_merge({bucket: {key: value}})
 
+    def _optima_sendcloud_origin_cache_token(self):
+        """Return the origin fragment used by route-sensitive cache keys."""
+        self.ensure_one()
+        origin = self._optima_sendcloud_origin_data()
+        return "%s:%s" % (
+            str(origin.get("country_code") or "").strip().upper(),
+            str(origin.get("postal_code") or "").strip().upper(),
+        )
+
     def _optima_sendcloud_products_cache_key(self, integration, point, package):
         """Cache key for Shipping Products, intentionally independent of carrier.
 
@@ -139,6 +148,7 @@ class SaleOrder(models.Model):
         self.ensure_one()
         return "|".join([
             str(integration.id or 0),
+            self._optima_sendcloud_origin_cache_token(),
             str(point.get("country_code") or "").strip().upper(),
             str(point.get("zip_code") or "").strip().upper(),
             self._optima_pickup_address_fingerprint(),
@@ -150,6 +160,7 @@ class SaleOrder(models.Model):
         carrier = self._optima_sendcloud_canonical_carrier(point.get("carrier_code") or "")
         return "|".join([
             str(integration.id or 0),
+            self._optima_sendcloud_origin_cache_token(),
             carrier,
             str(point.get("zip_code") or "").strip().upper(),
             self._optima_pickup_address_fingerprint(),
@@ -233,7 +244,8 @@ class SaleOrder(models.Model):
                 # Frontend map cache is valid only while both destination and
                 # parcel profile remain unchanged. No personal data are exposed
                 # in this token; both values are SHA-256 fingerprints.
-                "cache_token": "%s:%s" % (
+                "cache_token": "%s:%s:%s" % (
+                    integration.id or 0,
                     self._optima_pickup_address_fingerprint(),
                     self._optima_pickup_logistics_fingerprint(),
                 ),
@@ -292,6 +304,68 @@ class SaleOrder(models.Model):
                 "message": _("Sendcloud ha devuelto una respuesta no válida al buscar puntos."),
             }
         return {"success": True, "points": payload if isinstance(payload, list) else []}
+
+    def _optima_sendcloud_servicepoint_api_get(self, integration, service_point_id):
+        """Retrieve one exact service point using server-side credentials."""
+        self.ensure_one()
+        public_key = str(getattr(integration, "public_key", "") or "")
+        secret_key = self._optima_sendcloud_secret_key(integration)
+        point_id = str(service_point_id or "").strip()
+        if not public_key or not secret_key:
+            return {
+                "success": False,
+                "message": _(
+                    "La integración Sendcloud no tiene disponibles las credenciales necesarias para verificar el punto."
+                ),
+            }
+        if not point_id.isdigit():
+            return {
+                "success": False,
+                "message": _("El identificador del punto Sendcloud no es válido."),
+            }
+
+        try:
+            response = requests.get(
+                "https://servicepoints.sendcloud.sc/api/v2/service-points/%s" % point_id,
+                auth=(public_key, secret_key),
+                headers={"X-Requested-With": "XMLHttpRequest"},
+                timeout=(3, 6),
+            )
+            if response.status_code == 404:
+                return {
+                    "success": False,
+                    "message": _(
+                        "El punto de recogida seleccionado ya no está disponible en Sendcloud."
+                    ),
+                }
+            response.raise_for_status()
+            payload = response.json()
+        except requests.RequestException as exc:
+            _logger.warning(
+                "Optima pickup: exact Sendcloud service point verification failed for %s: %s",
+                point_id,
+                exc,
+            )
+            return {
+                "success": False,
+                "message": _(
+                    "No se ha podido verificar el punto Sendcloud en este momento. Inténtalo de nuevo."
+                ),
+            }
+        except ValueError:
+            return {
+                "success": False,
+                "message": _(
+                    "Sendcloud ha devuelto una respuesta no válida al verificar el punto."
+                ),
+            }
+
+        if not isinstance(payload, dict) or str(payload.get("id") or "") != point_id:
+            return {
+                "success": False,
+                "message": _("Sendcloud no ha devuelto el punto solicitado de forma válida."),
+            }
+        return {"success": True, "point": payload}
 
     def _optima_sendcloud_method_lead_time_hours(self, api_method, destination_country):
         """Extract the route-specific lead time from a Shipping Products method."""
@@ -637,6 +711,64 @@ class SaleOrder(models.Model):
             "carrier_name": point.get("carrier_name") or point_carrier,
             "latitude": float(latitude or 0.0),
             "longitude": float(longitude or 0.0),
+        }
+
+    def _optima_pickup_verify_point(self, provider_code, normalized, raw_point, extra=None):
+        if provider_code != "sendcloud":
+            return super()._optima_pickup_verify_point(
+                provider_code, normalized, raw_point, extra
+            )
+
+        self.ensure_one()
+        carriers = self._optima_pickup_get_provider_carriers().get(
+            "sendcloud", self.env["delivery.carrier"]
+        )
+        integration = self._optima_sendcloud_pickup_integration(carriers)
+        if not integration:
+            return {
+                "success": False,
+                "message": _(
+                    "No hay una integración Sendcloud activa con Service Points para verificar el punto."
+                ),
+            }
+
+        point_id = str((normalized or {}).get("id") or "").strip()
+        cache_key = "%s|%s" % (integration.id or 0, point_id)
+        authoritative = self._optima_sendcloud_cache_get(
+            "service_point", cache_key, ttl=1800
+        )
+        if not isinstance(authoritative, dict):
+            result = self._optima_sendcloud_servicepoint_api_get(integration, point_id)
+            if not result.get("success"):
+                return result
+            authoritative = result.get("point") or {}
+            self._optima_sendcloud_cache_put(
+                "service_point", cache_key, authoritative
+            )
+        else:
+            _logger.info(
+                "Optima pickup: reusing exact Sendcloud service-point verification for id=%s",
+                point_id,
+            )
+
+        try:
+            canonical = self._optima_pickup_prepare_point(
+                "sendcloud", authoritative, extra or {}
+            )
+        except ValidationError as exc:
+            return {"success": False, "message": str(exc)}
+        if not canonical or str(canonical.get("id") or "") != point_id:
+            return {
+                "success": False,
+                "message": _("El punto Sendcloud verificado no coincide con la selección recibida."),
+            }
+
+        # The exact server response is authoritative. Client-supplied name,
+        # address, carrier and coordinates are deliberately discarded here.
+        return {
+            "success": True,
+            "normalized": canonical,
+            "raw_point": authoritative,
         }
 
     @staticmethod
@@ -1519,11 +1651,20 @@ class SaleOrder(models.Model):
             return False
         origin = self._optima_sendcloud_origin_data()
         destination_country = str(point.get("country_code") or "").upper()
+        order_date = (
+            fields.Date.to_date(self.date_order)
+            if self.date_order
+            else fields.Date.context_today(self)
+        )
         key = "|".join([
             str(integration.id or 0),
             str(method_id),
+            self._optima_sendcloud_origin_cache_token(),
             self._optima_sendcloud_canonical_carrier(point.get("carrier_code") or ""),
+            destination_country,
             str(point.get("zip_code") or "").strip().upper(),
+            str(self.currency_id.id or 0),
+            str(order_date or ""),
             self._optima_pickup_address_fingerprint(),
             self._optima_pickup_logistics_fingerprint(package),
         ])
@@ -1575,7 +1716,6 @@ class SaleOrder(models.Model):
             )
             if not source_currency:
                 return False
-            order_date = fields.Date.to_date(self.date_order) if self.date_order else fields.Date.context_today(self)
             selected["price"] = source_currency._convert(
                 selected["price"], self.currency_id, self.company_id, order_date
             )
@@ -1903,18 +2043,32 @@ class SaleOrder(models.Model):
             return super()._optima_pickup_prewarm_point(provider_code, point, extra)
 
         self.ensure_one()
-        try:
-            normalized = self._optima_pickup_prepare_point(
-                provider_code, point, extra or {}
-            )
-        except ValidationError as exc:
-            return {"success": False, "prepared": False, "message": str(exc)}
-
         collector = {}
         warm_order = self.with_context(
             optima_sendcloud_cache_collector=collector,
             optima_pickup_prewarm=True,
         )
+        try:
+            normalized = warm_order._optima_pickup_prepare_point(
+                provider_code, point, extra or {}
+            )
+        except ValidationError as exc:
+            return {"success": False, "prepared": False, "message": str(exc)}
+
+        verification = warm_order._optima_pickup_verify_point(
+            provider_code, normalized, point, extra or {}
+        ) or {}
+        if not verification.get("success"):
+            if collector:
+                self._optima_sendcloud_cache_merge(collector)
+            return {
+                "success": False,
+                "prepared": False,
+                "message": verification.get("message") or False,
+            }
+        normalized = verification.get("normalized") or normalized
+        authoritative_point = verification.get("raw_point") or point
+
         validation = warm_order._optima_pickup_validate_package(
             provider_code=provider_code, point=normalized
         ) or {}
@@ -1923,7 +2077,7 @@ class SaleOrder(models.Model):
             resolve_extra = dict(extra or {})
             resolve_extra["_optima_package_validation"] = validation
             resolution = warm_order._optima_pickup_resolve_delivery(
-                provider_code, normalized, point, resolve_extra
+                provider_code, normalized, authoritative_point, resolve_extra
             ) or {}
 
         # Commit all warmed buckets at once, after Sendcloud I/O has completed.
@@ -1956,6 +2110,52 @@ class SaleOrder(models.Model):
                 "optima_sendcloud_to_post_number": str(post_number),
             }
         )
+
+    def _optima_pickup_provider_confirmation_error(self):
+        result = super()._optima_pickup_provider_confirmation_error()
+        if result or self.optima_pickup_provider_code != "sendcloud":
+            return result
+
+        self.ensure_one()
+        source = self.sendcloud_service_point_address
+        if isinstance(source, str):
+            try:
+                payload = json.loads(source) if source.strip() else {}
+            except (TypeError, ValueError):
+                payload = {}
+        elif isinstance(source, dict):
+            payload = source
+        else:
+            payload = {}
+        if not isinstance(payload, dict) or not payload:
+            return _(
+                "Faltan los datos Sendcloud verificados del punto de recogida."
+            )
+
+        point_id = str(payload.get("id") or payload.get("service_point_id") or "")
+        if point_id != str(self.optima_pickup_external_id or ""):
+            return _(
+                "Los datos Sendcloud ya no corresponden al punto de recogida validado."
+            )
+
+        street = " ".join(
+            str(value).strip()
+            for value in (payload.get("street"), payload.get("house_number"))
+            if value not in (None, "")
+        )
+        checks = (
+            (street, self.optima_pickup_street),
+            (payload.get("postal_code"), self.optima_pickup_zip),
+            (payload.get("city"), self.optima_pickup_city),
+            (payload.get("country"), self.optima_pickup_country_code),
+            (payload.get("carrier"), self.optima_pickup_carrier_code),
+        )
+        for actual, expected in checks:
+            if expected and self._optima_pickup_normalized_text(actual) != self._optima_pickup_normalized_text(expected):
+                return _(
+                    "Los datos Sendcloud del punto ya no coinciden con la selección validada."
+                )
+        return False
 
     def _optima_delivery_provider_sync_picking(self, picking):
         """Bridge the checkout Sendcloud service point to the stock shipment."""
