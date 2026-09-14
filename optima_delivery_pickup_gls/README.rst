@@ -27,8 +27,16 @@ This adapter deliberately does not alter the GLS shipment XML yet. The original
 
 * GLS ParcelShops now honour the 5/10/20/50 km radius selected in the unified
   pickup map. ``GetParcelShopProximosV3`` has no radius argument, so the module
-  normalizes GLS' returned ``Distancia`` value and filters locally.
+  uses GLS' returned ``Distancia`` value directly as metres and filters locally.
 * GLS points now expose a real ``distance_m`` value and therefore sort correctly
   together with Sendcloud points.
 * The technical GLS ParcelShop carrier remains published but is hidden from the
   standard checkout delivery-method list by ``optima_delivery_pickup``.
+
+Version 18.0.0.1.3
+------------------
+
+* ``Distancia`` from ``GetParcelShopProximosV3`` is treated directly as metres.
+  The previous metres/km inference has been removed.
+* The selected 5/10/20/50 km map radius is now an exact numeric comparison
+  against the distance calculated and returned by GLS.
