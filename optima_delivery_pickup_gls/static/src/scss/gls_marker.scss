@@ -1,0 +1,10 @@
+/* GLS marker already includes its own outline/shadow in the source PNG.
+ * The generic pickup-map drop-shadow made it look like two overlapped pins.
+ * Keep the card treatment untouched and remove only the extra map shadow. */
+.optima_pickup_map_canvas .optima_pickup_brand_marker[src*="/optima_delivery_pickup_gls/"] {
+    filter: none;
+}
+
+.optima_pickup_map_canvas .optima_pickup_brand_marker.active[src*="/optima_delivery_pickup_gls/"] {
+    filter: none;
+}

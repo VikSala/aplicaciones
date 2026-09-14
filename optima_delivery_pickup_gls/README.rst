@@ -40,3 +40,7 @@ Version 18.0.0.1.3
   The previous metres/km inference has been removed.
 * The selected 5/10/20/50 km map radius is now an exact numeric comparison
   against the distance calculated and returned by GLS.
+
+0.1.4
+-----
+* Removes the generic Leaflet CSS drop-shadow from the GLS branded map pin only, avoiding the visual double-marker effect while keeping the card icon unchanged.
