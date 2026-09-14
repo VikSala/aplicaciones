@@ -179,3 +179,8 @@ validation will later reject the current cart.
 11. Dirección del albarán modificada tras confirmar: `send_to_shipper` queda bloqueado, incluida una modificación solo de la calle.
 12. Datos del pedido modificados después de confirmar: el albarán conserva y reutiliza el snapshot confirmado, no los datos mutables posteriores.
 
+## 18.0.0.9.1
+
+- Los métodos técnicos que pertenecen a un proveedor de puntos de recogida
+  permanecen publicados, pero ya no se muestran como opciones independientes
+  en el checkout. El cliente los utiliza exclusivamente desde **Punto de recogida**.

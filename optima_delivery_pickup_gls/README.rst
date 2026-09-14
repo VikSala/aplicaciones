@@ -16,3 +16,19 @@ Adapter between ``optima_delivery_pickup`` and ``delivery_gls_asm``.
 This adapter deliberately does not alter the GLS shipment XML yet. The original
 ``delivery_gls_asm`` module still needs the final ParcelShop shipment handoff
 (``Horario=19`` + ``Destinatario/Codigo``) in the next integration step.
+
+18.0.0.1.1
+------------
+* Usa el marker corporativo GLS/ASM en el mapa unificado y en las tarjetas laterales.
+
+
+18.0.0.1.2
+------------
+
+* GLS ParcelShops now honour the 5/10/20/50 km radius selected in the unified
+  pickup map. ``GetParcelShopProximosV3`` has no radius argument, so the module
+  normalizes GLS' returned ``Distancia`` value and filters locally.
+* GLS points now expose a real ``distance_m`` value and therefore sort correctly
+  together with Sendcloud points.
+* The technical GLS ParcelShop carrier remains published but is hidden from the
+  standard checkout delivery-method list by ``optima_delivery_pickup``.

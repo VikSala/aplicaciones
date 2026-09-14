@@ -1,3 +1,5 @@
+import math
+import re
 import time
 
 from odoo import _, fields, models
@@ -62,6 +64,124 @@ class SaleOrder(models.Model):
             return False
         point = points.get(str(code or "").strip())
         return point if isinstance(point, dict) else False
+
+    @staticmethod
+    def _optima_gls_haversine_m(lat1, lon1, lat2, lon2):
+        """Great-circle distance in metres between two WGS84 coordinates."""
+        radius = 6371008.8
+        phi1 = math.radians(float(lat1))
+        phi2 = math.radians(float(lat2))
+        dphi = math.radians(float(lat2) - float(lat1))
+        dlambda = math.radians(float(lon2) - float(lon1))
+        a = (
+            math.sin(dphi / 2.0) ** 2
+            + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2.0) ** 2
+        )
+        return radius * 2.0 * math.atan2(math.sqrt(a), math.sqrt(max(1.0 - a, 0.0)))
+
+    @staticmethod
+    def _optima_gls_distance_token(value):
+        """Return ``(number, explicit_scale)`` for the GLS Distancia field.
+
+        GLS' supplied documentation exposes ``Distancia`` but does not state its
+        unit. Some service revisions include a suffix while others return only a
+        number. Explicit ``m``/``km`` values are honoured directly; unitless
+        values are calibrated once for the whole response below.
+        """
+        if value in (None, False, ""):
+            return (None, None)
+        raw = str(value).strip().lower().replace(" ", " ")
+        match = re.search(r"[-+]?\d[\d.,]*", raw)
+        if not match:
+            return (None, None)
+        token = match.group(0)
+        # Spanish responses normally use comma as decimal separator. Be
+        # defensive with values that also contain a thousands separator.
+        if "," in token and "." in token:
+            if token.rfind(",") > token.rfind("."):
+                token = token.replace(".", "").replace(",", ".")
+            else:
+                token = token.replace(",", "")
+        elif "," in token:
+            token = token.replace(",", ".")
+        try:
+            number = max(float(token), 0.0)
+        except (TypeError, ValueError):
+            return (None, None)
+        if re.search(r"(?:km|kms|kil[oó]metros?)\.?\s*$", raw):
+            return (number, 1000.0)
+        if re.search(r"(?:m|mts?|metros?)\.?\s*$", raw):
+            return (number, 1.0)
+        return (number, None)
+
+    @classmethod
+    def _optima_gls_unitless_distance_scale(cls, shops):
+        """Infer whether unitless GLS ``Distancia`` values are metres or km.
+
+        The official GLS material delivered with the connector does not define
+        the unit. Rather than hard-code an unsafe assumption, compare the scale
+        of the numeric distances with the geographic spread of the coordinates
+        returned in the same response. With the usual 10-50 nearby points this
+        makes metres-vs-kilometres unambiguous and avoids an extra geocoding API.
+        """
+        values = []
+        coords = []
+        for shop in shops or []:
+            if not isinstance(shop, dict):
+                continue
+            number, explicit_scale = cls._optima_gls_distance_token(shop.get("distance"))
+            if number is not None and explicit_scale is None:
+                values.append(number)
+            try:
+                lat = float(shop.get("latitude") or 0.0)
+                lon = float(shop.get("longitude") or 0.0)
+            except (TypeError, ValueError):
+                continue
+            if lat and lon:
+                coords.append((lat, lon))
+        if not values:
+            return 1.0
+
+        max_raw = max(values)
+        spread_m = 0.0
+        # At most ~50 shops are returned by GLS, so O(n²) here is tiny and gives
+        # a much better scale signal than a crude latitude/longitude bounding box.
+        for index, (lat1, lon1) in enumerate(coords):
+            for lat2, lon2 in coords[index + 1 :]:
+                spread_m = max(spread_m, cls._optima_gls_haversine_m(lat1, lon1, lat2, lon2))
+
+        if spread_m > 0.0 and max_raw > 0.0:
+            # The farthest point from the search origin is normally of the same
+            # order of magnitude as the cloud's diameter. Pick the scale whose
+            # order of magnitude best matches that geographic spread.
+            target = max(spread_m * 0.75, 1.0)
+            scores = {}
+            for scale in (1.0, 1000.0):
+                estimate = max(max_raw * scale, 1e-9)
+                scores[scale] = abs(math.log10(estimate / target))
+            return min(scores, key=scores.get)
+
+        # Fallback for a degenerate response with no useful coordinate spread.
+        # Nearby-locator APIs commonly return a small decimal when using km and
+        # a larger integer when using metres.
+        return 1000.0 if max_raw < 100.0 else 1.0
+
+    @classmethod
+    def _optima_gls_distances_m(cls, shops):
+        """Map GLS shop code to a normalized distance in metres."""
+        unitless_scale = cls._optima_gls_unitless_distance_scale(shops)
+        result = {}
+        for shop in shops or []:
+            if not isinstance(shop, dict):
+                continue
+            code = str(shop.get("code") or shop.get("id") or "").strip()
+            if not code:
+                continue
+            number, explicit_scale = cls._optima_gls_distance_token(shop.get("distance"))
+            if number is None:
+                continue
+            result[code] = max(number * (explicit_scale or unitless_scale), 0.0)
+        return result
 
     @staticmethod
     def _optima_gls_opening_times(shop):
@@ -155,6 +275,17 @@ class SaleOrder(models.Model):
         shops = [shop for shop in (shops or []) if isinstance(shop, dict)]
         self._optima_gls_cache_store(shops)
 
+        # GetParcelShopProximosV3 does not accept a radius parameter. Normalize
+        # the Distancia value returned by GLS and apply the exact radius chosen
+        # in our unified map locally. This also gives GLS points a real
+        # ``distance_m`` so they sort together with Sendcloud points.
+        try:
+            selected_radius_m = min(max(int(radius_m or 5000), 500), 50000)
+        except (TypeError, ValueError):
+            selected_radius_m = 5000
+        gls_distances_m = self._optima_gls_distances_m(shops)
+        has_distance_data = bool(gls_distances_m)
+
         public_points = []
         for shop in shops:
             code = str(shop.get("code") or "").strip()
@@ -167,6 +298,14 @@ class SaleOrder(models.Model):
                 continue
             if not latitude or not longitude:
                 continue
+
+            distance_m = gls_distances_m.get(code)
+            if has_distance_data:
+                # If GLS supplied distances for this response, keep the map's
+                # radius strict: a point without a usable distance cannot be
+                # proven to be inside the selected radius.
+                if distance_m is None or distance_m > selected_radius_m:
+                    continue
 
             raw_point = {
                 "id": code,
@@ -206,10 +345,7 @@ class SaleOrder(models.Model):
                     "carrier_name": "GLS",
                     "latitude": latitude,
                     "longitude": longitude,
-                    # GLS returns a distance value, but the supplied technical
-                    # documentation does not define its unit. Do not pretend it
-                    # is metres; coordinates remain authoritative for the map.
-                    "distance_m": 0,
+                    "distance_m": float(distance_m or 0.0),
                     "shop_type": "parcelshop",
                     "opening_times": self._optima_gls_opening_times(shop),
                     "quote": {
@@ -219,12 +355,18 @@ class SaleOrder(models.Model):
                         "lead_time_hours": 0,
                         "estimated": True,
                     },
-                    "marker_icon": "/delivery_gls_asm/static/description/icon.svg",
+                    "marker_icon": "/optima_delivery_pickup_gls/static/src/img/markers/gls.png",
                     "raw_point": raw_point,
                     "extra": {"network_id": raw_point["network_id"]},
                 }
             )
 
+        public_points.sort(
+            key=lambda point: (
+                point.get("distance_m") or 10**12,
+                point.get("name") or "",
+            )
+        )
         result["points"].extend(public_points[:100])
         return result
 

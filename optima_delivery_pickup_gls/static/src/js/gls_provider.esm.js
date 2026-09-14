@@ -1,7 +1,30 @@
 /** @odoo-module **/
 
 import {rpc} from "@web/core/network/rpc";
+import publicWidget from "@web/legacy/js/public/public_widget";
 import {registerPickupProvider} from "@optima_delivery_pickup/js/provider_registry.esm";
+
+const pickupCheckout = publicWidget.registry.OptimaPickupCheckout;
+if (pickupCheckout) {
+    pickupCheckout.include({
+        _brandMarkerAsset(point) {
+            const inherited = this._super(...arguments);
+            if (inherited) {
+                return inherited;
+            }
+            const raw = [
+                point?.carrier_code,
+                point?.carrier_name,
+                point?.provider_code,
+                point?.provider_name,
+            ].filter(Boolean).join(" ").toLowerCase().replace(/[^a-z0-9]+/g, "_");
+            if (raw.includes("gls")) {
+                return "/optima_delivery_pickup_gls/static/src/img/markers/gls.png";
+            }
+            return "";
+        },
+    });
+}
 
 registerPickupProvider("gls", {
     async searchPoints({query, radiusM}) {

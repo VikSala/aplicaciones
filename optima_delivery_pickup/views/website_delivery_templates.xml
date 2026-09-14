@@ -2,8 +2,12 @@
 <odoo>
     <template id="delivery_form_generic_pickup" inherit_id="website_sale.delivery_form">
         <xpath expr="//li[@name='o_delivery_method']" position="attributes">
-            <!-- Durante el desarrollo no ocultamos ningún método estándar. -->
-            <attribute name="t-if">True</attribute>
+            <!--
+                Los carriers técnicos integrados en el mapa unificado deben seguir
+                publicados para que Odoo pueda calcular tarifa/crear expedición, pero
+                no deben aparecer duplicados como métodos de entrega independientes.
+            -->
+            <attribute name="t-if">not delivery_method.optima_pickup_provider_code</attribute>
         </xpath>
 
         <xpath expr="//ul[@id='o_delivery_methods']/t[@t-foreach='delivery_methods']" position="after">
