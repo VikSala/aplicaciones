@@ -20,7 +20,7 @@ class DeliveryCarrier(models.Model):
     optima_gls_tariff_book_id = fields.Many2one(
         "optima.gls.tariff.book",
         string="Libro de tarifas GLS (forzar)",
-        help="Déjalo vacío para seleccionar automáticamente la plantilla vigente por fecha.",
+        help="Déjalo vacío para seleccionar automáticamente la plantilla activa del año vigente.",
     )
 
     def _optima_pickup_get_provider_code(self):
@@ -48,13 +48,18 @@ class DeliveryCarrier(models.Model):
         service_code = service_code or self._optima_gls_tariff_service_code()
         if not service_code:
             return self.env["optima.gls.tariff.service"]
-        on_date = fields.Date.to_date(order.date_order) if order.date_order else fields.Date.context_today(order)
+        # Checkout tariffs are selected by tariff year, not by the historical
+        # creation date of the web cart. GLS price sheets are annual commercial
+        # books and their exact from/to dates remain informative metadata.
+        on_date = fields.Date.context_today(order)
+        year_start = on_date.replace(month=1, day=1)
+        year_end = on_date.replace(month=12, day=31)
         domain = [
             ("code", "=", service_code),
             ("active", "=", True),
             ("book_id.active", "=", True),
-            ("valid_from", "<=", on_date),
-            ("valid_to", ">=", on_date),
+            ("valid_from", "<=", year_end),
+            ("valid_to", ">=", year_start),
         ]
         if self.optima_gls_tariff_book_id:
             domain.append(("book_id", "=", self.optima_gls_tariff_book_id.id))
@@ -80,7 +85,7 @@ class DeliveryCarrier(models.Model):
             return {
                 "success": False,
                 "price": 0.0,
-                "error_message": _("No hay una plantilla GLS vigente para este método y fecha."),
+                "error_message": _("No hay una plantilla GLS activa para este método y año."),
                 "warning_message": False,
             }
         return {

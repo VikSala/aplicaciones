@@ -123,9 +123,17 @@ class OptimaGlsTariffService(models.Model):
 
     def _date_for_order(self, order):
         self.ensure_one()
-        if order.date_order:
-            return fields.Date.to_date(order.date_order)
+        # Use the current commercial year for checkout pricing. A web cart can
+        # have an old date_order after sitting open for days/weeks, which must
+        # not force an obsolete or not-yet-started exact-date interpretation.
         return fields.Date.context_today(order)
+
+    @staticmethod
+    def _period_overlaps_year(valid_from, valid_to, on_date):
+        """Return True when a dated rule belongs to the active tariff year."""
+        year_start = on_date.replace(month=1, day=1)
+        year_end = on_date.replace(month=12, day=31)
+        return (not valid_from or valid_from <= year_end) and (not valid_to or valid_to >= year_start)
 
     def _postal_province(self, postal_code):
         self.ensure_one()
@@ -280,8 +288,7 @@ class OptimaGlsTariffService(models.Model):
         self.ensure_one()
         return self.surcharge_ids.filtered(
             lambda rec: rec.active
-            and (not rec.valid_from or rec.valid_from <= on_date)
-            and (not rec.valid_to or rec.valid_to >= on_date)
+            and self._period_overlaps_year(rec.valid_from, rec.valid_to, on_date)
         )
 
     def _method_limits_payload(self):
@@ -314,8 +321,15 @@ class OptimaGlsTariffService(models.Model):
     def rate_order(self, order):
         self.ensure_one()
         on_date = self._date_for_order(order)
-        if not self.active or not self.book_id.active or on_date < self.valid_from or on_date > self.valid_to:
-            return {"success": False, "error_message": _("La tarifa GLS no está vigente para la fecha del pedido.")}
+        if (
+            not self.active
+            or not self.book_id.active
+            or not self._period_overlaps_year(self.valid_from, self.valid_to, on_date)
+        ):
+            return {
+                "success": False,
+                "error_message": _("La tarifa GLS no pertenece al año tarifario vigente."),
+            }
 
         profile = order._optima_pickup_package_profile()
         if not profile.get("success"):

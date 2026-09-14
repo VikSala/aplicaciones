@@ -1,7 +1,7 @@
 {
     "name": "Optima Delivery Pickup - GLS",
     "summary": "GLS ParcelShop + motor de tarifas XLSX para Optima Delivery Pickup",
-    "version": "18.0.0.2.0",
+    "version": "18.0.0.2.1",
     "category": "Website/eCommerce",
     "author": "Optima",
     "license": "AGPL-3",

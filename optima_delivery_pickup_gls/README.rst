@@ -60,3 +60,13 @@ Version 18.0.0.1.3
 * GLS ParcelShop checkout automatically prefers an imported active
   ShopDeliveryService tariff; if none exists it keeps the previous carrier
   fallback.
+
+
+18.0.0.2.1
+------------
+* Tariff validity is evaluated by commercial year instead of exact checkout/order date.
+  Any active service whose validity period overlaps the current year is eligible.
+* Web carts no longer inherit an obsolete tariff date from ``sale.order.date_order``;
+  pricing uses the current date only to identify the active tariff year and for currency conversion.
+* Energy, Climate Protect and other dated surcharges follow the same annual-validity rule.
+* Forced tariff books still respect the active year: forcing a 2026 book will not make it valid in 2027.
