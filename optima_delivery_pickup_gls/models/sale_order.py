@@ -97,6 +97,54 @@ class SaleOrder(models.Model):
         except (TypeError, ValueError):
             return None
 
+    def _optima_gls_normalize_country_code(self, value, fallback_country=False):
+        """Normalize GLS ``Pais`` values to Odoo ISO alpha-2 codes.
+
+        The ParcelShop service can return Spain as ``34`` (telephone country
+        code) even though the search request is made with ``ES``.  Comparing
+        that raw value directly with ``res.country.code`` incorrectly rejects
+        a valid Spanish ParcelShop as belonging to another country.
+
+        Prefer the known destination country when its phone code matches.  For
+        other numeric values, resolve an unambiguous ``res.country.phone_code``
+        to its ISO code.  Ordinary two-letter ISO values pass through unchanged.
+        """
+        self.ensure_one()
+        fallback_country = fallback_country or (
+            (self.partner_shipping_id or self.partner_id).country_id
+        )
+        fallback_code = (fallback_country.code or "").strip().upper() if fallback_country else ""
+        raw = str(value or "").strip().upper()
+        if not raw:
+            return fallback_code or "ES"
+        if len(raw) == 2 and raw.isalpha():
+            return raw
+
+        numeric = raw.lstrip("+")
+        if numeric.isdigit():
+            if fallback_country and str(fallback_country.phone_code or "").strip() == numeric:
+                return fallback_code or raw
+            countries = self.env["res.country"].search(
+                [("phone_code", "=", int(numeric))], limit=2
+            )
+            if len(countries) == 1 and countries.code:
+                return countries.code.strip().upper()
+
+        return raw
+
+    def _optima_gls_normalize_shop_countries(self, shops, fallback_country=False):
+        self.ensure_one()
+        normalized = []
+        for shop in shops or []:
+            if not isinstance(shop, dict):
+                continue
+            values = dict(shop)
+            values["country_code"] = self._optima_gls_normalize_country_code(
+                values.get("country_code"), fallback_country
+            )
+            normalized.append(values)
+        return normalized
+
     @staticmethod
     def _optima_gls_opening_times(shop):
         """Normalize GLS Monday-Saturday strings to the map day format."""
@@ -186,7 +234,9 @@ class SaleOrder(models.Model):
             )
             return result
 
-        shops = [shop for shop in (shops or []) if isinstance(shop, dict)]
+        shops = self._optima_gls_normalize_shop_countries(
+            shops, partner.country_id
+        )
         self._optima_gls_cache_store(shops)
 
         # GetParcelShopProximosV3 does not accept a radius parameter, but its
@@ -293,16 +343,13 @@ class SaleOrder(models.Model):
         street = str(point.get("street") or point.get("address") or "").strip()
         postal_code = str(point.get("postal_code") or point.get("zip_code") or "").strip()
         city = str(point.get("city") or "").strip()
-        country = str(
-            point.get("country")
-            or point.get("country_code")
-            or (self.partner_shipping_id.country_id.code if self.partner_shipping_id.country_id else "ES")
-            or "ES"
-        ).strip().upper()
+        partner = self.partner_shipping_id or self.partner_id
+        country = self._optima_gls_normalize_country_code(
+            point.get("country") or point.get("country_code"), partner.country_id
+        )
         if not all((point_id, name, street, postal_code, city, country)):
             raise ValidationError(_("El ParcelShop GLS no contiene todos los datos obligatorios."))
 
-        partner = self.partner_shipping_id or self.partner_id
         expected_country = (partner.country_id.code or "").upper()
         if expected_country and country != expected_country:
             raise ValidationError(_("El ParcelShop GLS pertenece a otro país."))
@@ -343,7 +390,10 @@ class SaleOrder(models.Model):
             country_code=country_code or "ES",
             networks="1",
         )
-        shops = [shop for shop in (shops or []) if isinstance(shop, dict)]
+        partner = self.partner_shipping_id or self.partner_id
+        shops = self._optima_gls_normalize_shop_countries(
+            shops, partner.country_id
+        )
         self._optima_gls_cache_store(shops)
         for shop in shops:
             if str(shop.get("code") or "").strip() == str(point_id or "").strip():

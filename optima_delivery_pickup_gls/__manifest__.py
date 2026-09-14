@@ -1,7 +1,7 @@
 {
     "name": "Optima Delivery Pickup - GLS",
     "summary": "Adaptador GLS ParcelShop para el mapa unificado de Optima Delivery Pickup",
-    "version": "18.0.0.1.4",
+    "version": "18.0.0.1.5",
     "category": "Website/eCommerce",
     "author": "Optima",
     "license": "AGPL-3",
