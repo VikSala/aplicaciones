@@ -44,3 +44,19 @@ Version 18.0.0.1.3
 0.1.4
 -----
 * Removes the generic Leaflet CSS drop-shadow from the GLS branded map pin only, avoiding the visual double-marker effect while keeping the card icon unchanged.
+
+18.0.0.2.0
+------------
+* Adds a data-driven GLS tariff engine. Prices are imported from the stable
+  ``GLS_Tarifas_2026_OPTIMA.xlsx`` format instead of being hard-coded.
+* Supports ShopDeliveryService and BusinessParcel, volumetric weight (167
+  kg/m3), weight brackets, additional kg, energy/Climate Protect surcharges and
+  service validity dates.
+* Adds CP -> province master data and the provisional
+  ``AUTO_BORDERING_PROVINCES`` zoning rule: same province = Provincial,
+  imported bordering province = Regional, rest of mainland = Resto ES.
+* Keeps an ``EXPLICIT_MATRIX`` mode ready for a future official GLS zoning
+  matrix without requiring a code change.
+* GLS ParcelShop checkout automatically prefers an imported active
+  ShopDeliveryService tariff; if none exists it keeps the previous carrier
+  fallback.

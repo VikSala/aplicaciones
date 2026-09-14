@@ -484,26 +484,36 @@ class SaleOrder(models.Model):
         candidates = []
         diagnostics = []
         for carrier in carriers:
-            try:
-                rate = carrier.with_context(optima_pickup_force_rate=True).rate_shipment(self)
-            except Exception as exc:
-                diagnostics.append("%s: %s" % (carrier.display_name, exc))
-                continue
-            if not rate or not rate.get("success"):
-                diagnostics.append(
-                    "%s: %s"
-                    % (
-                        carrier.display_name,
-                        (rate or {}).get("error_message") or _("sin tarifa"),
+            tariff_result = carrier._optima_gls_tariff_rate(self, service_code="SHOP_DELIVERY")
+            if tariff_result is not False:
+                if not tariff_result.get("success"):
+                    diagnostics.append(
+                        "%s: %s"
+                        % (carrier.display_name, tariff_result.get("error_message") or _("sin tarifa"))
                     )
-                )
-                continue
+                    continue
+                rate = tariff_result
+            else:
+                try:
+                    rate = carrier.with_context(optima_pickup_force_rate=True).rate_shipment(self)
+                except Exception as exc:
+                    diagnostics.append("%s: %s" % (carrier.display_name, exc))
+                    continue
+                if not rate or not rate.get("success"):
+                    diagnostics.append(
+                        "%s: %s"
+                        % (
+                            carrier.display_name,
+                            (rate or {}).get("error_message") or _("sin tarifa"),
+                        )
+                    )
+                    continue
             try:
                 price = max(float(rate.get("price") or 0.0), 0.0)
             except (TypeError, ValueError):
                 diagnostics.append("%s: %s" % (carrier.display_name, _("precio no válido")))
                 continue
-            candidates.append((price, carrier))
+            candidates.append((price, carrier, rate.get("method_limits") or {}))
 
         if not candidates:
             return {
@@ -512,13 +522,13 @@ class SaleOrder(models.Model):
                 % ((" " + " · ".join(diagnostics)) if diagnostics else ""),
             }
 
-        price, carrier = sorted(candidates, key=lambda item: (item[0], item[1].id))[0]
+        price, carrier, method_limits = sorted(candidates, key=lambda item: (item[0], item[1].id))[0]
         return {
             "success": True,
             "carrier": carrier,
             "price": price,
             "message": False,
-            "method_limits": {
+            "method_limits": method_limits or {
                 "provider": "gls",
                 "min_weight_kg": 0.0,
                 "max_weight_kg": 0.0,

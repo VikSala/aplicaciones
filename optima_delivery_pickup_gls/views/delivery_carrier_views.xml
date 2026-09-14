@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_delivery_carrier_form_optima_gls_tariff" model="ir.ui.view">
+        <field name="name">delivery.carrier.form.optima.gls.tariff</field>
+        <field name="model">delivery.carrier</field>
+        <field name="inherit_id" ref="delivery_gls_asm.view_delivery_carrier_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='action_gls_asm_search_parcelshops']" position="before">
+                <separator string="Tarifas Optima GLS"/>
+                <field name="optima_gls_tariff_enabled"/>
+                <field name="optima_gls_tariff_service" invisible="not optima_gls_tariff_enabled"/>
+                <field name="optima_gls_tariff_book_id" invisible="not optima_gls_tariff_enabled"/>
+                <button name="action_optima_gls_import_tariff" string="Importar tarifas GLS" type="object" class="btn-secondary" icon="fa-upload"/>
+                <button name="action_optima_gls_tariff_books" string="Ver tarifas GLS" type="object" class="btn-secondary" icon="fa-table"/>
+                <button name="action_optima_gls_download_tariff_template" string="Descargar plantilla 2026" type="object" class="btn-secondary" icon="fa-download"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

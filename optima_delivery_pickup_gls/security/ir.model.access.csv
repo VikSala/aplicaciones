@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_optima_gls_tariff_book_user,optima.gls.tariff.book.user,model_optima_gls_tariff_book,base.group_user,1,1,1,1
+access_optima_gls_tariff_service_user,optima.gls.tariff.service.user,model_optima_gls_tariff_service,base.group_user,1,1,1,1
+access_optima_gls_tariff_rate_user,optima.gls.tariff.rate.user,model_optima_gls_tariff_rate,base.group_user,1,1,1,1
+access_optima_gls_tariff_surcharge_user,optima.gls.tariff.surcharge.user,model_optima_gls_tariff_surcharge,base.group_user,1,1,1,1
+access_optima_gls_tariff_zone_user,optima.gls.tariff.zone.user,model_optima_gls_tariff_zone,base.group_user,1,1,1,1
+access_optima_gls_tariff_limit_user,optima.gls.tariff.limit.user,model_optima_gls_tariff_limit,base.group_user,1,1,1,1
+access_optima_gls_tariff_postal_user,optima.gls.tariff.postal.user,model_optima_gls_tariff_postal,base.group_user,1,1,1,1
+access_optima_gls_tariff_border_user,optima.gls.tariff.border.user,model_optima_gls_tariff_border,base.group_user,1,1,1,1
+access_optima_gls_tariff_import_wizard_user,optima.gls.tariff.import.wizard.user,model_optima_gls_tariff_import_wizard,base.group_user,1,1,1,1

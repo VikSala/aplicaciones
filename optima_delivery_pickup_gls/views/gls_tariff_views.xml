@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_optima_gls_tariff_book_list" model="ir.ui.view">
+        <field name="name">optima.gls.tariff.book.list</field>
+        <field name="model">optima.gls.tariff.book</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="currency_id"/>
+                <field name="template_version"/>
+                <field name="imported_at"/>
+                <field name="source_filename"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_optima_gls_tariff_book_form" model="ir.ui.view">
+        <field name="name">optima.gls.tariff.book.form</field>
+        <field name="model">optima.gls.tariff.book</field>
+        <field name="arch" type="xml">
+            <form string="Tarifas GLS">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="name"/>
+                            <field name="currency_id"/>
+                            <field name="template_version"/>
+                        </group>
+                        <group>
+                            <field name="source_filename" readonly="1"/>
+                            <field name="imported_at" readonly="1"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Servicios">
+                            <field name="service_ids">
+                                <list>
+                                    <field name="code"/>
+                                    <field name="name"/>
+                                    <field name="valid_from"/>
+                                    <field name="valid_to"/>
+                                    <field name="zone_mode"/>
+                                    <field name="volumetric_factor_kg_m3"/>
+                                    <field name="active"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="CP → Provincia">
+                            <field name="postal_ids">
+                                <list>
+                                    <field name="postal_prefix"/>
+                                    <field name="province"/>
+                                    <field name="source"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Provincias limítrofes">
+                            <field name="border_ids">
+                                <list>
+                                    <field name="origin_province"/>
+                                    <field name="destination_province"/>
+                                    <field name="source"/>
+                                    <field name="confirmed_by_gls"/>
+                                    <field name="notes"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_optima_gls_tariff_service_form" model="ir.ui.view">
+        <field name="name">optima.gls.tariff.service.form</field>
+        <field name="model">optima.gls.tariff.service</field>
+        <field name="arch" type="xml">
+            <form string="Servicio tarifa GLS">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="book_id"/>
+                            <field name="code"/>
+                            <field name="name"/>
+                            <field name="valid_from"/>
+                            <field name="valid_to"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="zone_mode"/>
+                            <field name="origin_postal_code"/>
+                            <field name="origin_province"/>
+                            <field name="volumetric_factor_kg_m3"/>
+                            <field name="additional_kg_rounding"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Tarifas">
+                            <field name="rate_ids">
+                                <list editable="bottom">
+                                    <field name="zone_code"/>
+                                    <field name="weight_to_kg"/>
+                                    <field name="price"/>
+                                    <field name="additional_kg_price"/>
+                                    <field name="notes"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Zonas">
+                            <field name="zone_ids">
+                                <list editable="bottom">
+                                    <field name="sequence"/>
+                                    <field name="rule_type"/>
+                                    <field name="country_code"/>
+                                    <field name="postal_prefix"/>
+                                    <field name="origin_province"/>
+                                    <field name="destination_province"/>
+                                    <field name="zone_code"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Límites">
+                            <field name="limit_ids">
+                                <list editable="bottom">
+                                    <field name="package_type"/>
+                                    <field name="max_weight_kg"/>
+                                    <field name="max_sum_sides_cm"/>
+                                    <field name="max_length_girth_cm"/>
+                                    <field name="max_side_cm"/>
+                                    <field name="enforced_by_default"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Recargos">
+                            <field name="surcharge_ids">
+                                <list editable="bottom">
+                                    <field name="code"/>
+                                    <field name="kind"/>
+                                    <field name="value"/>
+                                    <field name="valid_from"/>
+                                    <field name="valid_to"/>
+                                    <field name="active"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_optima_gls_tariff_book" model="ir.actions.act_window">
+        <field name="name">Tarifas GLS</field>
+        <field name="res_model">optima.gls.tariff.book</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
