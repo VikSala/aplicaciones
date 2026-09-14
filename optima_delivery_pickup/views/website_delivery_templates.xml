@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <template id="delivery_form_generic_pickup" inherit_id="website_sale.delivery_form">
-        <xpath expr="//li[@name='o_delivery_method']" position="attributes">
-            <!--
-                Los carriers técnicos integrados en el mapa unificado deben seguir
-                publicados para que Odoo pueda calcular tarifa/crear expedición, pero
-                no deben aparecer duplicados como métodos de entrega independientes.
-            -->
-            <attribute name="t-if">not delivery_method.optima_pickup_provider_code</attribute>
+        <!--
+            Filtramos el propio iterable de métodos antes de que website_sale llame a
+            website_sale.delivery_method. En website_sale.delivery_form no existe una
+            variable `delivery_method` en el nodo <li>; esa variable solo existe dentro
+            del template llamado. Filtrar aquí evita el KeyError y mantiene ocultos los
+            carriers técnicos del mapa sin despublicarlos.
+        -->
+        <xpath expr="//ul[@id='o_delivery_methods']/t[@t-foreach='delivery_methods']" position="attributes">
+            <attribute name="t-foreach">delivery_methods - delivery_methods.filtered('optima_pickup_provider_code')</attribute>
         </xpath>
 
-        <xpath expr="//ul[@id='o_delivery_methods']/t[@t-foreach='delivery_methods']" position="after">
+        <xpath expr="//ul[@id='o_delivery_methods']/t[@t-foreach]" position="after">
             <li
                 t-if="True"
                 name="o_optima_pickup_method"
