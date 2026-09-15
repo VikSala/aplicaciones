@@ -175,6 +175,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             searchSequence: 0,
             searchRunning: false,
             needsFit: !cached?.points?.length,
+            mobileTab: "map",
         };
 
         const state = this._pickupMapState;
@@ -206,6 +207,10 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             }
         });
         radius?.addEventListener("change", () => this._searchUnifiedMapPoints());
+        modal.querySelectorAll("[data-optima-mobile-tab]").forEach((button) => {
+            button.addEventListener("click", () => this._setMobileTab(button.dataset.optimaMobileTab || "map"));
+        });
+        this._syncMobileTabUi();
 
         this._renderUnifiedCarrierFilters();
         this._renderUnifiedMapPointList();
@@ -282,6 +287,10 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
                     <div class="d-flex align-items-center mt-2">
                         <span class="small text-muted flex-grow-1" data-optima-result-status>Preparando búsqueda…</span>
                     </div>
+                    <div class="optima_pickup_mobile_tabs" data-optima-mobile-tabs>
+                        <button type="button" class="optima_pickup_mobile_tab_btn active" data-optima-mobile-tab="map">Mapa</button>
+                        <button type="button" class="optima_pickup_mobile_tab_btn" data-optima-mobile-tab="list">Lista</button>
+                    </div>
                 </div>
                 <div class="optima_pickup_map_body">
                     <aside class="optima_pickup_point_panel">
@@ -329,6 +338,39 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             const token = config.cache_token || [config.country, config.postal_code, config.city].filter(Boolean).join(":");
             return `${provider.code || ""}:${token}`;
         }).sort().join("|");
+    },
+
+    _isMobilePickupLayout() {
+        return Boolean(window.matchMedia && window.matchMedia("(max-width: 991.98px)").matches);
+    },
+
+    _syncMobileTabUi() {
+        const modal = this._pickupMapModal?.querySelector(".optima_pickup_map_modal");
+        const state = this._pickupMapState;
+        if (!modal || !state) {
+            return;
+        }
+        const isMobile = this._isMobilePickupLayout();
+        modal.classList.toggle("optima_pickup_mobile_mode", isMobile);
+        modal.classList.toggle("optima_pickup_mobile_tab_map", isMobile && state.mobileTab === "map");
+        modal.classList.toggle("optima_pickup_mobile_tab_list", isMobile && state.mobileTab === "list");
+        this._pickupMapModal.querySelectorAll("[data-optima-mobile-tab]").forEach((button) => {
+            const tab = button.dataset.optimaMobileTab || "map";
+            button.classList.toggle("active", state.mobileTab === tab);
+            button.setAttribute("aria-pressed", state.mobileTab === tab ? "true" : "false");
+        });
+    },
+
+    _setMobileTab(tab) {
+        const state = this._pickupMapState;
+        if (!state) {
+            return;
+        }
+        state.mobileTab = tab === "list" ? "list" : "map";
+        this._syncMobileTabUi();
+        if (state.mobileTab === "map" && state.leaflet) {
+            window.setTimeout(() => state.leaflet.invalidateSize(), 50);
+        }
     },
 
     _loadPickupMapCache(contextKey) {
@@ -901,7 +943,7 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
                 });
             }
             const marker = window.L.marker([lat, lng], {icon, keyboard: true}).addTo(map);
-            marker.on("click", () => this._selectUnifiedPointPreview(point));
+            marker.on("click", () => this._selectUnifiedPointPreview(point, {fromMarker: true}));
             marker.bindTooltip(
                 `<strong>${this._escapeHtml(point.name || "Punto")}</strong><br/>${this._escapeHtml(point.carrier_name || point.carrier_code || "")} · ${this._escapeHtml(this._formatDistance(point.distance_m))}`,
                 {direction: "top", offset: [0, -36]}
@@ -919,12 +961,15 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         }
     },
 
-    _selectUnifiedPointPreview(point) {
+    _selectUnifiedPointPreview(point, {fromMarker = false} = {}) {
         const state = this._pickupMapState;
         if (!state) {
             return;
         }
         state.selectedKey = point.key;
+        if (fromMarker && this._isMobilePickupLayout()) {
+            this._setMobileTab("list");
+        }
         this._startPickupPointPrewarm(point);
         this._renderUnifiedMapPointList();
         this._renderUnifiedMapMarkers({fit: false});
