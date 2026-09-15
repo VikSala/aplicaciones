@@ -500,6 +500,60 @@ class SaleOrder(models.Model):
     def _optima_pickup_normalized_text(value):
         return " ".join(str(value or "").strip().lower().split())
 
+    def _optima_pickup_expected_location_data(self):
+        """Build Odoo's standard pickup payload from the validated Optima snapshot.
+
+        website_sale can clear ``pickup_location_data`` while rebuilding the
+        delivery step/payment transition even though our validated pickup
+        snapshot and delivery line are still intact.  The standard field is a
+        mirror of data we already own, so it is safe to reconstruct *only when
+        it is missing*.  A present-but-different payload is never overwritten
+        and remains an integrity error.
+        """
+        self.ensure_one()
+        if not all((
+            self.optima_pickup_external_id,
+            self.optima_pickup_name,
+            self.optima_pickup_street,
+            self.optima_pickup_zip,
+            self.optima_pickup_city,
+            self.optima_pickup_country_code,
+        )):
+            return False
+        return {
+            "id": str(self.optima_pickup_external_id),
+            "name": self.optima_pickup_name,
+            "street": self.optima_pickup_street,
+            "zip_code": self.optima_pickup_zip,
+            "city": self.optima_pickup_city,
+            "country_code": self.optima_pickup_country_code,
+            "provider_code": self.optima_pickup_provider_code or "",
+            "carrier_code": self.optima_pickup_carrier_code or "",
+            "carrier_name": self.optima_pickup_carrier_name or "",
+            "latitude": self.optima_pickup_latitude or 0.0,
+            "longitude": self.optima_pickup_longitude or 0.0,
+        }
+
+    def _optima_pickup_restore_location_data_if_missing(self):
+        """Restore only a missing standard pickup mirror, without remote I/O."""
+        self.ensure_one()
+        data = self.pickup_location_data
+        if isinstance(data, dict) and data:
+            return False
+        if not (
+            self.optima_pickup_mode
+            and self.optima_pickup_external_id
+            and self.optima_pickup_resolved
+            and self.optima_pickup_delivery_carrier_id
+            and self.carrier_id == self.optima_pickup_delivery_carrier_id
+        ):
+            return False
+        expected = self._optima_pickup_expected_location_data()
+        if not expected:
+            return False
+        self.write({"pickup_location_data": expected})
+        return True
+
     def _optima_pickup_location_data_integrity_error(self):
         """Return a diagnostic when Odoo pickup data diverges from our snapshot."""
         self.ensure_one()
@@ -1146,6 +1200,13 @@ class SaleOrder(models.Model):
             raise ValidationError(_(
                 "El método de entrega ya no coincide con el método validado para el punto de recogida."
             ))
+
+        # Odoo may clear its standard pickup mirror while transitioning from
+        # delivery to payment.  Rebuild it from our already validated local
+        # snapshot, but only when it is entirely missing.  If a payload is
+        # present and has been changed, the strict comparison below still
+        # blocks payment/confirmation.
+        self._optima_pickup_restore_location_data_if_missing()
         location_error = self._optima_pickup_location_data_integrity_error()
         if location_error:
             raise ValidationError(location_error)
