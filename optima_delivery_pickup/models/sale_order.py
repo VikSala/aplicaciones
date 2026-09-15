@@ -1248,6 +1248,7 @@ class SaleOrder(models.Model):
             "optima_delivery_snapshot_ready": bool(method and profile.get("success")),
             "optima_delivery_method_snapshot_id": method.id or False,
             "optima_delivery_method_name_snapshot": method.display_name if method else False,
+            "optima_delivery_recipient_partner_snapshot_id": self.partner_shipping_id.id or False,
             "optima_delivery_expected_packaging": (
                 self.optima_delivery_packaging_suggested or False
             ),
@@ -1296,10 +1297,39 @@ class SaleOrder(models.Model):
                 order._optima_delivery_provider_sync_picking(picking)
 
     def _action_confirm(self):
-        """Protect pickup confirmation and prepare warehouse shipment data."""
+        """Protect pickup confirmation without persisting pickup points as contacts.
+
+        Odoo's standard ``delivery`` module turns ``pickup_location_data`` into a
+        child ``res.partner`` of type delivery during confirmation. That behavior
+        is useful for native pickup flows, but it is not appropriate for Optima:
+        a carrier service point is shipment metadata, not a reusable customer
+        address. Keep the standard JSON mirror during checkout/payment, hide it
+        only while the native confirmation hook runs, then restore it on the
+        confirmed order. Provider snapshots copied to the picking remain the
+        operational source of truth.
+        """
         for order in self:
             order._optima_delivery_confirmation_guard()
-        result = super()._action_confirm()
+
+        pickup_payloads = {
+            order.id: order.pickup_location_data
+            for order in self
+            if order.optima_pickup_mode and order.pickup_location_data
+        }
+        pickup_orders = self.filtered(lambda order: order.id in pickup_payloads)
+        if pickup_orders:
+            pickup_orders.write({"pickup_location_data": False})
+        try:
+            result = super()._action_confirm()
+        finally:
+            # Restore the checkout mirror even if a later confirmation hook
+            # raises. The transaction will still roll back on failure, but this
+            # keeps the in-memory records coherent for handled exceptions.
+            for order in pickup_orders.exists():
+                payload = pickup_payloads.get(order.id)
+                if payload and not order.pickup_location_data:
+                    order.write({"pickup_location_data": payload})
+
         self._optima_delivery_sync_pickings()
         return result
 

@@ -25,6 +25,13 @@ class StockPicking(models.Model):
         copy=True,
         readonly=True,
     )
+    optima_delivery_recipient_partner_snapshot_id = fields.Many2one(
+        "res.partner",
+        string="Destinatario original (snapshot)",
+        copy=True,
+        readonly=True,
+        ondelete="set null",
+    )
     optima_delivery_expected_packaging = fields.Char(
         string="Embalaje esperado",
         copy=True,
@@ -148,27 +155,41 @@ class StockPicking(models.Model):
         if not self.partner_id:
             return _("La expedición no tiene dirección de destino.")
 
-        # Odoo 18 converts pickup_location_data into the delivery partner when
-        # the sale is confirmed. Check the stable location parts so a manual
-        # address edit cannot silently ship the pickup parcel elsewhere.
-        expected_country = self._optima_normalized_text(
-            self.optima_delivery_pickup_country_code
-        )
-        actual_country = self._optima_normalized_text(self.partner_id.country_id.code)
-        expected_zip = self._optima_normalized_text(self.optima_delivery_pickup_zip)
-        actual_zip = self._optima_normalized_text(self.partner_id.zip)
-        expected_city = self._optima_normalized_text(self.optima_delivery_pickup_city)
-        actual_city = self._optima_normalized_text(self.partner_id.city)
-        expected_street = self._optima_normalized_text(self.optima_delivery_pickup_street)
-        actual_street = self._optima_normalized_text(self.partner_id.street)
-        if expected_country and actual_country != expected_country:
-            return _("El país de la expedición ya no coincide con el punto seleccionado.")
-        if expected_zip and actual_zip != expected_zip:
-            return _("El código postal de la expedición ya no coincide con el punto seleccionado.")
-        if expected_city and actual_city != expected_city:
-            return _("La ciudad de la expedición ya no coincide con el punto seleccionado.")
-        if expected_street and actual_street != expected_street:
-            return _("La dirección de la expedición ya no coincide con el punto seleccionado.")
+        # Optima pickup points are deliberately *not* persisted as customer
+        # delivery addresses. The picking keeps the customer's real delivery
+        # partner for contact/notification purposes, while the immutable pickup
+        # snapshot below is what provider adapters use for routing.
+        if (
+            self.optima_delivery_recipient_partner_snapshot_id
+            and self.partner_id != self.optima_delivery_recipient_partner_snapshot_id
+        ):
+            return _(
+                "El destinatario del albarán ya no coincide con el destinatario "
+                "confirmado en el pedido."
+            )
+
+        # Backward compatibility for pickings confirmed by older Optima
+        # versions, where Odoo had already created a technical pickup partner.
+        # Those historical pickings can still be shipped safely after upgrade.
+        if getattr(self.partner_id, "is_pickup_location", False):
+            expected_country = self._optima_normalized_text(
+                self.optima_delivery_pickup_country_code
+            )
+            actual_country = self._optima_normalized_text(self.partner_id.country_id.code)
+            expected_zip = self._optima_normalized_text(self.optima_delivery_pickup_zip)
+            actual_zip = self._optima_normalized_text(self.partner_id.zip)
+            expected_city = self._optima_normalized_text(self.optima_delivery_pickup_city)
+            actual_city = self._optima_normalized_text(self.partner_id.city)
+            expected_street = self._optima_normalized_text(self.optima_delivery_pickup_street)
+            actual_street = self._optima_normalized_text(self.partner_id.street)
+            if expected_country and actual_country != expected_country:
+                return _("El país de la expedición ya no coincide con el punto seleccionado.")
+            if expected_zip and actual_zip != expected_zip:
+                return _("El código postal de la expedición ya no coincide con el punto seleccionado.")
+            if expected_city and actual_city != expected_city:
+                return _("La ciudad de la expedición ya no coincide con el punto seleccionado.")
+            if expected_street and actual_street != expected_street:
+                return _("La dirección de la expedición ya no coincide con el punto seleccionado.")
         return False
 
     @api.depends(
@@ -181,6 +202,7 @@ class StockPicking(models.Model):
         "optima_delivery_pickup_country_code",
         "carrier_id",
         "optima_delivery_method_snapshot_id",
+        "optima_delivery_recipient_partner_snapshot_id",
         "partner_id",
         "partner_id.street",
         "partner_id.zip",

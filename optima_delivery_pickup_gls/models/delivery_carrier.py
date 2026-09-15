@@ -132,10 +132,30 @@ class DeliveryCarrier(models.Model):
                 )
             )
 
+        # Keep the customer's real partner on the picking, but route the GLS
+        # shipment to the immutable ParcelShop snapshot. This avoids creating a
+        # reusable res.partner address for every pickup point while preserving
+        # the exact destination that was confirmed at checkout.
+        point_name = str(getattr(picking, "optima_delivery_pickup_name", False) or "").strip()
+        point_street = str(getattr(picking, "optima_delivery_pickup_street", False) or "").strip()
+        point_zip = str(getattr(picking, "optima_delivery_pickup_zip", False) or "").strip()
+        point_city = str(getattr(picking, "optima_delivery_pickup_city", False) or "").strip()
+        point_country = str(getattr(picking, "optima_delivery_pickup_country_code", False) or "").strip()
+        if not all((point_name, point_street, point_zip, point_city, point_country)):
+            raise UserError(
+                _("Faltan datos de dirección del ParcelShop GLS confirmado en el albarán.")
+            )
+
         vals.update(
             {
                 "horario": "19",
                 "destinatario_codigo": escape(point_code),
+                "destinatario_nombre": escape(point_name),
+                "destinatario_direccion": escape(point_street),
+                "destinatario_poblacion": escape(point_city),
+                "destinatario_provincia": "",
+                "destinatario_pais": point_country,
+                "destinatario_cp": point_zip,
             }
         )
         return vals
