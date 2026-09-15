@@ -98,12 +98,63 @@ body.optima_pickup_map_open {
 }
 
 
+.optima_pickup_filter_layout {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+}
+
 .optima_pickup_filter_row {
     display: flex;
     gap: 0.45rem;
     overflow-x: auto;
     padding-bottom: 0.1rem;
     scrollbar-width: thin;
+    min-width: 0;
+}
+
+.optima_pickup_price_legend {
+    flex: 0 0 auto;
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: #64748b;
+    font-size: 0.76rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.optima_pickup_price_scale {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.optima_pickup_price_scale::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    top: 50%;
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #23C979 0%, #1BAA9A 33%, #176F95 67%, #0E273B 100%);
+    opacity: 0.72;
+    transform: translateY(-50%);
+}
+
+.optima_pickup_price_scale i {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--optima-price-color);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95);
 }
 
 .optima_pickup_filter_chip {
@@ -112,21 +163,42 @@ body.optima_pickup_map_open {
     align-items: center;
     gap: 0.35rem;
     min-height: 32px;
-    border: 1px solid #dfe4ea;
+    border: 1px solid #7b8390;
     border-radius: 999px;
-    background: #fff;
-    color: #334155;
+    background: #7b8390;
+    color: #fff;
     padding: 0.25rem 0.65rem;
     font-size: 0.82rem;
     font-weight: 600;
-    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 1px 4px rgba(20, 28, 38, 0.10);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
 }
 
-.optima_pickup_filter_chip:hover,
+.optima_pickup_filter_chip:hover {
+    color: #fff;
+    filter: brightness(0.97);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 9px rgba(20, 28, 38, 0.15);
+}
+
 .optima_pickup_filter_chip.active {
-    border-color: var(--bs-primary, #714b67);
-    background: #f7f2f6;
-    box-shadow: 0 1px 4px rgba(20, 28, 38, 0.08);
+    color: #fff;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.98),
+        0 0 0 4px rgba(14, 39, 59, 0.16),
+        0 3px 9px rgba(20, 28, 38, 0.15);
+}
+
+.optima_pickup_filter_chip_price {
+    border-color: var(--optima-price-color);
+    background: var(--optima-price-color);
+    color: #fff;
+}
+
+.optima_pickup_filter_chip_price:hover,
+.optima_pickup_filter_chip_price.active {
+    border-color: var(--optima-price-color);
+    background: var(--optima-price-color);
+    color: #fff;
 }
 
 .optima_pickup_filter_count {
@@ -137,7 +209,9 @@ body.optima_pickup_map_open {
     height: 20px;
     border-radius: 999px;
     padding: 0 0.3rem;
-    background: #eef2f6;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
     font-size: 0.72rem;
     font-weight: 700;
 }
@@ -374,6 +448,21 @@ body.optima_pickup_map_open {
     .optima_pickup_point_panel {
         border-right: 0;
         border-top: 1px solid #e5e9ef;
+    }
+
+    .optima_pickup_filter_layout {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.45rem;
+    }
+
+    .optima_pickup_filter_row {
+        width: 100%;
+    }
+
+    .optima_pickup_price_legend {
+        margin-left: 0;
+        align-self: flex-end;
     }
 
 }

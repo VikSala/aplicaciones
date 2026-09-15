@@ -266,7 +266,19 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
                         </select>
                         <button type="button" class="btn btn-primary" data-optima-search>Buscar</button>
                     </div>
-                    <div class="optima_pickup_filter_row mt-2" data-optima-carrier-filters></div>
+                    <div class="optima_pickup_filter_layout mt-2">
+                        <div class="optima_pickup_filter_row" data-optima-carrier-filters></div>
+                        <div class="optima_pickup_price_legend d-none" data-optima-price-legend aria-label="Orientación de precio de los transportistas">
+                            <span>Más barato</span>
+                            <span class="optima_pickup_price_scale" aria-hidden="true">
+                                <i style="--optima-price-color: #23C979"></i>
+                                <i style="--optima-price-color: #1BAA9A"></i>
+                                <i style="--optima-price-color: #176F95"></i>
+                                <i style="--optima-price-color: #0E273B"></i>
+                            </span>
+                            <span>Más caro</span>
+                        </div>
+                    </div>
                     <div class="d-flex align-items-center mt-2">
                         <span class="small text-muted flex-grow-1" data-optima-result-status>Preparando búsqueda…</span>
                     </div>
@@ -657,8 +669,32 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         container.appendChild(wrapper);
     },
 
+    _carrierPriceOrientation(item) {
+        const label = `${item?.name || ""} ${item?.key || ""}`
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase();
+        // UX-only orientation supplied by Optima. It deliberately does not
+        // pretend to be a live quote; exact prices are still calculated only
+        // after the customer selects a pickup point.
+        if (label.includes("inpost")) {
+            return {rank: 1, color: "#23C979", hint: "Más barato"};
+        }
+        if (label.includes("gls")) {
+            return {rank: 2, color: "#1BAA9A", hint: "Precio bajo"};
+        }
+        if (label.includes("correos express") || label.includes("correosexpress")) {
+            return {rank: 4, color: "#0E273B", hint: "Más caro"};
+        }
+        if (label.includes("correos")) {
+            return {rank: 3, color: "#176F95", hint: "Precio medio"};
+        }
+        return {rank: 100, color: "", hint: ""};
+    },
+
     _renderUnifiedCarrierFilters() {
         const container = this._pickupMapModal?.querySelector("[data-optima-carrier-filters]");
+        const legend = this._pickupMapModal?.querySelector("[data-optima-price-legend]");
         const state = this._pickupMapState;
         if (!container || !state) {
             return;
@@ -677,11 +713,20 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
         }
         container.replaceChildren();
         if (carriers.size <= 1) {
+            legend?.classList.add("d-none");
             return;
         }
+        const sortedCarriers = Array.from(carriers.values())
+            .map((item) => ({...item, priceOrientation: this._carrierPriceOrientation(item)}))
+            .sort((a, b) => {
+                const rankDiff = a.priceOrientation.rank - b.priceOrientation.rank;
+                return rankDiff || a.name.localeCompare(b.name);
+            });
+        const rankedCount = sortedCarriers.filter((item) => item.priceOrientation.rank < 100).length;
+        legend?.classList.toggle("d-none", rankedCount < 2);
         const options = [
-            {key: "all", name: "Todos", count: state.points.length},
-            ...Array.from(carriers.values()).sort((a, b) => a.name.localeCompare(b.name)),
+            {key: "all", name: "Todos", count: state.points.length, priceOrientation: null},
+            ...sortedCarriers,
         ];
         if (!options.some((item) => item.key === state.carrierFilter)) {
             state.carrierFilter = "all";
@@ -690,6 +735,11 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
             const button = document.createElement("button");
             button.type = "button";
             button.className = "optima_pickup_filter_chip";
+            if (item.priceOrientation?.color) {
+                button.classList.add("optima_pickup_filter_chip_price");
+                button.style.setProperty("--optima-price-color", item.priceOrientation.color);
+                button.title = `Orientación de precio: ${item.priceOrientation.hint}`;
+            }
             button.classList.toggle("active", state.carrierFilter === item.key);
             button.innerHTML = `<span>${this._escapeHtml(item.name)}</span><span class="optima_pickup_filter_count">${item.count}</span>`;
             button.addEventListener("click", () => {
