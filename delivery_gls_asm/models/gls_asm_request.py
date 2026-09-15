@@ -1,8 +1,10 @@
 # Copyright 2020 Tecnativa - David Vidal
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
+import base64
 import binascii
 import logging
 import os
+import xml.etree.ElementTree as ET
 
 from odoo import _
 from odoo.exceptions import UserError
@@ -346,20 +348,123 @@ class GlsAsmRequest:
             return [res]
         return res
 
-    def _shipping_label(self, reference=False):
-        """Get the PDF shipping label using GLS ``EtiquetaEnvioV2``.
+    @staticmethod
+    def _decode_pdf_candidate(value):
+        """Return PDF bytes when *value* contains raw/base64 PDF data."""
+        if value in (None, False, ""):
+            return False
+        if isinstance(value, bytearray):
+            value = bytes(value)
+        if isinstance(value, bytes):
+            raw = value.strip()
+            if raw.startswith(b"%PDF"):
+                return raw
+            try:
+                decoded = base64.b64decode(raw, validate=False)
+            except (binascii.Error, ValueError):
+                return False
+            return decoded if decoded.startswith(b"%PDF") else False
+        if not isinstance(value, str):
+            return False
+        text = value.strip()
+        if not text:
+            return False
+        if text.startswith("%PDF"):
+            return text.encode("latin1", errors="ignore")
+        # EtiquetaEnvioV2 is declared as xsd:any and can therefore arrive as
+        # an XML fragment containing the actual base64 payload.
+        if text.startswith("<"):
+            try:
+                root = ET.fromstring(text)
+            except ET.ParseError:
+                root = None
+            if root is not None:
+                for element in root.iter():
+                    if element.text:
+                        pdf = GlsAsmRequest._decode_pdf_candidate(element.text)
+                        if pdf:
+                            return pdf
+        compact = "".join(text.split())
+        try:
+            decoded = base64.b64decode(compact, validate=False)
+        except (binascii.Error, ValueError):
+            return False
+        return decoded if decoded.startswith(b"%PDF") else False
 
-        GLS currently recommends using the barcode returned by ``GrabaServicios``
-        as ``codigo`` when a label must be recovered after shipment creation.
-        ``reference`` is therefore expected to be that barcode.
+    def _extract_pdf_from_label_response(self, value, _seen=None):
+        """Extract a PDF from the heterogeneous Suds/XML GLS response.
+
+        ``EtiquetaEnvioV2Result`` is ``xsd:any`` in the current GLS WSDL, so
+        Suds may expose the payload as a dict, list, XML element/string or a
+        nested ``value``/``base64Binary`` member depending on the response.
+        """
+        if _seen is None:
+            _seen = set()
+        marker = id(value)
+        if marker in _seen:
+            return False
+        _seen.add(marker)
+
+        pdf = self._decode_pdf_candidate(value)
+        if pdf:
+            return pdf
+
+        if isinstance(value, dict):
+            preferred = []
+            others = []
+            for key, item in value.items():
+                key_text = str(key).lower()
+                if any(token in key_text for token in ("base64", "etiqueta", "label", "value", "any")):
+                    preferred.append(item)
+                else:
+                    others.append(item)
+            for item in preferred + others:
+                pdf = self._extract_pdf_from_label_response(item, _seen)
+                if pdf:
+                    return pdf
+            return False
+
+        if isinstance(value, (list, tuple, set)):
+            for item in value:
+                pdf = self._extract_pdf_from_label_response(item, _seen)
+                if pdf:
+                    return pdf
+            return False
+
+        if hasattr(value, "__keylist__"):
+            try:
+                return self._extract_pdf_from_label_response(
+                    self._recursive_asdict(value), _seen
+                )
+            except Exception:
+                pass
+
+        # Suds xsd:any values may be sax Elements. Their string form contains
+        # the XML fragment, which the decoder above knows how to inspect.
+        try:
+            text = str(value)
+        except Exception:
+            return False
+        if text and text != object.__repr__(value):
+            return self._decode_pdf_candidate(text)
+        return False
+
+    def _shipping_label(self, reference=False):
+        """Get the PDF shipping label for a GLS shipment barcode.
+
+        Prefer ``EtiquetaEnvioV2`` as documented by the current GLS service.
+        Its result is XML (xsd:any), so parse the nested payload instead of
+        assuming a top-level ``base64Binary`` member.  If V2 returns no usable
+        PDF, fall back to the still-published typed ``EtiquetaEnvio`` operation.
         """
         try:
             res = self.client.service.EtiquetaEnvioV2(
                 uidCliente=self.uidcustomer,
                 codigo=reference,
                 tipoEtiqueta="PDF",
+                plataforma="",
             )
-            _logger.debug(res)
+            _logger.debug("GLS EtiquetaEnvioV2 response for %s: %r", reference, res)
         except Exception as e:
             raise UserError(
                 _(
@@ -368,11 +473,30 @@ class GlsAsmRequest:
                 )
                 % {"ref": reference, "error": e}
             ) from e
-        res = self._recursive_asdict(res)
-        label = res.get("base64Binary")
-        if isinstance(label, (bytes, str)):
-            label = [label]
-        return label and binascii.a2b_base64(str(label[0]))
+
+        pdf = self._extract_pdf_from_label_response(res)
+        if pdf:
+            return pdf
+
+        _logger.warning(
+            "GLS EtiquetaEnvioV2 returned no usable PDF for barcode %s; "
+            "trying EtiquetaEnvio fallback",
+            reference,
+        )
+        try:
+            legacy_res = self.client.service.EtiquetaEnvio(
+                uidCliente=self.uidcustomer,
+                codigo=reference,
+                tipoEtiqueta="PDF",
+                plataforma="",
+            )
+            _logger.debug("GLS EtiquetaEnvio response for %s: %r", reference, legacy_res)
+        except Exception as e:
+            _logger.warning(
+                "GLS EtiquetaEnvio fallback failed for barcode %s: %s", reference, e
+            )
+            return False
+        return self._extract_pdf_from_label_response(legacy_res)
 
     def _cancel_shipment(self, reference=False):
         """Cancel shipment for a given reference

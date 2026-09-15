@@ -1,6 +1,7 @@
 # Copyright 2020 Tecnativa - David Vidal
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 from odoo import _, fields, models
+from odoo.exceptions import UserError
 
 
 class StockPicking(models.Model):
@@ -75,6 +76,15 @@ class StockPicking(models.Model):
         if self.delivery_type != "gls_asm" or not self.gls_asm_public_tracking_ref:
             return
         pdf = self.carrier_id.gls_asm_get_label(self.gls_asm_public_tracking_ref)
+        if not pdf:
+            raise UserError(
+                _(
+                    "GLS did not return a PDF label for barcode %s. "
+                    "The shipment remains registered; try retrieving the label again "
+                    "or check the GLS test/production environment and UID."
+                )
+                % self.gls_asm_public_tracking_ref
+            )
         label_name = f"gls_{self.gls_asm_public_tracking_ref}.pdf"
         self.message_post(
             body=(_("GLS label for %s") % self.gls_asm_public_tracking_ref),
