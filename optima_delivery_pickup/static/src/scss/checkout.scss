@@ -1,6 +1,31 @@
 .optima_pickup_method {
+    .optima_pickup_method_summary {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+        gap: 0.75rem;
+        width: 100%;
+    }
+
+    .optima_pickup_method_intro,
+    .optima_pickup_label {
+        min-width: 0;
+    }
+
     .optima_pickup_label { cursor: pointer; }
-    .optima_pickup_price { white-space: normal; text-align: end; }
+
+    .optima_pickup_benefit {
+        max-width: 36rem;
+        line-height: 1.35;
+    }
+
+    .optima_pickup_price {
+        align-self: start;
+        white-space: nowrap;
+        text-align: end;
+        line-height: 1.35;
+    }
+
     .optima_pickup_spinner { vertical-align: -0.125em; }
     &.optima_pickup_loading [name="o_optima_pickup_selector"] {
         pointer-events: none;
@@ -15,13 +40,32 @@
 
 @media (max-width: 767.98px) {
     .optima_pickup_method {
-        .optima_pickup_price {
-            float: none !important;
-            display: block;
-            margin-top: 0.5rem;
-            text-align: start;
+        .optima_pickup_method_summary {
+            gap: 0.55rem;
         }
+
+        .optima_pickup_price {
+            font-size: 0.92rem;
+            padding-left: 0.35rem;
+        }
+
+        .optima_pickup_benefit {
+            font-size: 0.84rem;
+        }
+
         [name="o_optima_pickup_location"] { margin-left: 0 !important; }
+    }
+}
+
+@media (max-width: 420px) {
+    .optima_pickup_method {
+        .optima_pickup_method_summary {
+            grid-template-columns: minmax(0, 1fr) max-content;
+        }
+
+        .optima_pickup_price {
+            font-size: 0.88rem;
+        }
     }
 }
 
