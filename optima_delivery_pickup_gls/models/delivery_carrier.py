@@ -1,4 +1,7 @@
+from xml.sax.saxutils import escape
+
 from odoo import _, fields, models
+from odoo.exceptions import UserError
 
 
 class DeliveryCarrier(models.Model):
@@ -94,6 +97,48 @@ class DeliveryCarrier(models.Model):
             "error_message": result.get("error_message") or False,
             "warning_message": result.get("warning_message") or False,
         }
+
+    def _prepare_gls_asm_shipping(self, picking):
+        """Inject the confirmed GLS ParcelShop into the native GLS shipment.
+
+        ``delivery_gls_asm`` owns the SOAP request, tracking and label lifecycle.
+        This adapter only adds the ParcelShop-specific values documented by GLS:
+        Horario 19 + Destinatario/Codigo. The point code comes from the immutable
+        pickup snapshot copied to the outgoing picking at sale confirmation.
+        """
+        self.ensure_one()
+        vals = super()._prepare_gls_asm_shipping(picking)
+        if not (
+            getattr(picking, "optima_delivery_pickup_mode", False)
+            and getattr(picking, "optima_delivery_pickup_provider_code", False) == "gls"
+        ):
+            return vals
+
+        point_code = str(
+            getattr(picking, "optima_delivery_pickup_external_id", False) or ""
+        ).strip()
+        if not point_code:
+            # The preflight normally catches this before the carrier is called,
+            # but fail closed here as well in case another flow invokes the
+            # connector preparation directly.
+            raise UserError(
+                _("Falta el código GLS del ParcelShop seleccionado en la expedición.")
+            )
+        if self.delivery_type != "gls_asm" or self.gls_asm_shiptime != "19":
+            raise UserError(
+                _(
+                    "El punto GLS seleccionado solo puede enviarse con un método "
+                    "GLS ParcelShop configurado con Horario 19."
+                )
+            )
+
+        vals.update(
+            {
+                "horario": "19",
+                "destinatario_codigo": escape(point_code),
+            }
+        )
+        return vals
 
     def action_optima_gls_import_tariff(self):
         self.ensure_one()

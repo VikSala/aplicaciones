@@ -16,10 +16,16 @@ class StockPicking(models.Model):
                     "La expedición GLS ParcelShop no está asociada a un método GLS con Horario 19."
                 )
             )
-        raise ValidationError(
-            _(
-                "El ParcelShop GLS está seleccionado y validado, pero el envío final a GLS "
-                "todavía necesita integrar Destinatario/Codigo en la expedición. "
-                "No se ha enviado nada al transportista."
+        point_code = str(self.optima_delivery_pickup_external_id or "").strip()
+        if not point_code:
+            raise ValidationError(
+                _("Falta el código GLS del ParcelShop seleccionado en la expedición.")
             )
-        )
+        if self.carrier_id.gls_is_pickup_service:
+            raise ValidationError(
+                _(
+                    "El servicio GLS configurado es un servicio de recogida, no una entrega "
+                    "a ParcelShop. Revisa el Servicio GLS del método de envío."
+                )
+            )
+        return result

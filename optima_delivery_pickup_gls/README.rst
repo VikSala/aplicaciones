@@ -70,3 +70,19 @@ Version 18.0.0.1.3
   pricing uses the current date only to identify the active tariff year and for currency conversion.
 * Energy, Climate Protect and other dated surcharges follow the same annual-validity rule.
 * Forced tariff books still respect the active year: forcing a 2026 book will not make it valid in 2027.
+
+
+GLS ParcelShop shipment
+=======================
+
+Version 0.2.2 completes the outbound ParcelShop hand-off without modifying the
+base ``delivery_gls_asm`` connector. When an outgoing picking contains a GLS
+pickup snapshot confirmed by Optima, the native GLS request is augmented with:
+
+* ``Horario = 19``.
+* ``Destinatario/Codigo = <confirmed GLS ParcelShop code>``.
+
+The code is taken from the immutable picking snapshot, not from browser input at
+shipping time. Standard GLS home deliveries continue through the native
+connector unchanged. Tracking and PDF labels remain handled by
+``delivery_gls_asm``.
