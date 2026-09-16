@@ -2,36 +2,40 @@
 
 import publicWidget from "@web/legacy/js/public/public_widget";
 
-// The Review order cart is not part of #shop_checkout on all Odoo 18 themes.
-// Detect the real product elements rather than guessing td/column class names.
+// Only shorten product *labels* in the mobile review cart.  Do not change
+// product records, quantity controls, totals or desktop layout.
 const QUANTITY_SELECTOR = "input.js_quantity, input[data-line-id].js_quantity";
 const PRODUCT_ROW_HINT = "tr, .o_cart_product, .o_cart_line, .o_wsale_cart_line, .o_wsale_cart_product, [data-cart-line-id]";
-const PRODUCT_TITLE_HINT = ".td-product_name, .o_wsale_product_name, .o_cart_product_name, [itemprop='name']";
-const CURRENCY_HINT = ".oe_currency_value, .oe_price, [data-oe-type='monetary'], .o_wsale_cart_line_price";
+const PRODUCT_NAME_PATTERN = /^\s*(\[[^\]\r\n]+\])\s+(\S+)(?:\s+([\s\S]+))?\s*$/u;
+
+function shortenProductName(fullName) {
+    const name = String(fullName || "").trim();
+    const match = name.match(PRODUCT_NAME_PATTERN);
+    if (!match || !match[3]?.trim()) {
+        return name;
+    }
+    return `${match[1]} ${match[2]}...`;
+}
 
 function getProductTitle(line) {
-    const links = Array.from(line.querySelectorAll("a[href]"));
-    const productLinks = links.filter((link) => {
-        const href = link.getAttribute("href") || "";
-        const text = (link.textContent || "").trim();
-        return (href.includes("/shop/product/") || /^\/shop\/(?!cart|checkout|payment)/.test(href))
-            && text.length > 14 && !link.querySelector(".js_quantity");
-    });
-    if (productLinks.length) {
-        return productLinks.sort((a, b) => (b.textContent || "").length - (a.textContent || "").length)[0];
+    const candidates = Array.from(line.querySelectorAll("a[href]"))
+        .filter((link) => {
+            const href = link.getAttribute("href") || "";
+            return (href.includes("/shop/product/") || /^\/shop\/(?!cart|checkout|payment)/.test(href))
+                && PRODUCT_NAME_PATTERN.test((link.textContent || "").trim());
+        });
+    if (candidates.length) {
+        return candidates.sort((a, b) => b.textContent.length - a.textContent.length)[0];
     }
-    const named = line.querySelector(PRODUCT_TITLE_HINT);
-    if (named && (named.textContent || "").trim().length > 14) {
-        return named;
-    }
-    return Array.from(line.querySelectorAll("strong, h5, h6"))
-        .find((item) => (item.textContent || "").trim().length > 16 && !item.closest(".css_quantity"));
+    return Array.from(line.querySelectorAll(
+        ".o_wsale_product_name, .o_cart_product_name, [itemprop='name'], strong, h5, h6"
+    )).find((element) => PRODUCT_NAME_PATTERN.test((element.textContent || "").trim())
+        && !element.querySelector("a, button, input, .css_quantity, .oe_currency_value")) || null;
 }
 
 function getProductRow(input) {
-    // Prefer a known cart-line wrapper, but only if it is one product, with an image.
     const hinted = input.closest(PRODUCT_ROW_HINT);
-    if (hinted && hinted.querySelector("img") && getProductTitle(hinted)
+    if (hinted?.querySelector("img") && getProductTitle(hinted)
             && hinted.querySelectorAll(QUANTITY_SELECTOR).length === 1) {
         return hinted;
     }
@@ -40,96 +44,39 @@ function getProductRow(input) {
         if (node.querySelectorAll(QUANTITY_SELECTOR).length !== 1) {
             break;
         }
-        if (node.querySelector("img") && getProductTitle(node)
-                && node.getBoundingClientRect().width >= 200) {
+        if (node.querySelector("img") && getProductTitle(node)) {
             return node;
         }
     }
     return null;
 }
 
-function getQuantityGroup(input, row) {
-    return input.closest(".css_quantity, .oe_website_spinner, .input-group")
-        || (input.parentElement !== row ? input.parentElement : input);
-}
-
-function findControlsGroup(group, title, row) {
-    let candidate = group;
-    for (let parent = group.parentElement; parent && parent !== row; parent = parent.parentElement) {
-        if (parent.contains(title) || parent.querySelectorAll(QUANTITY_SELECTOR).length !== 1
-                || parent.querySelector("img")) {
+// Preserve the element containing the link and its styling (typically an <a>
+// around <strong>). Only replace the innermost single text-bearing node.
+function getTextHost(title) {
+    let host = title;
+    while (host.children.length === 1 && !Array.from(host.childNodes).some(
+        (node) => node.nodeType === 3 && node.textContent.trim()
+    )) {
+        const child = host.firstElementChild;
+        if (!child || child.matches("a, button, input, img, svg, .css_quantity")) {
             break;
         }
-        if (parent.querySelector(CURRENCY_HINT) || /(?:€|\bEUR\b)/.test(parent.textContent || "")) {
-            candidate = parent;
-        }
+        host = child;
     }
-    return candidate;
-}
-
-function findSeparatePrice(row, controls, title) {
-    const values = Array.from(row.querySelectorAll(CURRENCY_HINT)).filter((element) =>
-        !controls.contains(element) && !title.contains(element)
-    );
-    if (!values.length) {
+    // Never remove nested controls or links when abbreviating a title.
+    if (host.querySelector("a, button, input, img, svg, .css_quantity")) {
         return null;
     }
-    const value = values[values.length - 1];
-    // Only position the amount, not a wrapping element with the quantity or product.
-    let candidate = value;
-    while (candidate.parentElement && candidate.parentElement !== row
-            && !candidate.parentElement.contains(controls)
-            && !candidate.parentElement.contains(title)
-            && candidate.parentElement.querySelectorAll(CURRENCY_HINT).length === 1) {
-        candidate = candidate.parentElement;
-    }
-    return candidate;
-}
-
-function updateCartLines() {
-    if (!window.matchMedia("(max-width: 575.98px)").matches
-            || !window.location.pathname.startsWith("/shop")) {
-        return;
-    }
-    for (const input of document.querySelectorAll(QUANTITY_SELECTOR)) {
-        // Product-detail quantity widgets have no product line with a picture/name.
-        const row = getProductRow(input);
-        if (!row) {
-            continue;
-        }
-        const title = getProductTitle(row);
-        if (!title) {
-            continue;
-        }
-        const quantity = getQuantityGroup(input, row);
-        const controls = findControlsGroup(quantity, title, row);
-        const rect = row.getBoundingClientRect();
-        const titleX = title.getBoundingClientRect().left;
-        const available = Math.max(65, Math.floor(rect.right - titleX - 156));
-        row.classList.add("optima_review_line");
-        row.style.setProperty("--optima-review-name-width", `${available}px`);
-        title.classList.add("optima_review_name");
-        const titleParent = title.parentElement;
-        if (titleParent && titleParent !== row && !titleParent.contains(controls)) {
-            titleParent.classList.add("optima_review_name_container");
-        }
-        quantity.classList.add("optima_review_quantity");
-        controls.classList.add("optima_review_controls");
-        if (controls !== quantity) {
-            const inlinePrice = controls.querySelector(CURRENCY_HINT);
-            if (inlinePrice) {
-                inlinePrice.parentElement?.classList.add("optima_review_price_inline");
-            }
-        }
-        const separatePrice = findSeparatePrice(row, controls, title);
-        separatePrice?.classList.add("optima_review_price");
-    }
+    return host;
 }
 
 publicWidget.registry.OptimaPickupCartReview = publicWidget.Widget.extend({
     selector: "body",
+
     start() {
         const result = this._super.apply(this, arguments);
+        this._shortenedNames = new Map();
         this._scheduledCartRefresh = false;
         this._refreshCartReview = () => {
             if (this._scheduledCartRefresh) {
@@ -138,24 +85,86 @@ publicWidget.registry.OptimaPickupCartReview = publicWidget.Widget.extend({
             this._scheduledCartRefresh = true;
             window.requestAnimationFrame(() => {
                 this._scheduledCartRefresh = false;
-                updateCartLines();
+                this._updateCartTitles();
             });
         };
         if (window.location.pathname.startsWith("/shop")) {
             this._refreshCartReview();
-            // website_sale replaces cart fragments when quantity changes. Only observe
-            // child additions/removals: CSS class/style updates cannot re-trigger us.
+            // Odoo replaces cart rows after quantity changes. Reapply only to new
+            // rows. Our one-time text replacement cannot produce an observer loop.
             this._cartReviewObserver = new MutationObserver(this._refreshCartReview);
             this._cartReviewObserver.observe(document.body, {subtree: true, childList: true});
             window.addEventListener("resize", this._refreshCartReview);
         }
         return result;
     },
+
+    _updateCartTitles() {
+        const isMobile = window.matchMedia("(max-width: 575.98px)").matches;
+        // Restore complete titles when switching from mobile to desktop.
+        for (const [host, saved] of this._shortenedNames) {
+            if (!host.isConnected) {
+                this._shortenedNames.delete(host);
+            } else if (!isMobile) {
+                host.textContent = saved.fullName;
+                if (saved.hadTitle) {
+                    saved.title.setAttribute("title", saved.previousTitle);
+                } else {
+                    saved.title.removeAttribute("title");
+                }
+                this._shortenedNames.delete(host);
+            }
+        }
+        if (!isMobile) {
+            return;
+        }
+        for (const input of document.querySelectorAll(QUANTITY_SELECTOR)) {
+            const row = getProductRow(input);
+            const title = row && getProductTitle(row);
+            if (!title) {
+                continue;
+            }
+            const host = getTextHost(title);
+            if (!host) {
+                continue;
+            }
+            const saved = this._shortenedNames.get(host);
+            if (saved && host.textContent === saved.shortName) {
+                continue;
+            }
+            const fullName = (host.textContent || "").trim();
+            const shortName = shortenProductName(fullName);
+            if (fullName === shortName) {
+                continue;
+            }
+            this._shortenedNames.set(host, {
+                title,
+                fullName,
+                shortName,
+                hadTitle: title.hasAttribute("title"),
+                previousTitle: title.getAttribute("title"),
+            });
+            title.setAttribute("title", fullName);
+            host.textContent = shortName;
+        }
+    },
+
     destroy() {
         this._cartReviewObserver?.disconnect();
         if (this._refreshCartReview) {
             window.removeEventListener("resize", this._refreshCartReview);
         }
+        for (const [host, saved] of this._shortenedNames || []) {
+            if (host.isConnected) {
+                host.textContent = saved.fullName;
+                if (saved.hadTitle) {
+                    saved.title.setAttribute("title", saved.previousTitle);
+                } else {
+                    saved.title.removeAttribute("title");
+                }
+            }
+        }
+        this._shortenedNames?.clear();
         return this._super.apply(this, arguments);
     },
 });
