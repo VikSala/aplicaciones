@@ -1,7 +1,7 @@
 {
     "name": "Optima Delivery Pickup",
     "summary": "Núcleo multi-proveedor para puntos de recogida en ecommerce",
-    "version": "18.0.1.0.1",
+    "version": "18.0.1.0.2",
     "category": "Website/eCommerce",
     "author": "Optima",
     "license": "LGPL-3",

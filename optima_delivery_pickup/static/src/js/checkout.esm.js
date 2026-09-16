@@ -1457,7 +1457,13 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
                 child.querySelector(".fa-plus, .fa-plus-circle")
             )
         );
-        if (!grid || grid.classList.contains("optima_pickup_address_grid")) {
+        if (!grid) {
+            return;
+        }
+        // Give the delivery-address heading its own responsive spacing,
+        // regardless of Odoo's intermediate theme wrappers.
+        deliveryHeading.classList.add("optima_pickup_delivery_address_heading");
+        if (grid.classList.contains("optima_pickup_address_grid")) {
             return;
         }
         grid.classList.add("optima_pickup_address_grid");

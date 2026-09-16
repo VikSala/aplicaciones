@@ -674,6 +674,13 @@ body.optima_pickup_map_open {
 /* V1.0.0: compact delivery-address cards on narrow screens, without altering
    Odoo's native address links or its address-management logic. */
 @media (max-width: 575.98px) {
+    // Separate the coupon from the delivery-address section and the
+    // heading from its first card without changing Odoo's address markup.
+    #shop_checkout .optima_pickup_delivery_address_heading {
+        padding-top: 1.1rem !important;
+        margin-bottom: 0.85rem !important;
+    }
+
     #shop_checkout .optima_pickup_address_grid {
         display: flex !important;
         flex-direction: column !important;
