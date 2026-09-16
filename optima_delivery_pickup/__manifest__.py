@@ -1,7 +1,7 @@
 {
     "name": "Optima Delivery Pickup",
     "summary": "Núcleo multi-proveedor para puntos de recogida en ecommerce",
-    "version": "18.0.1.0.5",
+    "version": "18.0.1.0.0",
     "category": "Website/eCommerce",
     "author": "Optima",
     "license": "LGPL-3",
@@ -16,7 +16,6 @@
         "web.assets_frontend": [
             "optima_delivery_pickup/static/src/js/provider_registry.esm.js",
             "optima_delivery_pickup/static/src/js/checkout.esm.js",
-            "optima_delivery_pickup/static/src/js/cart_review.esm.js",
             "optima_delivery_pickup/static/src/scss/checkout.scss",
         ],
     },
