@@ -44,7 +44,8 @@
                         />
                         <span class="optima_pickup_price_text">
                             <t t-if="optima_pickup_resolved">
-                                <t t-esc="'%.2f %s' % (optima_pickup_price, optima_pickup_currency)"/>
+                                <span t-field="order.optima_pickup_delivery_price"
+                                      t-options='{"widget": "monetary", "display_currency": order.currency_id}'/>
                             </t>
                             <t t-elif="optima_pickup_point">Calculando precio…</t>
                             <t t-else="">Precio al seleccionar</t>
@@ -60,9 +61,9 @@
                         name="o_optima_pickup_details"
                         t-attf-class="optima_pickup_details {{'' if optima_pickup_point else 'd-none'}}"
                     >
-                        <div class="d-flex align-items-start gap-2">
-                            <i class="fa fa-map-marker mt-1" aria-hidden="true"/>
-                            <div class="flex-grow-1">
+                        <div class="optima_pickup_selected_point">
+                            <i class="fa fa-map-marker optima_pickup_selected_icon" aria-hidden="true"/>
+                            <div class="optima_pickup_selected_content">
                                 <div class="fw-semibold" name="o_optima_pickup_name">
                                     <t t-esc="optima_pickup_point.get('name', '')"/>
                                 </div>
@@ -85,7 +86,7 @@
                                     </t>
                                 </div>
                             </div>
-                            <button type="button" name="o_optima_pickup_selector" class="btn btn-link btn-sm p-0 text-nowrap">
+                            <button type="button" name="o_optima_pickup_selector" class="btn btn-link btn-sm p-0 text-nowrap optima_pickup_change_point">
                                 Cambiar punto
                             </button>
                         </div>
@@ -107,7 +108,7 @@
                     >
                         <t t-if="optima_pickup_resolution_message and not optima_pickup_resolved" t-esc="optima_pickup_resolution_message"/>
                     </div>
-                    <div class="small text-muted mt-2">
+                    <div class="small text-muted mt-2 optima_pickup_status_note">
                         <t t-if="optima_pickup_resolved">
                             Método y precio calculados para el punto seleccionado.
                         </t>

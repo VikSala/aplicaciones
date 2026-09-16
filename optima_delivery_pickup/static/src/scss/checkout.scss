@@ -23,7 +23,38 @@
         align-self: start;
         white-space: nowrap;
         text-align: end;
-        line-height: 1.35;
+        font-family: inherit;
+        font-size: 1rem;
+        font-weight: 700;
+        line-height: 1.5;
+        letter-spacing: normal;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .optima_pickup_price_text,
+    .optima_pickup_price_text > span {
+        font: inherit;
+        color: inherit;
+    }
+
+    .optima_pickup_selected_point {
+        display: grid;
+        grid-template-columns: 0.7rem minmax(0, 1fr) auto;
+        align-items: start;
+        gap: 0.45rem;
+    }
+
+    .optima_pickup_selected_icon {
+        margin-top: 0.2rem;
+    }
+
+    .optima_pickup_selected_content {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .optima_pickup_change_point {
+        justify-self: end;
     }
 
     .optima_pickup_spinner { vertical-align: -0.125em; }
@@ -45,8 +76,21 @@
         }
 
         .optima_pickup_price {
-            font-size: 0.92rem;
-            padding-left: 0.35rem;
+            font-size: 1rem;
+            padding-left: 0.25rem;
+        }
+
+        .optima_pickup_selected_point {
+            grid-template-columns: 0.7rem minmax(0, 1fr) auto;
+            gap: 0.35rem;
+        }
+
+        .optima_pickup_details {
+            padding-left: 0.5rem;
+        }
+
+        .optima_pickup_status_note {
+            line-height: 1.4;
         }
 
         .optima_pickup_benefit {
@@ -64,7 +108,17 @@
         }
 
         .optima_pickup_price {
-            font-size: 0.88rem;
+            font-size: 1rem;
+        }
+
+        .optima_pickup_selected_point {
+            grid-template-columns: 0.7rem minmax(0, 1fr);
+        }
+
+        .optima_pickup_change_point {
+            grid-column: 2;
+            justify-self: start;
+            margin-top: 0.2rem;
         }
     }
 }
@@ -614,5 +668,79 @@ body.optima_pickup_map_open {
     .optima_pickup_map_modal.optima_pickup_mobile_mode .optima_pickup_point_panel,
     .optima_pickup_map_modal.optima_pickup_mobile_mode .optima_pickup_map_visual {
         height: calc(100vh - 290px);
+    }
+}
+
+/* V1.0.0: compact delivery-address cards on narrow screens, without altering
+   Odoo's native address links or its address-management logic. */
+@media (max-width: 575.98px) {
+    #shop_checkout .optima_pickup_address_grid {
+        display: flex !important;
+        flex-direction: column !important;
+        flex-wrap: nowrap !important;
+        align-items: stretch !important;
+        gap: 0.55rem !important;
+        margin-inline: 0 !important;
+    }
+
+    #shop_checkout .optima_pickup_address_grid > .optima_pickup_address_card,
+    #shop_checkout .optima_pickup_address_grid > .optima_pickup_add_address_card {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 auto !important;
+        margin: 0 !important;
+        padding: 0.5rem 0.65rem !important;
+        height: auto !important;
+        min-height: 0 !important;
+    }
+
+    #shop_checkout .optima_pickup_address_card > :first-child {
+        width: 100%;
+        max-width: 100%;
+        min-height: 0;
+        padding: 0.2rem;
+        overflow-wrap: anywhere;
+    }
+
+    #shop_checkout .optima_pickup_add_address_card > :first-child {
+        display: flex !important;
+        width: 100%;
+        max-width: 100%;
+        min-height: 42px !important;
+        height: auto !important;
+        align-items: center;
+        justify-content: center;
+        flex-direction: row !important;
+        gap: 0.55rem;
+        padding: 0.25rem 0.4rem !important;
+        font-size: 0.88rem;
+    }
+
+    #shop_checkout .optima_pickup_add_address_card .fa-plus,
+    #shop_checkout .optima_pickup_add_address_card .fa-plus-circle {
+        font-size: 0.95rem !important;
+        line-height: 1;
+    }
+
+    #shop_checkout .optima_pickup_add_address_card {
+        text-align: center;
+    }
+
+    #shop_checkout {
+        padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+    }
+}
+
+/* Added by the address-card enhancement only when the stock Odoo label is
+   visually hidden. Keep it invisible outside the narrow checkout. */
+#shop_checkout .optima_pickup_mobile_add_address_label {
+    display: none;
+}
+@media (max-width: 575.98px) {
+    #shop_checkout .optima_pickup_mobile_add_address_label {
+        display: inline;
+        color: #198754;
+        font-size: 0.88rem;
+        font-weight: 600;
     }
 }

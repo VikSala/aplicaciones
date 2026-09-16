@@ -16,6 +16,9 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
     start() {
         const result = this._super.apply(this, arguments);
         this._pickupPrewarmJobs = new Map();
+        // Only decorate the existing Odoo address cards; never modify their
+        // forms, links or partner data. The enhancement is mobile CSS only.
+        this._decorateCheckoutAddressCards();
         const pickupRadio = this._getPickupRadio();
         if (pickupRadio?.checked) {
             this._markPickupSelected();
@@ -1392,14 +1395,97 @@ publicWidget.registry.OptimaPickupCheckout = publicWidget.Widget.extend({
     },
 
     _formatCurrency(amount, currency) {
+        // Odoo HTML languages sometimes use the underscore syntax (es_ES),
+        // which is not a valid Intl locale. Normalise it rather than falling
+        // back to a raw ISO currency code such as "3.26 EUR".
+        const rawLocale = document.documentElement.lang || "es-ES";
+        let locale = "es-ES";
         try {
-            const language = document.documentElement.lang || "es-ES";
-            return new Intl.NumberFormat(language, {
-                style: "currency",
-                currency,
-            }).format(Number(amount || 0));
+            const candidate = rawLocale.replace(/_/g, "-");
+            if (Intl.NumberFormat.supportedLocalesOf([candidate]).length) {
+                locale = candidate;
+            }
         } catch {
-            return `${Number(amount || 0).toFixed(2)} ${currency || ""}`.trim();
+            // A malformed html[lang] must not change the customer's price.
+        }
+        const currencyCode = String(currency || "EUR").toUpperCase();
+        const value = Number(amount || 0);
+        try {
+            return new Intl.NumberFormat(locale, {
+                style: "currency",
+                currency: currencyCode,
+            }).format(value);
+        } catch {
+            // Keep a properly localised number and symbol even when the
+            // browser receives an unexpected locale/currency identifier.
+            const number = new Intl.NumberFormat("es-ES", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            }).format(value);
+            const symbol = {EUR: "€", USD: "$", GBP: "£"}[currencyCode] || currencyCode;
+            return `${number} ${symbol}`;
+        }
+    },
+
+    _decorateCheckoutAddressCards() {
+        const root = this.el;
+        if (!root) {
+            return;
+        }
+        // Odoo may wrap the address heading in another div depending on the
+        // website theme. Locate the card group conservatively; if the expected
+        // sibling structure is absent, leave the stock checkout untouched.
+        const headings = root.querySelectorAll("h1, h2, h3, h4, h5, h6, .h4, .h5, .h6");
+        const deliveryHeading = Array.from(headings).find((heading) =>
+            /^(?:direcci[oó]n de entrega|direcci[oó]n de env[ií]o|delivery address|shipping address)$/i
+                .test((heading.textContent || "").trim().replace(/\s+/g, " "))
+        );
+        if (!deliveryHeading) {
+            return;
+        }
+        const candidates = [
+            deliveryHeading.nextElementSibling,
+            deliveryHeading.parentElement?.nextElementSibling,
+            deliveryHeading.parentElement?.parentElement?.nextElementSibling,
+            deliveryHeading.parentElement?.querySelector(".row"),
+            deliveryHeading.closest("section")?.querySelector(".row"),
+        ];
+        const grid = candidates.find((node) =>
+            node && node !== deliveryHeading && node.children.length >= 2 &&
+            Array.from(node.children).some((child) =>
+                /a[nñ]adir (?:otra )?direcci[oó]n|add (?:another )?address/i.test(child.textContent || "") ||
+                child.querySelector(".fa-plus, .fa-plus-circle")
+            )
+        );
+        if (!grid || grid.classList.contains("optima_pickup_address_grid")) {
+            return;
+        }
+        grid.classList.add("optima_pickup_address_grid");
+        const cards = Array.from(grid.children);
+        for (const card of cards) {
+            const text = (card.textContent || "").trim().replace(/\s+/g, " ");
+            const target = card.matches("a, button")
+                ? card
+                : card.querySelector('a[href*="/shop/address"], a, button');
+            // Only a compact add-address tile gets a new visual treatment.
+            // Never change the selected address, its Edit link or its click.
+            if (target && (
+                /a[nñ]adir (?:otra )?direcci[oó]n|add (?:another )?address/i.test(text) ||
+                /^\+?$/.test(text) && card.querySelector(".fa-plus, .fa-plus-circle, [class*='plus']")
+            )) {
+                card.classList.add("optima_pickup_add_address_card");
+                // Odoo themes often hide the label at phone widths and show
+                // only a large plus. Provide a compact visible label without
+                // changing the link or adding a second clickable control.
+                if (!/a[nñ]adir (?:otra )?direcci[oó]n|add (?:another )?address/i.test(target.innerText || "")) {
+                    const label = document.createElement("span");
+                    label.className = "optima_pickup_mobile_add_address_label";
+                    label.textContent = "Añadir dirección";
+                    target.appendChild(label);
+                }
+            } else {
+                card.classList.add("optima_pickup_address_card");
+            }
         }
     },
 
