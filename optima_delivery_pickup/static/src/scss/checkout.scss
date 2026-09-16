@@ -754,107 +754,92 @@ body.optima_pickup_map_open {
 }
 
 
-/* V1.0.3: compact mobile order-summary product lines.
-   Goal: keep quantity/price aligned to a fixed right column and clamp long
-   product names to four lines on narrow screens. */
+/* V1.0.4 — Cart lines on the Review order step, including AJAX refreshes.
+   These classes are assigned to the actual cart elements by cart_review.esm.js.
+   Do not assume that the cart is a <table> or nested in #shop_checkout:
+   Odoo / themes can render each line with nested flex or grid <div>s. */
 @media (max-width: 575.98px) {
-    #shop_checkout #cart_products > tbody > tr,
-    #o_wsale_offcanvas_order #cart_products > tbody > tr {
-        display: grid;
-        grid-template-columns: 56px minmax(0, 1fr) minmax(104px, 112px);
-        grid-template-areas:
-            "img name qty"
-            "img name price"
-            "img meta meta";
-        column-gap: 0.8rem;
-        row-gap: 0.2rem;
-        align-items: start;
-    }
-
-    #shop_checkout #cart_products > tbody > tr > td,
-    #o_wsale_offcanvas_order #cart_products > tbody > tr > td {
-        min-width: 0;
-        border: 0;
-    }
-
-    #shop_checkout #cart_products > tbody > tr > td.td-img,
-    #o_wsale_offcanvas_order #cart_products > tbody > tr > td.td-img {
-        grid-area: img;
-        width: 56px;
-        padding-right: 0;
-    }
-
-    #shop_checkout #cart_products > tbody > tr > td.td-product_name,
-    #o_wsale_offcanvas_order #cart_products > tbody > tr > td.td-product_name {
-        grid-area: name;
-        min-width: 0;
-        padding-right: 0.15rem;
-    }
-
-    #shop_checkout #cart_products > tbody > tr > td.td-qty,
-    #o_wsale_offcanvas_order #cart_products > tbody > tr > td.td-qty {
-        grid-area: qty;
+    .optima_review_line {
+        position: relative !important;
+        min-width: 0 !important;
         width: 100%;
-        min-width: 104px;
-        justify-self: end;
-        padding-left: 0;
-        text-align: right;
     }
 
-    #shop_checkout #cart_products > tbody > tr > td.td-price,
-    #shop_checkout #cart_products > tbody > tr > td.td-price-total,
-    #o_wsale_offcanvas_order #cart_products > tbody > tr > td.td-price,
-    #o_wsale_offcanvas_order #cart_products > tbody > tr > td.td-price-total {
-        grid-area: price;
-        width: 100%;
-        justify-self: end;
-        align-self: start;
-        padding-top: 0.1rem;
-        padding-left: 0;
-        text-align: right;
-        white-space: nowrap;
-        font-weight: 700;
+    .optima_review_name_container {
+        min-width: 0 !important;
+        max-width: var(--optima-review-name-width) !important;
+        width: var(--optima-review-name-width) !important;
+        flex: 0 1 var(--optima-review-name-width) !important;
     }
 
-    #shop_checkout #cart_products .td-product_name h6,
-    #shop_checkout #cart_products .td-product_name .h6,
-    #shop_checkout #cart_products .td-product_name a:not(.btn),
-    #shop_checkout #cart_products .td-product_name strong,
-    #o_wsale_offcanvas_order #cart_products .td-product_name h6,
-    #o_wsale_offcanvas_order #cart_products .td-product_name .h6,
-    #o_wsale_offcanvas_order #cart_products .td-product_name a:not(.btn),
-    #o_wsale_offcanvas_order #cart_products .td-product_name strong {
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 4;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        line-height: 1.35;
-        max-height: calc(1.35em * 4);
+    .optima_review_name {
+        display: -webkit-box !important;
+        -webkit-box-orient: vertical !important;
+        -webkit-line-clamp: 4 !important;
+        line-clamp: 4;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: normal !important;
         overflow-wrap: anywhere;
-        word-break: break-word;
-    }
-
-    #shop_checkout #cart_products .td-product_name > div,
-    #o_wsale_offcanvas_order #cart_products .td-product_name > div {
-        min-width: 0;
-    }
-
-    #shop_checkout #cart_products .td-qty .css_quantity,
-    #shop_checkout #cart_products .td-qty .input-group,
-    #shop_checkout #cart_products .td-qty .bootstrap-touchspin,
-    #o_wsale_offcanvas_order #cart_products .td-qty .css_quantity,
-    #o_wsale_offcanvas_order #cart_products .td-qty .input-group,
-    #o_wsale_offcanvas_order #cart_products .td-qty .bootstrap-touchspin {
+        word-break: normal;
+        max-height: calc(1.35em * 4);
+        line-height: 1.35 !important;
+        max-width: var(--optima-review-name-width) !important;
         width: 100%;
-        min-width: 104px;
-        margin-left: auto;
     }
 
-    #shop_checkout #cart_products .td-price .oe_currency_value,
-    #shop_checkout #cart_products .td-price-total .oe_currency_value,
-    #o_wsale_offcanvas_order #cart_products .td-price .oe_currency_value,
-    #o_wsale_offcanvas_order #cart_products .td-price-total .oe_currency_value {
-        white-space: nowrap;
+    .optima_review_name > strong,
+    .optima_review_name > span {
+        display: inline;
+        white-space: inherit;
+    }
+
+    .optima_review_controls {
+        position: absolute !important;
+        inset-inline-end: 0.75rem !important;
+        inset-inline-start: auto !important;
+        top: 0 !important;
+        width: 136px !important;
+        max-width: 136px !important;
+        min-width: 136px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        float: none !important;
+        z-index: 1;
+    }
+
+    .optima_review_controls:not(.optima_review_quantity) {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.25rem;
+    }
+
+    .optima_review_quantity {
+        width: 136px !important;
+        max-width: 136px !important;
+        min-width: 136px !important;
+        margin-inline-start: auto !important;
+        flex: 0 0 auto !important;
+    }
+
+    .optima_review_price {
+        position: absolute !important;
+        inset-inline-end: 0.75rem !important;
+        inset-inline-start: auto !important;
+        top: 42px !important;
+        width: 136px !important;
+        text-align: end !important;
+        white-space: nowrap !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        z-index: 1;
+    }
+
+    .optima_review_controls .optima_review_price_inline {
+        position: static !important;
+        width: 100% !important;
+        text-align: end !important;
+        white-space: nowrap !important;
     }
 }
