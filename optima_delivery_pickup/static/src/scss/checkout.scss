@@ -752,3 +752,109 @@ body.optima_pickup_map_open {
         font-weight: 600;
     }
 }
+
+
+/* V1.0.3: compact mobile order-summary product lines.
+   Goal: keep quantity/price aligned to a fixed right column and clamp long
+   product names to four lines on narrow screens. */
+@media (max-width: 575.98px) {
+    #shop_checkout #cart_products > tbody > tr,
+    #o_wsale_offcanvas_order #cart_products > tbody > tr {
+        display: grid;
+        grid-template-columns: 56px minmax(0, 1fr) minmax(104px, 112px);
+        grid-template-areas:
+            "img name qty"
+            "img name price"
+            "img meta meta";
+        column-gap: 0.8rem;
+        row-gap: 0.2rem;
+        align-items: start;
+    }
+
+    #shop_checkout #cart_products > tbody > tr > td,
+    #o_wsale_offcanvas_order #cart_products > tbody > tr > td {
+        min-width: 0;
+        border: 0;
+    }
+
+    #shop_checkout #cart_products > tbody > tr > td.td-img,
+    #o_wsale_offcanvas_order #cart_products > tbody > tr > td.td-img {
+        grid-area: img;
+        width: 56px;
+        padding-right: 0;
+    }
+
+    #shop_checkout #cart_products > tbody > tr > td.td-product_name,
+    #o_wsale_offcanvas_order #cart_products > tbody > tr > td.td-product_name {
+        grid-area: name;
+        min-width: 0;
+        padding-right: 0.15rem;
+    }
+
+    #shop_checkout #cart_products > tbody > tr > td.td-qty,
+    #o_wsale_offcanvas_order #cart_products > tbody > tr > td.td-qty {
+        grid-area: qty;
+        width: 100%;
+        min-width: 104px;
+        justify-self: end;
+        padding-left: 0;
+        text-align: right;
+    }
+
+    #shop_checkout #cart_products > tbody > tr > td.td-price,
+    #shop_checkout #cart_products > tbody > tr > td.td-price-total,
+    #o_wsale_offcanvas_order #cart_products > tbody > tr > td.td-price,
+    #o_wsale_offcanvas_order #cart_products > tbody > tr > td.td-price-total {
+        grid-area: price;
+        width: 100%;
+        justify-self: end;
+        align-self: start;
+        padding-top: 0.1rem;
+        padding-left: 0;
+        text-align: right;
+        white-space: nowrap;
+        font-weight: 700;
+    }
+
+    #shop_checkout #cart_products .td-product_name h6,
+    #shop_checkout #cart_products .td-product_name .h6,
+    #shop_checkout #cart_products .td-product_name a:not(.btn),
+    #shop_checkout #cart_products .td-product_name strong,
+    #o_wsale_offcanvas_order #cart_products .td-product_name h6,
+    #o_wsale_offcanvas_order #cart_products .td-product_name .h6,
+    #o_wsale_offcanvas_order #cart_products .td-product_name a:not(.btn),
+    #o_wsale_offcanvas_order #cart_products .td-product_name strong {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 4;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.35;
+        max-height: calc(1.35em * 4);
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    #shop_checkout #cart_products .td-product_name > div,
+    #o_wsale_offcanvas_order #cart_products .td-product_name > div {
+        min-width: 0;
+    }
+
+    #shop_checkout #cart_products .td-qty .css_quantity,
+    #shop_checkout #cart_products .td-qty .input-group,
+    #shop_checkout #cart_products .td-qty .bootstrap-touchspin,
+    #o_wsale_offcanvas_order #cart_products .td-qty .css_quantity,
+    #o_wsale_offcanvas_order #cart_products .td-qty .input-group,
+    #o_wsale_offcanvas_order #cart_products .td-qty .bootstrap-touchspin {
+        width: 100%;
+        min-width: 104px;
+        margin-left: auto;
+    }
+
+    #shop_checkout #cart_products .td-price .oe_currency_value,
+    #shop_checkout #cart_products .td-price-total .oe_currency_value,
+    #o_wsale_offcanvas_order #cart_products .td-price .oe_currency_value,
+    #o_wsale_offcanvas_order #cart_products .td-price-total .oe_currency_value {
+        white-space: nowrap;
+    }
+}
