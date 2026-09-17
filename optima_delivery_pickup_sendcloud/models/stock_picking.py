@@ -22,6 +22,23 @@ class StockPicking(models.Model):
         copy=True,
         readonly=True,
     )
+    optima_sendcloud_test_letter_mode = fields.Boolean(
+        string="Sendcloud: etiqueta de prueba Unstamped Letter",
+        copy=True,
+        readonly=True,
+    )
+    optima_sendcloud_priced_carrier_id = fields.Many2one(
+        "delivery.carrier",
+        string="Sendcloud: método original y tarifa cobrada",
+        copy=True,
+        readonly=True,
+    )
+    optima_sendcloud_test_letter_carrier_id = fields.Many2one(
+        "delivery.carrier",
+        string="Sendcloud: método usado para la etiqueta de prueba",
+        copy=True,
+        readonly=True,
+    )
 
     @staticmethod
     def _optima_sendcloud_json_payload(value):
@@ -172,37 +189,53 @@ class StockPicking(models.Model):
             "optima_sendcloud_service_point_synced": True,
         }
 
-        # Re-apply the immutable snapshot to the fields consumed by the installed
-        # OCA connector. This self-heals accidental edits on connector fields
-        # without ever consulting mutable sale-order point data again.
-        self._optima_sendcloud_write_oca_field(
-            vals,
-            "sendcloud_service_point_address",
-            payload,
-            payload_text,
-        )
-        self._optima_sendcloud_write_oca_field(
-            vals,
-            "sendcloud_service_point_data",
-            payload,
-            payload_text,
-        )
-
-        id_field = self._fields.get("sendcloud_service_point_id")
-        if id_field and self._optima_sendcloud_field_is_writable(id_field):
-            if id_field.type in ("char", "text"):
-                vals["sendcloud_service_point_id"] = point_id
-            elif id_field.type == "integer" and point_id.isdigit():
-                vals["sendcloud_service_point_id"] = int(point_id)
-
-        for field_name in ("sendcloud_to_post_number", "sendcloud_post_number"):
-            field = self._fields.get(field_name)
-            if (
-                field
-                and self._optima_sendcloud_field_is_writable(field)
-                and field.type in ("char", "text")
+        # An Unstamped Letter is NOT a service-point shipping product. Keep the
+        # confirmed PUDO data in our immutable snapshots, but never inject its
+        # service_point_id into the letter shipment sent by the OCA connector.
+        # Normal (paid) PUDO shipments retain their existing OCA synchronization.
+        if self.optima_sendcloud_test_letter_mode:
+            for name in (
+                "sendcloud_service_point_address",
+                "sendcloud_service_point_data",
+                "sendcloud_service_point_id",
+                "sendcloud_to_post_number",
+                "sendcloud_post_number",
             ):
-                vals[field_name] = post_number or False
+                field = self._fields.get(name)
+                if field and self._optima_sendcloud_field_is_writable(field) and field.type in (
+                    "json", "char", "text", "integer",
+                ):
+                    vals[name] = False
+        else:
+            # Self-heal connector fields from the confirmed snapshot.
+            self._optima_sendcloud_write_oca_field(
+                vals,
+                "sendcloud_service_point_address",
+                payload,
+                payload_text,
+            )
+            self._optima_sendcloud_write_oca_field(
+                vals,
+                "sendcloud_service_point_data",
+                payload,
+                payload_text,
+            )
+
+            id_field = self._fields.get("sendcloud_service_point_id")
+            if id_field and self._optima_sendcloud_field_is_writable(id_field):
+                if id_field.type in ("char", "text"):
+                    vals["sendcloud_service_point_id"] = point_id
+                elif id_field.type == "integer" and point_id.isdigit():
+                    vals["sendcloud_service_point_id"] = int(point_id)
+
+            for field_name in ("sendcloud_to_post_number", "sendcloud_post_number"):
+                field = self._fields.get(field_name)
+                if (
+                    field
+                    and self._optima_sendcloud_field_is_writable(field)
+                    and field.type in ("char", "text")
+                ):
+                    vals[field_name] = post_number or False
 
         self.write(vals)
         return True
@@ -220,8 +253,58 @@ class StockPicking(models.Model):
             raise ValidationError(_(
                 "No se puede recuperar el pedido de venta para preparar el punto Sendcloud."
             ))
+        if self.optima_sendcloud_test_letter_mode:
+            priced = self.optima_sendcloud_priced_carrier_id
+            letter = self.optima_sendcloud_test_letter_carrier_id
+            if (
+                not priced
+                or priced.delivery_type != "sendcloud"
+                or not priced.sendcloud_service_point_required
+                or self.sale_id.carrier_id != priced
+                or not letter
+                or not letter.active
+                or letter.delivery_type != "sendcloud"
+                or letter.sendcloud_service_point_required
+                or letter.sendcloud_integration_id != priced.sendcloud_integration_id
+                or not any(
+                    self.sale_id._optima_sendcloud_is_unstamped_letter_name(name)
+                    for name in self.sale_id._optima_sendcloud_local_method_names(letter)
+                )
+                or self.carrier_id != letter
+            ):
+                raise ValidationError(_(
+                    "ALBARÁN DE PRUEBA: el método de etiqueta no es la carta "
+                    "Unstamped Letter confirmada. Se bloquea el envío para "
+                    "evitar generar una etiqueta de transporte de pago."
+                ))
+        elif self.sale_id.optima_sendcloud_test_letter_carrier_id:
+            raise ValidationError(_(
+                "El pedido se confirmó en modo Unstamped Letter, pero este "
+                "albarán no tiene su método de prueba preparado."
+            ))
         if not self._optima_sendcloud_sync_service_point_from_sale():
             raise ValidationError(_(
                 "Faltan los datos Sendcloud del punto de recogida. No se enviará el albarán al transportista."
             ))
         return result
+
+    def _add_delivery_cost_to_so(self):
+        """A letter's actual cost must not replace/add to the quoted PUDO fee."""
+        self.ensure_one()
+        if self.optima_sendcloud_test_letter_mode:
+            return None
+        return super()._add_delivery_cost_to_so()
+
+    def send_to_shipper(self):
+        """Guard even if the generic pickup preflight is bypassed by a caller.
+
+        The standard Odoo button ultimately uses this entry point. Never allow
+        a previously confirmed test order to fall back to its paid PUDO method.
+        """
+        self.ensure_one()
+        if self.optima_delivery_pickup_provider_code == "sendcloud" and (
+            self.optima_sendcloud_test_letter_mode
+            or (self.sale_id and self.sale_id.optima_sendcloud_test_letter_carrier_id)
+        ):
+            self._optima_delivery_provider_preflight()
+        return super().send_to_shipper()

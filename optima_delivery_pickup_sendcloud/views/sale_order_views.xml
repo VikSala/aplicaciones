@@ -12,6 +12,11 @@
                     readonly="1"
                     invisible="optima_pickup_provider_code != 'sendcloud'"
                 />
+                <field
+                    name="optima_sendcloud_test_letter_carrier_id"
+                    readonly="1"
+                    invisible="optima_pickup_provider_code != 'sendcloud' or not optima_sendcloud_test_letter_carrier_id"
+                />
             </xpath>
         </field>
     </record>
