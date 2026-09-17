@@ -1,7 +1,7 @@
 {
     "name": "Website B2B Private",
     "summary": "B2B approval flow with private prices, cart and stock",
-    "version": "18.0.6.0.5",
+    "version": "18.0.6.0.6",
     "category": "Website/eCommerce",
     "author": "Custom",
     "license": "LGPL-3",

@@ -162,7 +162,7 @@ class ProductTemplate(models.Model):
         website = self.env["website"].get_current_website()
         if website and (
             website.b2b_is_blocked(user=website.env.user)
-            or website.b2b_is_price_unavailable(product=self)
+            or combination_info.get("b2b_price_unavailable")
         ):
             return "", None
         return super()._search_render_results_prices(mapping, combination_info)
