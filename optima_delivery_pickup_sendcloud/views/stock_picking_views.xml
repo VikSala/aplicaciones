@@ -16,21 +16,6 @@
                     readonly="1"
                     invisible="optima_delivery_pickup_provider_code != 'sendcloud'"
                 />
-                <field
-                    name="optima_sendcloud_test_letter_mode"
-                    readonly="1"
-                    invisible="optima_delivery_pickup_provider_code != 'sendcloud'"
-                />
-                <field
-                    name="optima_sendcloud_priced_carrier_id"
-                    readonly="1"
-                    invisible="not optima_sendcloud_test_letter_mode"
-                />
-                <field
-                    name="optima_sendcloud_test_letter_carrier_id"
-                    readonly="1"
-                    invisible="not optima_sendcloud_test_letter_mode"
-                />
             </xpath>
         </field>
     </record>

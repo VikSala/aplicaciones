@@ -25,71 +25,6 @@ class SaleOrder(models.Model):
         copy=False,
         default=dict,
     )
-    optima_sendcloud_test_letter_carrier_id = fields.Many2one(
-        "delivery.carrier",
-        string="Sendcloud: método de prueba para la etiqueta",
-        copy=False,
-        readonly=True,
-        help=(
-            "Se fija al seleccionar un punto mientras Unstamped Letter está publicado. "
-            "El método y el precio de venta permanecen en el transportista original."
-        ),
-    )
-
-    @staticmethod
-    def _optima_sendcloud_is_unstamped_letter_name(value):
-        """Match the shipping *method*, never a fuzzy 'letter' substring."""
-        token = SaleOrder._optima_sendcloud_normalize_token(value)
-        return token in {"unstampedletter", "sendcloudunstampedletter"}
-
-    def _optima_sendcloud_published_test_letter(self, integration):
-        """Find the published test carrier for THIS company, website and account.
-
-        No global setting or hard-coded volatile Sendcloud method ID is used.
-        An ambiguous configuration aborts selection instead of risking a paid label.
-        """
-        self.ensure_one()
-        Carrier = self.env["delivery.carrier"].sudo()
-        candidates = Carrier.search([
-            ("active", "=", True),
-            ("delivery_type", "=", "sendcloud"),
-            ("sendcloud_service_point_required", "=", False),
-            *Carrier._check_company_domain(self.company_id),
-        ])
-        website = self.website_id if "website_id" in self._fields else False
-        published = Carrier.browse()
-        for carrier in candidates:
-            website_field = carrier._fields.get("website_id")
-            if website and website_field and carrier.website_id and carrier.website_id != website:
-                continue
-            publication_field = carrier._fields.get("is_published") or carrier._fields.get(
-                "website_published"
-            )
-            if not publication_field:
-                continue  # Never infer test mode from a method that is not publicly published.
-            if not carrier[publication_field.name]:
-                continue
-            names = self._optima_sendcloud_local_method_names(carrier)
-            if not any(self._optima_sendcloud_is_unstamped_letter_name(name) for name in names):
-                continue
-            published |= carrier
-
-        if not published:
-            return self.env["delivery.carrier"]
-        matching = published.filtered(
-            lambda carrier: carrier.sendcloud_integration_id == integration
-            and carrier.sendcloud_integration_id.active
-        )
-        if len(published) != 1 or len(matching) != 1:
-            raise ValidationError(_(
-                "Hay varias cartas Unstamped Letter publicadas o su integración no coincide "
-                "con la del punto Sendcloud. Despublica los métodos duplicados y "
-                "selecciona otra vez el punto antes de continuar."
-            ))
-        letter = matching[:1]
-        if letter.sendcloud_service_point_required:
-            raise ValidationError(_("Unstamped Letter no debe ser un método PUDO."))
-        return letter
 
     def _optima_pickup_get_provider_carriers(self):
         """Add technical Sendcloud PUDO methods independently of website_sale."""
@@ -2165,29 +2100,14 @@ class SaleOrder(models.Model):
         super()._optima_pickup_after_store_point(provider_code, normalized, raw_point, extra)
         if provider_code != "sendcloud":
             return
-        # Store the activation decision at point selection, not when the label
-        # is printed: changing website publication must not change old orders.
-        # The core may set sale.order.carrier_id immediately after this hook;
-        # use the same integration resolver as point discovery/validation here.
-        integration = self._optima_sendcloud_pickup_integration(
-            self._optima_pickup_get_provider_carriers().get(
-                "sendcloud", self.env["delivery.carrier"]
-            )
-        )
-        if not integration:
-            raise ValidationError(_(
-                "Falta la integración Sendcloud del punto seleccionado."
-            ))
-        test_letter = self._optima_sendcloud_published_test_letter(integration)
         point_to_store = dict(raw_point)
-        post_number = (extra or {}).get("post_number") or ""
+        post_number = extra.get("post_number") or ""
         if post_number:
             point_to_store["post_number"] = str(post_number)
         self.write(
             {
                 "sendcloud_service_point_address": json.dumps(point_to_store),
                 "optima_sendcloud_to_post_number": str(post_number),
-                "optima_sendcloud_test_letter_carrier_id": test_letter.id or False,
             }
         )
 
@@ -2246,45 +2166,6 @@ class SaleOrder(models.Model):
             and self.optima_pickup_provider_code == "sendcloud"
             and picking.picking_type_id.code == "outgoing"
         ):
-            priced_carrier = self.carrier_id
-            letter = self.optima_sendcloud_test_letter_carrier_id
-            if letter:
-                # This is a confirmed-order snapshot: retain the paid tariff on
-                # sale.order and route ONLY the actual label via Unstamped Letter.
-                if (
-                    priced_carrier.delivery_type != "sendcloud"
-                    or not priced_carrier.sendcloud_service_point_required
-                    or not letter.active
-                    or letter.delivery_type != "sendcloud"
-                    or letter.sendcloud_service_point_required
-                    or letter.sendcloud_integration_id != priced_carrier.sendcloud_integration_id
-                    or not any(
-                        self._optima_sendcloud_is_unstamped_letter_name(name)
-                        for name in self._optima_sendcloud_local_method_names(letter)
-                    )
-                ):
-                    raise ValidationError(_(
-                        "El método de prueba Unstamped Letter ya no es compatible "
-                        "con el transportista del pedido. No se generará ninguna etiqueta."
-                    ))
-                if (
-                    picking.optima_sendcloud_test_letter_mode
-                    and picking.optima_sendcloud_test_letter_carrier_id != letter
-                ):
-                    raise ValidationError(_(
-                        "El método de prueba confirmado del albarán ha cambiado."
-                    ))
-                picking.write({
-                    "optima_sendcloud_test_letter_mode": True,
-                    "optima_sendcloud_priced_carrier_id": priced_carrier.id,
-                    "optima_sendcloud_test_letter_carrier_id": letter.id,
-                    "carrier_id": letter.id,
-                })
-            elif picking.optima_sendcloud_test_letter_mode:
-                raise ValidationError(_(
-                    "No se puede convertir un albarán de prueba confirmado "
-                    "en un envío real por una modificación posterior del pedido."
-                ))
             picking._optima_sendcloud_sync_service_point_from_sale()
         return result
 
@@ -2295,6 +2176,5 @@ class SaleOrder(models.Model):
                 "sendcloud_service_point_address": False,
                 "optima_sendcloud_to_post_number": False,
                 "optima_sendcloud_resolution_cache": {},
-                "optima_sendcloud_test_letter_carrier_id": False,
             }
         )

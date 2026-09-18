@@ -31,12 +31,3 @@ class TestSendcloudPureHelpers(TestCase):
         payload, text = StockPicking._optima_sendcloud_json_payload("not-json")
         self.assertEqual(payload, {})
         self.assertEqual(text, "not-json")
-
-    def test_unstamped_letter_recognition_is_exact(self):
-        match = SaleOrder._optima_sendcloud_is_unstamped_letter_name
-        self.assertTrue(match("Sendcloud Unstamped letter"))
-        self.assertTrue(match("UNSTAMPED LETTER"))
-        self.assertTrue(match("sendcloudunstampedletter"))
-        self.assertFalse(match("Sendcloud Correos Estandar Pudo Delivery 0-1kg"))
-        self.assertFalse(match("Unstamped letter premium"))
-        self.assertFalse(match("InPost letter"))
