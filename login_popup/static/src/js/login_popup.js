@@ -407,7 +407,11 @@ whenReady(() => {
             }
 
             if (result?.success) {
-                window.location.reload();
+                if (window.location.pathname === "/") {
+                    window.location.assign("/my/home");
+                } else {
+                    window.location.reload();
+                }
                 return;
             }
 
