@@ -14,7 +14,7 @@ Módulo para Odoo 18 que mantiene el acceso y el registro dentro de la página a
   - `Empresa` -> etiqueta **Empresa**.
   - `Autónomo` -> etiqueta **Autónomo**.
 - Si la etiqueta ya existe se reutiliza; si no existe, se crea antes de asignarla.
-- Los formularios de alta utilizan el flujo estándar `/web/signup` de Odoo.
+- Los formularios de alta utilizan `/login_popup/signup`, reutilizando internamente el flujo estándar de `auth_signup`.
 - En caso de alta o login correcto, se recarga la página actual ya autenticada.
 
 
@@ -46,3 +46,19 @@ Si está instalado `login_attempt_security`, el popup mantiene la autenticación
 - Empresa: CIF obligatorio. Autónomo: NIF obligatorio.
 - Tlf/Móvil pasa a ser obligatorio.
 - CP y Ciudad se guardan en `res.partner.zip` y `res.partner.city`.
+
+
+## 18.0.1.7.1
+
+- `/web/signup` queda bloqueado para altas públicas directas; se conserva únicamente el flujo con token de invitación de Odoo.
+- El registro del popup pasa a `/login_popup/signup` y mantiene las validaciones estándar de `auth_signup`.
+- Se añade un honeypot de servidor para descartar formularios automatizados básicos.
+- `/web/login` directo queda bloqueado salvo cuando el destino es el backend (`/odoo`, `/web` o `/scoped_app`).
+- El login del website sigue realizándose por `/login_popup/authenticate`.
+
+
+## 18.0.1.7.1
+
+- El endpoint `/login_popup/signup` procesa el alta directamente con el flujo de Odoo 18, sin delegar en `/web/signup`.
+- Se elimina el honeypot de los formularios de alta para evitar falsos positivos por autocompletado del navegador.
+- `/web/signup` continúa bloqueado salvo invitaciones con token.

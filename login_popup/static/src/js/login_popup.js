@@ -3,6 +3,7 @@
 const LOGIN_PATH = "/web/login";
 const LOGIN_POPUP_AUTH_PATH = "/login_popup/authenticate";
 const SIGNUP_PATH = "/web/signup";
+const SIGNUP_SUBMIT_PATH = "/login_popup/signup";
 const RESET_PASSWORD_PATH = "/web/reset_password";
 
 function whenReady(callback) {
@@ -340,6 +341,55 @@ whenReady(() => {
         return Boolean(payload?.result?.uid);
     };
 
+    const buildSignupFormData = (form) => {
+        // No enviamos directamente los nombres de los inputs visibles. Los
+        // gestores de contraseñas/autofill pueden conservar estado interno o
+        // volver a escribir campos al enviar. Tomamos una instantánea de los
+        // valores visibles actuales y construimos solo los parámetros que
+        // entiende el controlador de Odoo.
+        const data = new FormData();
+        const read = (selector) => form.querySelector(selector)?.value ?? "";
+        const setIfPresent = (name, value) => {
+            if (value !== undefined && value !== null && value !== "") {
+                data.set(name, value);
+            }
+        };
+
+        setIfPresent("csrf_token", read('input[name="csrf_token"]'));
+        setIfPresent("redirect", read(".o_login_popup_signup_redirect"));
+        setIfPresent("name", read(".o_login_popup_signup_fullname").trim());
+        setIfPresent("signup_account_type", read('input[name="signup_account_type"]'));
+        setIfPresent("login", read(".o_login_popup_signup_email").trim());
+        setIfPresent("password", read(".o_login_popup_signup_password"));
+        setIfPresent("confirm_password", read(".o_login_popup_signup_confirm_password"));
+
+        const professionalType = form.querySelector('input[name="professional_type"]:checked');
+        if (professionalType) {
+            data.set("professional_type", professionalType.value);
+        }
+
+        [
+            "partner_street",
+            "partner_zip",
+            "partner_city",
+            "partner_vat",
+            "partner_phone",
+            "partner_website",
+        ].forEach((name) => {
+            const field = form.querySelector(`[name="${name}"]`);
+            if (field && !field.disabled) {
+                setIfPresent(name, field.value.trim());
+            }
+        });
+
+        // Si Odoo/reCAPTCHA ha inyectado tokens en el formulario, conservarlos.
+        form.querySelectorAll('input[name="recaptcha_token_response"]').forEach((field) => {
+            setIfPresent("recaptcha_token_response", field.value);
+        });
+
+        return data;
+    };
+
     const extractSignupError = async (response) => {
         try {
             const html = await response.text();
@@ -514,8 +564,8 @@ whenReady(() => {
             const errorBox = form.querySelector(".o_login_popup_signup_error");
             setBoxError(errorBox);
 
-            const password = form.querySelector('input[name="password"]');
-            const confirmPassword = form.querySelector('input[name="confirm_password"]');
+            const password = form.querySelector(".o_login_popup_signup_password");
+            const confirmPassword = form.querySelector(".o_login_popup_signup_confirm_password");
             if (password?.value !== confirmPassword?.value) {
                 setBoxError(errorBox, "Las contraseñas no coinciden.");
                 confirmPassword?.focus();
@@ -540,9 +590,9 @@ whenReady(() => {
             setSignupLoading(form, true);
 
             try {
-                const response = await fetch(SIGNUP_PATH, {
+                const response = await fetch(SIGNUP_SUBMIT_PATH, {
                     method: "POST",
-                    body: new FormData(form),
+                    body: buildSignupFormData(form),
                     credentials: "same-origin",
                     redirect: "follow",
                     headers: {

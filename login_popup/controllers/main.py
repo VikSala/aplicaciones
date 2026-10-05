@@ -2,11 +2,17 @@
 
 import logging
 import math
+from urllib.parse import urlsplit
 
-from odoo import fields, http
+import werkzeug
+
+from markupsafe import Markup
+
+from odoo import _, fields, http
 from odoo.exceptions import AccessDenied, UserError
 from odoo.http import request
 from odoo.addons.auth_signup.controllers.main import AuthSignupHome
+from odoo.addons.auth_signup.models.res_users import SignupError
 
 _logger = logging.getLogger(__name__)
 
@@ -40,6 +46,18 @@ class LoginPopupAuthSignup(AuthSignupHome):
         ha quedado bloqueada. La integración es opcional: ``login_popup``
         continúa funcionando aunque ese módulo no esté instalado.
         """
+        honeypot = (
+            kw.get("login_popup_company_fax")
+            or request.params.get("login_popup_company_fax")
+            or ""
+        ).strip()
+        if honeypot:
+            _logger.warning(
+                "Login bloqueado por honeypot desde %s",
+                request.httprequest.remote_addr,
+            )
+            raise werkzeug.exceptions.NotFound()
+
         login = (login or "").strip()
         password = password or ""
 
@@ -125,9 +143,129 @@ class LoginPopupAuthSignup(AuthSignupHome):
         }
 
     @http.route()
+    def web_login(self, *args, **kw):
+        """Bloquea el login web estándar salvo cuando se usa para el backend.
+
+        El website autentica mediante ``/login_popup/authenticate``. Mantener
+        ``/web/login`` abierto permitiría a bots saltarse el popup. Odoo, sin
+        embargo, necesita esa ruta para iniciar sesión en el backend, por lo
+        que solo se permite cuando el redirect apunta explícitamente al
+        webclient. Las llamadas internas de Odoo desde signup/reset no se ven
+        afectadas porque conservan su ruta original en ``httprequest.path``.
+        """
+        if request.httprequest.path == "/web/login":
+            redirect = kw.get("redirect") or request.params.get("redirect")
+            if not self._is_backend_redirect(redirect):
+                raise werkzeug.exceptions.NotFound()
+
+        return super().web_login(*args, **kw)
+
+    @staticmethod
+    def _is_backend_redirect(redirect):
+        """Acepta únicamente destinos internos propios del webclient."""
+        if not redirect:
+            return False
+
+        try:
+            parsed = urlsplit(redirect)
+        except (TypeError, ValueError):
+            return False
+
+        # No aceptar URLs absolutas ni protocol-relative como destino backend.
+        if parsed.scheme or parsed.netloc:
+            return False
+
+        path = parsed.path or ""
+        return (
+            path in {"/web", "/odoo", "/scoped_app"}
+            or path.startswith("/odoo/")
+            or path.startswith("/scoped_app/")
+        )
+
+    @http.route()
     def web_auth_signup(self, *args, **kw):
-        # Republicamos la ruta heredada para que Odoo aplique este controlador.
+        """Reserva ``/web/signup`` exclusivamente para invitaciones.
+
+        Los registros públicos del website se procesan por la ruta privada del
+        popup. Los tokens de invitación/restablecimiento de Odoo se mantienen
+        compatibles para no romper altas de portal ya enviadas.
+        """
+        qcontext = self.get_auth_signup_qcontext()
+        if not qcontext.get("token"):
+            raise werkzeug.exceptions.NotFound()
         return super().web_auth_signup(*args, **kw)
+
+    @http.route(
+        "/login_popup/signup",
+        type="http",
+        auth="public",
+        website=True,
+        methods=["POST"],
+        csrf=True,
+        sitemap=False,
+    )
+    def login_popup_signup(self, *args, **kw):
+        """Procesa el alta pública exclusivamente desde el popup.
+
+        No se llama a ``super().web_auth_signup`` porque esa ruta estándar
+        contiene su propia comprobación de ``signup_enabled`` y puede devolver
+        404 antes de procesar el formulario. Aquí reproducimos el flujo de
+        Odoo 18 que realmente necesitamos: qcontext, reCAPTCHA, creación,
+        correo de confirmación y autenticación.
+        """
+        qcontext = self.get_auth_signup_qcontext()
+
+        # Este endpoint solo se publica por POST y únicamente lo usa el popup.
+        # Mantenemos la validación reCAPTCHA nativa de Odoo si está configurada.
+        try:
+            if not request.env["ir.http"]._verify_request_recaptcha_token("signup"):
+                raise UserError(_("Suspicious activity detected by Google reCaptcha."))
+
+            self.do_signup(qcontext)
+
+            # Igual que auth_signup de Odoo 18: con MFA el alta puede no dejar
+            # una sesión autenticada y hay que restaurar el usuario público.
+            if request.session.uid is None:
+                public_user = request.env.ref("base.public_user")
+                request.update_env(user=public_user)
+
+            User = request.env["res.users"]
+            user_sudo = User.sudo().search(
+                User._get_login_domain(qcontext.get("login")),
+                order=User._get_login_order(),
+                limit=1,
+            )
+            template = request.env.ref(
+                "auth_signup.mail_template_user_signup_account_created",
+                raise_if_not_found=False,
+            )
+            if user_sudo and template:
+                template.sudo().send_mail(user_sudo.id, force_send=True)
+
+            return super().web_login(*args, **kw)
+
+        except UserError as e:
+            qcontext["error"] = e.args[0]
+        except (SignupError, AssertionError) as e:
+            if request.env["res.users"].sudo().search_count(
+                [("login", "=", qcontext.get("login"))],
+                limit=1,
+            ):
+                qcontext["error"] = _(
+                    "Another user is already registered using this email address."
+                )
+            else:
+                _logger.warning("%s", e)
+                qcontext["error"] = (
+                    _("Could not create a new account.")
+                    + Markup("<br/>")
+                    + str(e)
+                )
+
+        response = request.render("auth_signup.signup", qcontext)
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        response.headers["Content-Security-Policy"] = "frame-ancestors 'self'"
+        return response
 
     def _signup_with_values(self, token, values):
         """Crea el usuario y, si procede, añade su etiqueta profesional.

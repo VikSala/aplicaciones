@@ -38,7 +38,7 @@
 
                             <form id="o_login_popup_form"
                                   class="o_login_popup_form"
-                                  action="/web/login"
+                                  action="/login_popup/authenticate"
                                   method="post"
                                   autocomplete="on">
 
@@ -49,6 +49,10 @@
                                        type="hidden"
                                        name="redirect"
                                        value="/"/>
+                                <div class="o_login_popup_honeypot" aria-hidden="true">
+                                    <label for="o_login_popup_company_fax">Fax de empresa</label>
+                                    <input id="o_login_popup_company_fax" type="text" name="login_popup_company_fax" tabindex="-1" autocomplete="off"/>
+                                </div>
 
                                 <div class="o_login_popup_field">
                                     <label class="visually-hidden" for="o_login_popup_login">Correo electrónico</label>
@@ -232,26 +236,25 @@
 
                             <form id="o_login_popup_signup_particular_form"
                                   class="o_login_popup_signup_form"
-                                  action="/web/signup"
+                                  action="/login_popup/signup"
                                   method="post"
-                                  autocomplete="on">
+                                  autocomplete="off">
                                 <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                                 <input type="hidden" name="redirect" class="o_login_popup_signup_redirect" value="/"/>
                                 <input type="hidden" name="name" class="o_login_popup_signup_fullname"/>
                                 <input type="hidden" name="signup_account_type" value="particular"/>
-
                                 <div class="o_login_popup_signup_grid">
                                     <div class="o_login_popup_field o_login_popup_required_field">
                                         <label class="visually-hidden" for="o_signup_particular_firstname">Nombre (obligatorio)</label>
-                                        <input id="o_signup_particular_firstname" class="form-control o_login_popup_firstname" type="text" placeholder="Nombre" autocomplete="given-name" required="required"/>
+                                        <input id="o_signup_particular_firstname" class="form-control o_login_popup_firstname" type="text" name="signup_first_name" placeholder="Nombre" autocomplete="section-login-popup-particular given-name" required="required"/>
                                     </div>
                                     <div class="o_login_popup_field">
                                         <label class="visually-hidden" for="o_signup_particular_lastname">Apellidos (opcional)</label>
-                                        <input id="o_signup_particular_lastname" class="form-control o_login_popup_lastname" type="text" placeholder="Apellidos" autocomplete="family-name"/>
+                                        <input id="o_signup_particular_lastname" class="form-control o_login_popup_lastname" type="text" name="signup_last_name" placeholder="Apellidos" autocomplete="section-login-popup-particular family-name"/>
                                     </div>
                                     <div class="o_login_popup_field o_login_popup_required_field">
                                         <label class="visually-hidden" for="o_signup_particular_email">Correo electrónico (obligatorio)</label>
-                                        <input id="o_signup_particular_email" class="form-control" type="email" name="login" placeholder="Correo electrónico" autocomplete="email" required="required"/>
+                                        <input id="o_signup_particular_email" class="form-control o_login_popup_signup_email" type="email" name="signup_email_input" placeholder="Correo electrónico" autocomplete="section-login-popup-particular email" required="required"/>
                                     </div>
                                     <div class="o_login_popup_field o_login_popup_required_field">
                                         <label class="visually-hidden" for="o_signup_particular_vat">NIF (obligatorio)</label>
@@ -259,14 +262,14 @@
                                     </div>
                                     <div class="o_login_popup_field o_login_popup_password_field o_login_popup_required_field">
                                         <label class="visually-hidden" for="o_signup_particular_password">Contraseña (obligatoria)</label>
-                                        <input id="o_signup_particular_password" class="form-control" type="password" name="password" placeholder="Contraseña" autocomplete="new-password" required="required"/>
+                                        <input id="o_signup_particular_password" class="form-control o_login_popup_signup_password" type="password" name="signup_password_input" placeholder="Contraseña" autocomplete="section-login-popup-particular new-password" required="required"/>
                                         <button type="button" class="o_login_popup_password_toggle" aria-label="Mostrar contraseña" aria-pressed="false">
                                             <i class="fa fa-eye-slash" aria-hidden="true"/>
                                         </button>
                                     </div>
                                     <div class="o_login_popup_field o_login_popup_password_field o_login_popup_required_field">
                                         <label class="visually-hidden" for="o_signup_particular_confirm">Confirmar contraseña (obligatorio)</label>
-                                        <input id="o_signup_particular_confirm" class="form-control" type="password" name="confirm_password" placeholder="Confirmar contraseña" autocomplete="new-password" required="required"/>
+                                        <input id="o_signup_particular_confirm" class="form-control o_login_popup_signup_confirm_password" type="password" name="signup_confirm_password_input" placeholder="Confirmar contraseña" autocomplete="section-login-popup-particular new-password" required="required"/>
                                         <button type="button" class="o_login_popup_password_toggle" aria-label="Mostrar contraseña" aria-pressed="false">
                                             <i class="fa fa-eye-slash" aria-hidden="true"/>
                                         </button>
@@ -298,37 +301,36 @@
 
                             <form id="o_login_popup_signup_professional_form"
                                   class="o_login_popup_signup_form"
-                                  action="/web/signup"
+                                  action="/login_popup/signup"
                                   method="post"
-                                  autocomplete="on">
+                                  autocomplete="off">
                                 <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                                 <input type="hidden" name="redirect" class="o_login_popup_signup_redirect" value="/"/>
                                 <input type="hidden" name="name" class="o_login_popup_signup_fullname"/>
                                 <input type="hidden" name="signup_account_type" value="professional"/>
-
                                 <div class="o_login_popup_signup_grid">
                                     <div class="o_login_popup_field o_login_popup_required_field">
                                         <label class="visually-hidden" for="o_signup_professional_firstname">Nombre (obligatorio)</label>
-                                        <input id="o_signup_professional_firstname" class="form-control o_login_popup_firstname" type="text" placeholder="Nombre" autocomplete="given-name" required="required"/>
+                                        <input id="o_signup_professional_firstname" class="form-control o_login_popup_firstname" type="text" name="signup_first_name" placeholder="Nombre" autocomplete="section-login-popup-professional given-name" required="required"/>
                                     </div>
                                     <div class="o_login_popup_field">
                                         <label class="visually-hidden" for="o_signup_professional_lastname">Apellidos (opcional)</label>
-                                        <input id="o_signup_professional_lastname" class="form-control o_login_popup_lastname" type="text" placeholder="Apellidos" autocomplete="family-name"/>
+                                        <input id="o_signup_professional_lastname" class="form-control o_login_popup_lastname" type="text" name="signup_last_name" placeholder="Apellidos" autocomplete="section-login-popup-professional family-name"/>
                                     </div>
                                     <div class="o_login_popup_field o_login_popup_required_field o_login_popup_signup_grid_full">
                                         <label class="visually-hidden" for="o_signup_professional_email">Correo electrónico (obligatorio)</label>
-                                        <input id="o_signup_professional_email" class="form-control" type="email" name="login" placeholder="Correo electrónico" autocomplete="email" required="required"/>
+                                        <input id="o_signup_professional_email" class="form-control o_login_popup_signup_email" type="email" name="signup_email_input" placeholder="Correo electrónico" autocomplete="section-login-popup-professional email" required="required"/>
                                     </div>
                                     <div class="o_login_popup_field o_login_popup_password_field o_login_popup_required_field">
                                         <label class="visually-hidden" for="o_signup_professional_password">Contraseña (obligatoria)</label>
-                                        <input id="o_signup_professional_password" class="form-control" type="password" name="password" placeholder="Contraseña" autocomplete="new-password" required="required"/>
+                                        <input id="o_signup_professional_password" class="form-control o_login_popup_signup_password" type="password" name="signup_password_input" placeholder="Contraseña" autocomplete="section-login-popup-professional new-password" required="required"/>
                                         <button type="button" class="o_login_popup_password_toggle" aria-label="Mostrar contraseña" aria-pressed="false">
                                             <i class="fa fa-eye-slash" aria-hidden="true"/>
                                         </button>
                                     </div>
                                     <div class="o_login_popup_field o_login_popup_password_field o_login_popup_required_field">
                                         <label class="visually-hidden" for="o_signup_professional_confirm">Confirmar contraseña (obligatorio)</label>
-                                        <input id="o_signup_professional_confirm" class="form-control" type="password" name="confirm_password" placeholder="Confirmar contraseña" autocomplete="new-password" required="required"/>
+                                        <input id="o_signup_professional_confirm" class="form-control o_login_popup_signup_confirm_password" type="password" name="signup_confirm_password_input" placeholder="Confirmar contraseña" autocomplete="section-login-popup-professional new-password" required="required"/>
                                         <button type="button" class="o_login_popup_password_toggle" aria-label="Mostrar contraseña" aria-pressed="false">
                                             <i class="fa fa-eye-slash" aria-hidden="true"/>
                                         </button>
@@ -347,15 +349,15 @@
                                     <div class="o_login_popup_signup_grid">
                                         <div class="o_login_popup_field o_login_popup_signup_grid_full">
                                             <label class="visually-hidden" for="o_signup_professional_street">Calle y número (opcional)</label>
-                                            <input id="o_signup_professional_street" class="form-control" type="text" name="partner_street" placeholder="Calle y número" autocomplete="street-address" disabled="disabled"/>
+                                            <input id="o_signup_professional_street" class="form-control" type="text" name="partner_street" placeholder="Calle y número" autocomplete="section-login-popup-professional street-address" disabled="disabled"/>
                                         </div>
                                         <div class="o_login_popup_field">
                                             <label class="visually-hidden" for="o_signup_professional_zip">CP (opcional)</label>
-                                            <input id="o_signup_professional_zip" class="form-control" type="text" name="partner_zip" placeholder="CP" autocomplete="postal-code" disabled="disabled"/>
+                                            <input id="o_signup_professional_zip" class="form-control" type="text" name="partner_zip" placeholder="CP" autocomplete="section-login-popup-professional postal-code" disabled="disabled"/>
                                         </div>
                                         <div class="o_login_popup_field">
                                             <label class="visually-hidden" for="o_signup_professional_city">Ciudad (opcional)</label>
-                                            <input id="o_signup_professional_city" class="form-control" type="text" name="partner_city" placeholder="Ciudad" autocomplete="address-level2" disabled="disabled"/>
+                                            <input id="o_signup_professional_city" class="form-control" type="text" name="partner_city" placeholder="Ciudad" autocomplete="section-login-popup-professional address-level2" disabled="disabled"/>
                                         </div>
                                         <div class="o_login_popup_field o_login_popup_required_field">
                                             <label id="o_signup_professional_vat_label" class="visually-hidden" for="o_signup_professional_vat">NIF / CIF (obligatorio)</label>
@@ -363,11 +365,11 @@
                                         </div>
                                         <div class="o_login_popup_field o_login_popup_required_field">
                                             <label class="visually-hidden" for="o_signup_professional_phone">Tlf/Móvil (obligatorio)</label>
-                                            <input id="o_signup_professional_phone" class="form-control" type="tel" name="partner_phone" placeholder="Tlf/Móvil" autocomplete="tel" required="required" disabled="disabled"/>
+                                            <input id="o_signup_professional_phone" class="form-control" type="tel" name="partner_phone" placeholder="Tlf/Móvil" autocomplete="section-login-popup-professional tel" required="required" disabled="disabled"/>
                                         </div>
                                         <div class="o_login_popup_field o_login_popup_signup_grid_full">
                                             <label class="visually-hidden" for="o_signup_professional_website">Sitio Web (opcional)</label>
-                                            <input id="o_signup_professional_website" class="form-control" type="text" inputmode="url" name="partner_website" placeholder="Sitio Web" autocomplete="url" disabled="disabled"/>
+                                            <input id="o_signup_professional_website" class="form-control" type="text" inputmode="url" name="partner_website" placeholder="Sitio Web" autocomplete="section-login-popup-professional url" disabled="disabled"/>
                                         </div>
                                     </div>
                                 </div>

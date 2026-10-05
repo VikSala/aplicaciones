@@ -692,3 +692,14 @@ body.o_login_popup_open {
         min-height: 165px;
     }
 }
+
+
+// Campo trampa anti-bot: fuera del viewport, pero presente en el formulario.
+.o_login_popup_honeypot {
+    position: absolute !important;
+    left: -10000px !important;
+    top: auto !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+}
