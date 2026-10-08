@@ -1,0 +1,1507 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# * optima_delivery_ontime
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-10-07 12:19+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Mode"
+msgstr "Modo OnTime"
+
+#. module: optima_delivery_ontime
+msgid "Simulated"
+msgstr "Simulado"
+
+#. module: optima_delivery_ontime
+msgid "Real"
+msgstr "Real"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Environment"
+msgstr "Entorno OnTime"
+
+#. module: optima_delivery_ontime
+msgid "Production"
+msgstr "Producción"
+
+#. module: optima_delivery_ontime
+msgid "OnTime API Key"
+msgstr "API Key de OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Origin Center"
+msgstr "Centro de origen OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Timeout (s)"
+msgstr "Timeout OnTime (s)"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Base URL"
+msgstr "URL base OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Tariff Rules"
+msgstr "Reglas de tarifa OnTime"
+
+#. module: optima_delivery_ontime
+msgid "Tariff File"
+msgstr "Fichero de tarifas"
+
+#. module: optima_delivery_ontime
+msgid "Replace Existing Tariffs"
+msgstr "Sustituir tarifas existentes"
+
+#. module: optima_delivery_ontime
+msgid "Require Product Weight"
+msgstr "Exigir peso del producto"
+
+#. module: optima_delivery_ontime
+msgid "Require Product Dimensions"
+msgstr "Exigir dimensiones del producto"
+
+#. module: optima_delivery_ontime
+msgid "Volumetric Factor (kg/m³)"
+msgstr "Factor volumétrico (kg/m³)"
+
+#. module: optima_delivery_ontime
+msgid "Maximum Length (cm)"
+msgstr "Largo máximo (cm)"
+
+#. module: optima_delivery_ontime
+msgid "Maximum Width (cm)"
+msgstr "Ancho máximo (cm)"
+
+#. module: optima_delivery_ontime
+msgid "Maximum Height (cm)"
+msgstr "Alto máximo (cm)"
+
+#. module: optima_delivery_ontime
+msgid "Zone"
+msgstr "Zona"
+
+#. module: optima_delivery_ontime
+msgid "Country"
+msgstr "País"
+
+#. module: optima_delivery_ontime
+msgid "State"
+msgstr "Provincia/Estado"
+
+#. module: optima_delivery_ontime
+msgid "Postal Prefixes"
+msgstr "Prefijos de código postal"
+
+#. module: optima_delivery_ontime
+msgid "ZIP From"
+msgstr "CP desde"
+
+#. module: optima_delivery_ontime
+msgid "ZIP To"
+msgstr "CP hasta"
+
+#. module: optima_delivery_ontime
+msgid "Weight From (kg)"
+msgstr "Peso desde (kg)"
+
+#. module: optima_delivery_ontime
+msgid "Weight To (kg)"
+msgstr "Peso hasta (kg)"
+
+#. module: optima_delivery_ontime
+msgid "Base Price"
+msgstr "Precio base"
+
+#. module: optima_delivery_ontime
+msgid "Included Weight (kg)"
+msgstr "Peso incluido (kg)"
+
+#. module: optima_delivery_ontime
+msgid "Extra Weight Price"
+msgstr "Precio de peso extra"
+
+#. module: optima_delivery_ontime
+msgid "Extra Weight Step (kg)"
+msgstr "Tramo de peso extra (kg)"
+
+#. module: optima_delivery_ontime
+msgid "The OnTime timeout must be greater than 0 seconds."
+msgstr "El timeout de OnTime debe ser mayor que 0 segundos."
+
+#. module: optima_delivery_ontime
+msgid "OnTime tariff and dimension settings cannot be negative."
+msgstr "La configuración de tarifas y dimensiones OnTime no puede ser negativa."
+
+#. module: optima_delivery_ontime
+msgid "OnTime tariff weights cannot be negative."
+msgstr "Los pesos de las tarifas OnTime no pueden ser negativos."
+
+#. module: optima_delivery_ontime
+msgid "OnTime tariff maximum weight must be greater than or equal to minimum weight."
+msgstr "El peso máximo de una tarifa OnTime debe ser mayor o igual que el peso mínimo."
+
+#. module: optima_delivery_ontime
+msgid "OnTime tariff prices cannot be negative."
+msgstr "Los precios de las tarifas OnTime no pueden ser negativos."
+
+#. module: optima_delivery_ontime
+msgid "OnTime included weight cannot be negative."
+msgstr "El peso incluido de OnTime no puede ser negativo."
+
+#. module: optima_delivery_ontime
+msgid "OnTime extra weight step must be greater than 0."
+msgstr "El tramo de peso extra OnTime debe ser mayor que 0."
+
+#. module: optima_delivery_ontime
+msgid "Configure the OnTime API Key before connecting."
+msgstr "Configura la API Key de OnTime antes de conectar."
+
+#. module: optima_delivery_ontime
+msgid "OnTime API calls are disabled while the carrier is in Simulated mode."
+msgstr "Las llamadas a la API de OnTime están desactivadas mientras el transportista está en modo Simulado."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "OnTime API communication failed: %s"
+msgstr "Ha fallado la comunicación con la API de OnTime: %s"
+
+#. module: optima_delivery_ontime
+msgid "This action is only available for OnTime carriers."
+msgstr "Esta acción solo está disponible para transportistas OnTime."
+
+#. module: optima_delivery_ontime
+msgid "Switch OnTime Mode to Real before testing the connection."
+msgstr "Cambia el modo OnTime a Real antes de probar la conexión."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "OnTime connection test failed: %s"
+msgstr "La prueba de conexión con OnTime ha fallado: %s"
+
+#. module: optima_delivery_ontime
+msgid "OnTime connection successful"
+msgstr "Conexión con OnTime correcta"
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "Authentication and API access to %s are working correctly."
+msgstr "La autenticación y el acceso a la API de %s funcionan correctamente."
+
+#. module: optima_delivery_ontime
+msgid "Select a tariff file before importing."
+msgstr "Selecciona un fichero de tarifas antes de importar."
+
+#. module: optima_delivery_ontime
+msgid "Unsupported tariff file. Use .xlsx or .csv."
+msgstr "Fichero de tarifas no compatible. Usa .xlsx o .csv."
+
+#. module: optima_delivery_ontime
+msgid "XLSX import requires the Python package 'openpyxl'. You can alternatively upload a CSV file."
+msgstr "La importación XLSX requiere el paquete Python 'openpyxl'. Como alternativa puedes cargar un CSV."
+
+#. module: optima_delivery_ontime
+msgid "The tariff file must contain a header and at least one data row."
+msgstr "El fichero de tarifas debe contener una cabecera y al menos una fila de datos."
+
+#. module: optima_delivery_ontime
+msgid "The tariff file must contain a price/precio column."
+msgstr "El fichero de tarifas debe contener una columna price/precio."
+
+#. module: optima_delivery_ontime
+msgid "OnTime tariff imported"
+msgstr "Tarifa OnTime importada"
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "%s tariff rules were imported successfully."
+msgstr "Se han importado correctamente %s reglas de tarifa."
+
+#. module: optima_delivery_ontime
+msgid "OnTime is not available for the delivery address."
+msgstr "OnTime no está disponible para la dirección de entrega."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "Products without weight for OnTime: %s"
+msgstr "Productos sin peso para OnTime: %s"
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "Products without complete OnTime dimensions: %s"
+msgstr "Productos sin dimensiones OnTime completas: %s"
+
+#. module: optima_delivery_ontime
+msgid "OnTime rates and restrictions are ready (Phase 3), but shipment creation is not implemented yet."
+msgstr ""
+"Las tarifas y restricciones OnTime están preparadas (Fase 3), pero la creación de expediciones todavía no está "
+"implementada."
+
+#. module: optima_delivery_ontime
+msgid "OnTime Tariff Rates"
+msgstr "Tarifas OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Tariff PDF"
+msgstr "PDF de tarifas OnTime"
+
+#. module: optima_delivery_ontime
+msgid "Tariff SHA-256"
+msgstr "SHA-256 de la tarifa"
+
+#. module: optima_delivery_ontime
+msgid "Tariff Imported At"
+msgstr "Tarifa importada el"
+
+#. module: optima_delivery_ontime
+msgid "Tariff Year"
+msgstr "Año de tarifa"
+
+#. module: optima_delivery_ontime
+msgid "Tariff Origin Postal Code"
+msgstr "Código postal de origen tarifario"
+
+#. module: optima_delivery_ontime
+msgid "Regional Postal Prefixes"
+msgstr "Prefijos postales Regional"
+
+#. module: optima_delivery_ontime
+msgid "Baleares Minor Postal Prefixes"
+msgstr "Prefijos postales Baleares menores"
+
+#. module: optima_delivery_ontime
+msgid "Canarias Major Postal Prefixes"
+msgstr "Prefijos postales Canarias mayores"
+
+#. module: optima_delivery_ontime
+msgid "Price"
+msgstr "Precio"
+
+#. module: optima_delivery_ontime
+msgid "Additional kg"
+msgstr "Kg adicional"
+
+#. module: optima_delivery_ontime
+msgid "Provincial"
+msgstr "Provincial"
+
+#. module: optima_delivery_ontime
+msgid "Regional"
+msgstr "Regional"
+
+#. module: optima_delivery_ontime
+msgid "Iberia"
+msgstr "Iberia"
+
+#. module: optima_delivery_ontime
+msgid "Ceuta"
+msgstr "Ceuta"
+
+#. module: optima_delivery_ontime
+msgid "Melilla"
+msgstr "Melilla"
+
+#. module: optima_delivery_ontime
+msgid "Baleares mayores"
+msgstr "Baleares mayores"
+
+#. module: optima_delivery_ontime
+msgid "Baleares menores"
+msgstr "Baleares menores"
+
+#. module: optima_delivery_ontime
+msgid "Canarias mayores"
+msgstr "Canarias mayores"
+
+#. module: optima_delivery_ontime
+msgid "Canarias menores"
+msgstr "Canarias menores"
+
+#. module: optima_delivery_ontime
+msgid "OnTime tariff weight must be greater than zero."
+msgstr "El peso de una tarifa OnTime debe ser mayor que cero."
+
+#. module: optima_delivery_ontime
+msgid "Select the official OnTime tariff PDF before importing."
+msgstr "Selecciona el PDF oficial de tarifas OnTime antes de importar."
+
+#. module: optima_delivery_ontime
+msgid "The OnTime tariff must be uploaded as a PDF file."
+msgstr "La tarifa OnTime debe cargarse como un fichero PDF."
+
+#. module: optima_delivery_ontime
+msgid "The uploaded OnTime tariff file is not valid."
+msgstr "El fichero de tarifas OnTime cargado no es válido."
+
+#. module: optima_delivery_ontime
+msgid "No OnTime rates were found in the PDF."
+msgstr "No se han encontrado tarifas OnTime en el PDF."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "Imported %(economy)s XS ECONOMY 24-48h rates and %(xs24)s XS 24h fallback rates."
+msgstr "Se han importado %(economy)s tarifas XS ECONOMY 24-48h y %(xs24)s tarifas de excepción XS 24h."
+
+#. module: optima_delivery_ontime
+msgid "OnTime home delivery is configured only for Spain."
+msgstr "La entrega a domicilio OnTime está configurada únicamente para España."
+
+#. module: optima_delivery_ontime
+msgid "A valid 5-digit Spanish postal code is required for OnTime."
+msgstr "OnTime requiere un código postal español válido de 5 dígitos."
+
+#. module: optima_delivery_ontime
+msgid "Configure a valid OnTime tariff origin postal code."
+msgstr "Configura un código postal de origen tarifario OnTime válido."
+
+#. module: optima_delivery_ontime
+msgid "The order has no billable weight for OnTime."
+msgstr "El pedido no tiene peso facturable para OnTime."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "The imported OnTime contract has no rate for zone %(zone)s and weight %(weight).3f kg."
+msgstr "El contrato OnTime importado no tiene tarifa para la zona %(zone)s y el peso %(weight).3f kg."
+
+#. module: optima_delivery_ontime
+msgid "Import the current OnTime tariff PDF before quoting this carrier."
+msgstr "Importa el PDF de tarifas OnTime vigente antes de cotizar este transportista."
+
+#. module: optima_delivery_ontime
+msgid "OnTime used the XS 24h exception tariff for this destination/weight."
+msgstr "OnTime ha utilizado la tarifa de excepción XS 24h para este destino/peso."
+
+#. module: optima_delivery_ontime
+msgid "OnTime Shipment Endpoint"
+msgstr "Endpoint de expediciones OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime API Service - Economy"
+msgstr "Servicio API OnTime - Economy"
+
+#. module: optima_delivery_ontime
+msgid "OnTime API Service - XS 24h"
+msgstr "Servicio API OnTime - XS 24h"
+
+#. module: optima_delivery_ontime
+msgid "The OnTime shipment endpoint cannot be empty."
+msgstr "El endpoint de expediciones OnTime no puede estar vacío."
+
+#. module: optima_delivery_ontime
+msgid "The OnTime shipment endpoint must start with '/'."
+msgstr "El endpoint de expediciones OnTime debe comenzar por '/'."
+
+#. module: optima_delivery_ontime
+msgid "recipient name"
+msgstr "nombre del destinatario"
+
+#. module: optima_delivery_ontime
+msgid "street"
+msgstr "dirección"
+
+#. module: optima_delivery_ontime
+msgid "postal code"
+msgstr "código postal"
+
+#. module: optima_delivery_ontime
+msgid "city"
+msgstr "población"
+
+#. module: optima_delivery_ontime
+msgid "phone"
+msgstr "teléfono"
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "Complete the following delivery data before creating the OnTime shipment: %s"
+msgstr "Completa los siguientes datos de entrega antes de crear la expedición OnTime: %s"
+
+#. module: optima_delivery_ontime
+msgid "The picking has no billable weight for OnTime."
+msgstr "El albarán no tiene peso facturable para OnTime."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "The picking weight (%(weight).3f kg) exceeds the carrier maximum (%(limit).3f kg)."
+msgstr "El peso del albarán (%(weight).3f kg) supera el máximo del transportista (%(limit).3f kg)."
+
+#. module: optima_delivery_ontime
+msgid "Configure the OnTime API product/service code for the selected tariff service."
+msgstr "Configura el código de producto/servicio de la API OnTime para el servicio tarifario seleccionado."
+
+#. module: optima_delivery_ontime
+msgid "Import the current OnTime tariff PDF before creating a shipment."
+msgstr "Importa el PDF de tarifas OnTime vigente antes de crear una expedición."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid ""
+"OnTime shipment creation has an uncertain result because the connection failed: %(error)s. Check OnTime before "
+"retrying to avoid a duplicate shipment."
+msgstr ""
+"La creación de la expedición OnTime tiene un resultado incierto porque falló la conexión: %(error)s. Comprueba OnTime"
+" antes de reintentar para evitar una expedición duplicada."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "OnTime rejected shipment creation: %s"
+msgstr "OnTime ha rechazado la creación de la expedición: %s"
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid ""
+"OnTime accepted the shipment request but did not return a shipment reference. Check the shipment in OnTime before "
+"retrying. Correlation ID: %s"
+msgstr ""
+"OnTime aceptó la solicitud de expedición pero no devolvió una referencia. Comprueba la expedición en OnTime antes de "
+"reintentar. ID de correlación: %s"
+
+#. module: optima_delivery_ontime
+msgid "not provided"
+msgstr "no proporcionado"
+
+#. module: optima_delivery_ontime
+msgid "OnTime shipment cancellation is reserved for Phase 6 and is not enabled yet."
+msgstr "La cancelación de expediciones OnTime está reservada para la Fase 6 y todavía no está habilitada."
+
+#. module: optima_delivery_ontime
+msgid "OnTime Shipment Reference"
+msgstr "Referencia de expedición OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Shipment Status"
+msgstr "Estado de expedición OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Correlation ID"
+msgstr "ID de correlación OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Shipment Created At"
+msgstr "Expedición OnTime creada el"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Tariff Service"
+msgstr "Servicio tarifario OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime API Service"
+msgstr "Servicio API OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Tariff Zone"
+msgstr "Zona tarifaria OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Contract Price"
+msgstr "Precio contractual OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Actual Weight (kg)"
+msgstr "Peso real OnTime (kg)"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Billable Weight (kg)"
+msgstr "Peso facturable OnTime (kg)"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Packages"
+msgstr "Bultos OnTime"
+
+#. module: optima_delivery_ontime
+msgid "Volumetric Divisor"
+msgstr "Divisor volumétrico"
+
+#. module: optima_delivery_ontime
+msgid "Maximum Weight per Package (kg)"
+msgstr "Peso máximo por bulto (kg)"
+
+#. module: optima_delivery_ontime
+msgid "Maximum L+W+H per Package (cm)"
+msgstr "Largo + ancho + alto máximo por bulto (cm)"
+
+#. module: optima_delivery_ontime
+msgid "Legacy Volumetric Factor (kg/m³)"
+msgstr "Factor volumétrico antiguo (kg/m³)"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Volumetric Weight (kg)"
+msgstr "Peso volumétrico OnTime (kg)"
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "%(label)s has no complete dimensions for OnTime."
+msgstr "%(label)s no tiene dimensiones completas para OnTime."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "%(label)s exceeds the OnTime maximum length (%(limit)s cm)."
+msgstr "%(label)s supera el largo máximo de OnTime (%(limit)s cm)."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "%(label)s exceeds the OnTime maximum width (%(limit)s cm)."
+msgstr "%(label)s supera el ancho máximo de OnTime (%(limit)s cm)."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "%(label)s exceeds the OnTime maximum height (%(limit)s cm)."
+msgstr "%(label)s supera el alto máximo de OnTime (%(limit)s cm)."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "%(label)s exceeds the OnTime XS combined-dimension limit: %(combined).2f cm (L+W+H), maximum %(limit).2f cm."
+msgstr ""
+"%(label)s supera el límite de dimensiones combinadas de OnTime XS: %(combined).2f cm (largo+ancho+alto), máximo "
+"%(limit).2f cm."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "Product '%(product)s' weighs %(weight).3f kg per unit, above the OnTime XS limit of %(limit).3f kg per package."
+msgstr ""
+"El producto '%(product)s' pesa %(weight).3f kg por unidad, por encima del límite OnTime XS de %(limit).3f kg por "
+"bulto."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "Package '%s' has no Package Type. Assign a package type with dimensions before creating the OnTime shipment."
+msgstr "El bulto '%s' no tiene Tipo de paquete. Asigna un tipo de paquete con dimensiones antes de crear la expedición OnTime."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "Package '%s' has no valid shipping weight for OnTime."
+msgstr "El bulto '%s' no tiene un peso de envío válido para OnTime."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "Package '%(package)s' weighs %(weight).3f kg, above the OnTime XS limit of %(limit).3f kg per package."
+msgstr "El bulto '%(package)s' pesa %(weight).3f kg, por encima del límite OnTime XS de %(limit).3f kg por bulto."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid ""
+"The picking declares %(declared)s package(s), but OnTime XS requires at least %(minimum)s for the prepared/loose "
+"weight."
+msgstr ""
+"El albarán declara %(declared)s bulto(s), pero OnTime XS requiere al menos %(minimum)s para el peso preparado/sin "
+"empaquetar."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid ""
+"The picking declares %(declared)s package(s), but %(weight).3f kg requires at least %(minimum)s package(s) with the "
+"OnTime XS limit of %(limit).3f kg each."
+msgstr ""
+"El albarán declara %(declared)s bulto(s), pero %(weight).3f kg requiere al menos %(minimum)s bulto(s) con el límite "
+"OnTime XS de %(limit).3f kg por bulto."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "Product dimension field '%(field)s' must contain a numeric value."
+msgstr "El campo de dimensión de producto '%(field)s' debe contener un valor numérico."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "Product '%(product)s' has a negative value in %(field)s."
+msgstr "El producto '%(product)s' tiene un valor negativo en %(field)s."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "OnTime requires the existing Optima product dimension fields: %(fields)s."
+msgstr "OnTime requiere los campos de dimensiones de producto existentes de Optima: %(fields)s."
+
+#. module: optima_delivery_ontime
+msgid "OnTime Label Endpoint"
+msgstr "Endpoint de etiqueta OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Tracking Endpoint"
+msgstr "Endpoint de tracking OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Public Tracking URL"
+msgstr "URL pública de seguimiento OnTime"
+
+#. module: optima_delivery_ontime
+msgid "Automatically Download OnTime Label"
+msgstr "Descargar automáticamente la etiqueta OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Label"
+msgstr "Etiqueta OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Label Downloaded At"
+msgstr "Etiqueta OnTime descargada el"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Tracking Last Sync"
+msgstr "Última sincronización de tracking OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Last Tracking Event"
+msgstr "Último evento de tracking OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Tracking Raw Data"
+msgstr "Datos técnicos de tracking OnTime"
+
+#. module: optima_delivery_ontime
+msgid "This delivery order is not assigned to an OnTime carrier."
+msgstr "Este albarán no tiene asignado un transportista OnTime."
+
+#. module: optima_delivery_ontime
+msgid "Create the OnTime shipment before using label or tracking actions."
+msgstr "Crea la expedición OnTime antes de utilizar las acciones de etiqueta o tracking."
+
+#. module: optima_delivery_ontime
+msgid "OnTime tracking updated"
+msgstr "Tracking OnTime actualizado"
+
+#. module: optima_delivery_ontime
+msgid "Updated"
+msgstr "Actualizado"
+
+#. module: optima_delivery_ontime
+msgid "Configure the OnTime public tracking URL on the carrier."
+msgstr "Configura la URL pública de seguimiento OnTime en el transportista."
+
+#. module: optima_delivery_ontime
+msgid "The OnTime endpoint template cannot be empty."
+msgstr "La plantilla de endpoint OnTime no puede estar vacía."
+
+#. module: optima_delivery_ontime
+msgid "OnTime API endpoint templates must start with '/'."
+msgstr "Las plantillas de endpoint de la API OnTime deben empezar por '/'."
+
+#. module: optima_delivery_ontime
+#, python-brace-format
+msgid "OnTime label/tracking endpoint templates must contain {reference}."
+msgstr "Las plantillas de endpoint de etiqueta/tracking OnTime deben contener {reference}."
+
+#. module: optima_delivery_ontime
+msgid "The OnTime public tracking URL must start with http:// or https://."
+msgstr "La URL pública de seguimiento OnTime debe empezar por http:// o https://."
+
+#. module: optima_delivery_ontime
+msgid "The OnTime endpoint template is not configured correctly."
+msgstr "La plantilla de endpoint OnTime no está configurada correctamente."
+
+#. module: optima_delivery_ontime
+msgid "ReportLab is required to generate the simulated OnTime label."
+msgstr "Se requiere ReportLab para generar la etiqueta simulada de OnTime."
+
+#. module: optima_delivery_ontime
+msgid "Create the OnTime shipment before requesting its label."
+msgstr "Crea la expedición OnTime antes de solicitar su etiqueta."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "OnTime label download failed: %s"
+msgstr "La descarga de la etiqueta OnTime ha fallado: %s"
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "OnTime label download URL failed: %s"
+msgstr "La URL de descarga de la etiqueta OnTime ha fallado: %s"
+
+#. module: optima_delivery_ontime
+msgid "OnTime returned a successful label response but no printable document was found."
+msgstr "OnTime devolvió una respuesta de etiqueta correcta, pero no se encontró ningún documento imprimible."
+
+#. module: optima_delivery_ontime
+msgid "OnTime returned an empty label document."
+msgstr "OnTime devolvió un documento de etiqueta vacío."
+
+#. module: optima_delivery_ontime
+msgid "Simulated shipment - no remote tracking events."
+msgstr "Expedición simulada: no existen eventos de tracking remotos."
+
+#. module: optima_delivery_ontime
+msgid "Create the OnTime shipment before requesting tracking."
+msgstr "Crea la expedición OnTime antes de solicitar el tracking."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "OnTime tracking request failed: %s"
+msgstr "La consulta de tracking OnTime ha fallado: %s"
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid ""
+"The OnTime shipment was created correctly, but its label could not be downloaded automatically. Use 'Download OnTime "
+"Label' to retry. Error: %s"
+msgstr ""
+"La expedición OnTime se creó correctamente, pero no se pudo descargar automáticamente su etiqueta. Usa 'Etiqueta "
+"OnTime' para reintentarlo. Error: %s"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Shipment Detail Endpoint"
+msgstr "Endpoint de detalle de expedición OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Proof of Delivery Endpoint"
+msgstr "Endpoint del justificante de entrega OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Cancellation Mode"
+msgstr "Modo de cancelación OnTime"
+
+#. module: optima_delivery_ontime
+msgid "Manual / OnTime onboarding channel"
+msgstr "Manual / canal acordado con OnTime"
+
+#. module: optima_delivery_ontime
+msgid "API endpoint supplied by OnTime"
+msgstr "Endpoint API suministrado por OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Cancellation Endpoint"
+msgstr "Endpoint de cancelación OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Cancellation HTTP Method"
+msgstr "Método HTTP de cancelación OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Shipment Detail Last Sync"
+msgstr "Última sincronización del detalle OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Shipment Detail Raw Data"
+msgstr "Datos técnicos del detalle OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Proof of Delivery"
+msgstr "Justificante de entrega OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime POD Downloaded At"
+msgstr "POD OnTime descargado el"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Shipment Cancelled At"
+msgstr "Expedición OnTime cancelada el"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Cancellation Correlation ID"
+msgstr "ID de correlación de cancelación OnTime"
+
+#. module: optima_delivery_ontime
+#, python-brace-format
+msgid "OnTime shipment endpoint templates must contain {reference}."
+msgstr "Las plantillas de endpoints de expedición OnTime deben contener {reference}."
+
+#. module: optima_delivery_ontime
+msgid "An OnTime cancellation endpoint is required when API cancellation is enabled."
+msgstr "Se requiere un endpoint de cancelación OnTime cuando la cancelación por API está activada."
+
+#. module: optima_delivery_ontime
+msgid "Create the OnTime shipment before requesting its detail."
+msgstr "Crea la expedición OnTime antes de solicitar su detalle."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "OnTime shipment detail request failed: %s"
+msgstr "La consulta del detalle de la expedición OnTime ha fallado: %s"
+
+#. module: optima_delivery_ontime
+msgid "ReportLab is required to generate the simulated OnTime POD."
+msgstr "Se requiere ReportLab para generar el POD simulado de OnTime."
+
+#. module: optima_delivery_ontime
+msgid "Create the OnTime shipment before requesting proof of delivery."
+msgstr "Crea la expedición OnTime antes de solicitar el justificante de entrega."
+
+#. module: optima_delivery_ontime
+msgid ""
+"The OnTime public catalogue confirms proof-of-delivery download, but the exact POD endpoint has not been configured. "
+"Confirm the route in the Shipments OpenAPI/onboarding and configure it on the carrier before retrying."
+msgstr ""
+"El catálogo público de OnTime confirma la descarga del justificante de entrega, pero no se ha configurado el endpoint"
+" exacto de POD. Confirma la ruta en el OpenAPI de Shipments/onboarding y configúrala en el transportista antes de "
+"reintentar."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "OnTime proof-of-delivery download failed: %s"
+msgstr "La descarga del justificante de entrega OnTime ha fallado: %s"
+
+#. module: optima_delivery_ontime
+msgid "OnTime returned a successful POD response but no downloadable document was found."
+msgstr "OnTime devolvió una respuesta POD correcta, pero no se encontró ningún documento descargable."
+
+#. module: optima_delivery_ontime
+msgid "OnTime returned an empty proof-of-delivery document."
+msgstr "OnTime devolvió un justificante de entrega vacío."
+
+#. module: optima_delivery_ontime
+msgid "Shipment cancelled"
+msgstr "Expedición cancelada"
+
+#. module: optima_delivery_ontime
+msgid ""
+"Automatic cancellation is intentionally disabled for this OnTime carrier. The public Shipments API catalogue does not"
+" advertise shipment cancellation. Cancel through the channel agreed with OnTime, or configure an account-specific API"
+" cancellation endpoint if OnTime provides one during onboarding."
+msgstr ""
+"La cancelación automática está desactivada intencionadamente para este transportista OnTime. El catálogo público de "
+"Shipments API no publica una operación de cancelación de expediciones. Cancela mediante el canal acordado con OnTime "
+"o configura un endpoint API específico de la cuenta si OnTime lo facilita durante el onboarding."
+
+#. module: optima_delivery_ontime
+msgid "Configure the account-specific OnTime cancellation endpoint before cancelling."
+msgstr "Configura el endpoint de cancelación OnTime específico de la cuenta antes de cancelar."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid ""
+"OnTime cancellation has an uncertain result because the connection failed: %(error)s. Check the shipment in OnTime "
+"before retrying."
+msgstr ""
+"La cancelación OnTime tiene un resultado incierto porque falló la conexión: %(error)s. Comprueba la expedición en "
+"OnTime antes de reintentar."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "OnTime rejected shipment cancellation: %s"
+msgstr "OnTime rechazó la cancelación de la expedición: %s"
+
+#. module: optima_delivery_ontime
+msgid "OnTime shipment updated"
+msgstr "Expedición OnTime actualizada"
+
+#. module: optima_delivery_ontime
+msgid "OnTime shipment cancelled"
+msgstr "Expedición OnTime cancelada"
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "OnTime shipment %(reference)s has been marked as cancelled."
+msgstr "La expedición OnTime %(reference)s se ha marcado como cancelada."
+
+#. module: optima_delivery_ontime
+msgid "OnTime Safe Read Retries"
+msgstr "Reintentos seguros de lectura OnTime"
+
+#. module: optima_delivery_ontime
+msgid ""
+"Number of automatic retries for read-only OnTime requests such as tracking, shipment detail, labels and POD. Write "
+"operations are never retried automatically."
+msgstr ""
+"Número de reintentos automáticos para peticiones de solo lectura de OnTime como tracking, detalle de expedición, "
+"etiquetas y POD. Las operaciones de escritura nunca se reintentan automáticamente."
+
+#. module: optima_delivery_ontime
+msgid "OnTime Maximum Document Size (MB)"
+msgstr "Tamaño máximo de documento OnTime (MB)"
+
+#. module: optima_delivery_ontime
+msgid "Maximum accepted size for labels/POD downloaded from OnTime."
+msgstr "Tamaño máximo aceptado para etiquetas/POD descargados de OnTime."
+
+#. module: optima_delivery_ontime
+msgid "OnTime safe read retries must be between 0 and 5."
+msgstr "Los reintentos seguros de lectura OnTime deben estar entre 0 y 5."
+
+#. module: optima_delivery_ontime
+msgid "The OnTime maximum document size must be greater than 0 and no more than 100 MB."
+msgstr "El tamaño máximo de documento OnTime debe ser mayor que 0 y no superar 100 MB."
+
+#. module: optima_delivery_ontime
+msgid ""
+"Assign a company to the OnTime carrier. API credentials and the imported contract must not be shared implicitly "
+"between companies."
+msgstr ""
+"Asigna una compañía al transportista OnTime. Las credenciales API y el contrato importado no deben compartirse "
+"implícitamente entre compañías."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid ""
+"The OnTime carrier belongs to company '%(carrier_company)s' but the document belongs to '%(document_company)s'. Use "
+"an OnTime carrier configured for the same company."
+msgstr ""
+"El transportista OnTime pertenece a la compañía '%(carrier_company)s', pero el documento pertenece a "
+"'%(document_company)s'. Usa un transportista OnTime configurado para la misma compañía."
+
+#. module: optima_delivery_ontime
+msgid "Carrier type is not OnTime."
+msgstr "El tipo de transportista no es OnTime."
+
+#. module: optima_delivery_ontime
+msgid "Assign a company to the OnTime carrier."
+msgstr "Asigna una compañía al transportista OnTime."
+
+#. module: optima_delivery_ontime
+msgid "Import the current OnTime tariff PDF."
+msgstr "Importa el PDF de tarifas OnTime vigente."
+
+#. module: optima_delivery_ontime
+msgid "Configure the OnTime API service value for XS ECONOMY 24-48h."
+msgstr "Configura el valor de servicio API OnTime para XS ECONOMY 24-48h."
+
+#. module: optima_delivery_ontime
+msgid "Configure the OnTime API service value for XS 24h."
+msgstr "Configura el valor de servicio API OnTime para XS 24h."
+
+#. module: optima_delivery_ontime
+msgid "Configure the OnTime API Key for Real mode."
+msgstr "Configura la API Key de OnTime para el modo Real."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "Required Optima product dimension field is missing: %s"
+msgstr "Falta el campo de dimensiones de producto de Optima requerido: %s"
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid ""
+"OnTime configuration is not ready:\n"
+"- %s"
+msgstr ""
+"La configuración de OnTime no está lista:\n"
+"- %s"
+
+#. module: optima_delivery_ontime
+msgid "OnTime configuration validated"
+msgstr "Configuración OnTime validada"
+
+#. module: optima_delivery_ontime
+msgid "Company isolation, tariff, service codes and product dimension fields are configured."
+msgstr ""
+"El aislamiento por compañía, la tarifa, los códigos de servicio y los campos de dimensiones de producto están "
+"configurados."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid ""
+"OnTime returned an uncertain result for a write operation. Automatic retry is blocked to prevent duplicates. "
+"Reconcile the shipment with OnTime before retrying. Technical detail: %s"
+msgstr ""
+"OnTime devolvió un resultado incierto para una operación de escritura. El reintento automático está bloqueado para "
+"evitar duplicados. Reconcilia la expedición con OnTime antes de reintentar. Detalle técnico: %s"
+
+#. module: optima_delivery_ontime
+msgid ""
+"This picking has an uncertain OnTime creation result. Automatic retry is blocked to avoid creating a duplicate "
+"shipment. Reconcile it first."
+msgstr ""
+"Este albarán tiene un resultado incierto en la creación OnTime. El reintento automático está bloqueado para evitar "
+"crear una expedición duplicada. Reconcílialo primero."
+
+#. module: optima_delivery_ontime
+msgid "This picking has an uncertain OnTime cancellation result. Reconcile it before attempting any new shipment operation."
+msgstr ""
+"Este albarán tiene un resultado incierto en la cancelación OnTime. Reconcílialo antes de intentar una nueva operación"
+" de expedición."
+
+#. module: optima_delivery_ontime
+msgid ""
+"The existing OnTime shipment is cancelled. A cancelled remote shipment is never recreated automatically from the same"
+" picking."
+msgstr ""
+"La expedición OnTime existente está cancelada. Una expedición remota cancelada nunca se recrea automáticamente desde "
+"el mismo albarán."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "OnTime accepted the shipment request but did not return a shipment reference. Correlation ID: %s"
+msgstr "OnTime aceptó la solicitud de expedición pero no devolvió una referencia. ID de correlación: %s"
+
+#. module: optima_delivery_ontime
+msgid "No OnTime shipment"
+msgstr "Sin expedición OnTime"
+
+#. module: optima_delivery_ontime
+msgid "Created / linked"
+msgstr "Creada / vinculada"
+
+#. module: optima_delivery_ontime
+msgid "Creation result uncertain"
+msgstr "Resultado de creación incierto"
+
+#. module: optima_delivery_ontime
+msgid "Cancellation result uncertain"
+msgstr "Resultado de cancelación incierto"
+
+#. module: optima_delivery_ontime
+msgid "Cancelled"
+msgstr "Cancelada"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Operation State"
+msgstr "Estado de operación OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Last API Attempt"
+msgstr "Último intento API OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Last API Error"
+msgstr "Último error API OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Shipment Request Hash"
+msgstr "Hash de solicitud de expedición OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Reconciled At"
+msgstr "OnTime reconciliado el"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Reconciliation Note"
+msgstr "Nota de reconciliación OnTime"
+
+#. module: optima_delivery_ontime
+msgid "The OnTime creation result is uncertain. Reconcile the operation before using shipment actions."
+msgstr "El resultado de creación OnTime es incierto. Reconcilia la operación antes de usar acciones de expedición."
+
+#. module: optima_delivery_ontime
+msgid "Only an administrator can reconcile uncertain OnTime operations."
+msgstr "Solo un administrador puede reconciliar operaciones OnTime inciertas."
+
+#. module: optima_delivery_ontime
+msgid "This picking has no uncertain OnTime operation to reconcile."
+msgstr "Este albarán no tiene ninguna operación OnTime incierta que reconciliar."
+
+#. module: optima_delivery_ontime
+msgid "Reconcile OnTime operation"
+msgstr "Reconciliar operación OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime cancellation requires reconciliation"
+msgstr "La cancelación OnTime requiere reconciliación"
+
+#. module: optima_delivery_ontime
+msgid "The remote cancellation result is uncertain. Check OnTime before retrying."
+msgstr "El resultado de la cancelación remota es incierto. Comprueba OnTime antes de reintentar."
+
+#. module: optima_delivery_ontime
+msgid "The OnTime shipment creation result is uncertain. Reconcile creation before attempting cancellation."
+msgstr "El resultado de creación de la expedición OnTime es incierto. Reconcilia la creación antes de intentar la cancelación."
+
+#. module: optima_delivery_ontime
+msgid "The OnTime cancellation result is uncertain. Automatic retry is blocked; reconcile the shipment first."
+msgstr ""
+"El resultado de la cancelación OnTime es incierto. El reintento automático está bloqueado; reconcilia primero la "
+"expedición."
+
+#. module: optima_delivery_ontime
+msgid "Delivery Order"
+msgstr "Albarán"
+
+#. module: optima_delivery_ontime
+msgid "Current OnTime State"
+msgstr "Estado OnTime actual"
+
+#. module: optima_delivery_ontime
+msgid "Resolution"
+msgstr "Resolución"
+
+#. module: optima_delivery_ontime
+msgid "Creation succeeded: link existing OnTime reference"
+msgstr "La creación tuvo éxito: vincular referencia OnTime existente"
+
+#. module: optima_delivery_ontime
+msgid "Creation did not happen: allow creation retry"
+msgstr "La creación no se realizó: permitir reintento de creación"
+
+#. module: optima_delivery_ontime
+msgid "Cancellation succeeded: mark shipment cancelled"
+msgstr "La cancelación tuvo éxito: marcar expedición como cancelada"
+
+#. module: optima_delivery_ontime
+msgid "Cancellation did not happen: allow cancellation retry"
+msgstr "La cancelación no se realizó: permitir reintento de cancelación"
+
+#. module: optima_delivery_ontime
+msgid "Reconciliation Note"
+msgstr "Nota de reconciliación"
+
+#. module: optima_delivery_ontime
+msgid "Required when linking a shipment that was created remotely after an uncertain response."
+msgstr "Obligatoria al vincular una expedición creada remotamente tras una respuesta incierta."
+
+#. module: optima_delivery_ontime
+msgid "Record how the result was verified in OnTime before resolving the uncertain state."
+msgstr "Registra cómo se verificó el resultado en OnTime antes de resolver el estado incierto."
+
+#. module: optima_delivery_ontime
+msgid "This resolution is only valid for an uncertain creation."
+msgstr "Esta resolución solo es válida para una creación incierta."
+
+#. module: optima_delivery_ontime
+msgid "Enter the OnTime shipment reference confirmed in OnTime."
+msgstr "Introduce la referencia de expedición confirmada en OnTime."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "OnTime uncertain creation reconciled manually. Existing shipment reference %(reference)s was linked. Note: %(note)s"
+msgstr ""
+"Creación OnTime incierta reconciliada manualmente. Se vinculó la referencia de expedición existente %(reference)s. "
+"Nota: %(note)s"
+
+#. module: optima_delivery_ontime
+msgid "A shipment reference is already linked; creation retry cannot be enabled."
+msgstr "Ya hay una referencia de expedición vinculada; no se puede habilitar el reintento de creación."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid ""
+"OnTime uncertain creation reconciled manually: the operator confirmed that no remote shipment exists, so a new "
+"creation attempt is allowed. Note: %s"
+msgstr ""
+"Creación OnTime incierta reconciliada manualmente: el operador confirmó que no existe una expedición remota, por lo "
+"que se permite un nuevo intento de creación. Nota: %s"
+
+#. module: optima_delivery_ontime
+msgid "This resolution is only valid for an uncertain cancellation."
+msgstr "Esta resolución solo es válida para una cancelación incierta."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "OnTime uncertain cancellation was confirmed manually. Note: %s"
+msgstr "La cancelación OnTime incierta se confirmó manualmente. Nota: %s"
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid ""
+"OnTime uncertain cancellation reconciled manually: the operator confirmed that the shipment remains active, so "
+"cancellation may be retried. Note: %s"
+msgstr ""
+"Cancelación OnTime incierta reconciliada manualmente: el operador confirmó que la expedición sigue activa, por lo que"
+" se puede reintentar la cancelación. Nota: %s"
+
+#. module: optima_delivery_ontime
+msgid "Select a valid OnTime reconciliation resolution."
+msgstr "Selecciona una resolución válida de reconciliación OnTime."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "OnTime shipment reference %(reference)s is already linked to picking %(picking)s in this company."
+msgstr "La referencia de expedición OnTime %(reference)s ya está vinculada al albarán %(picking)s en esta compañía."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid ""
+"OnTime returned reference %(reference)s, but it is already linked to picking %(picking)s in this company. The result "
+"must be reconciled manually."
+msgstr ""
+"OnTime devolvió la referencia %(reference)s, pero ya está vinculada al albarán %(picking)s en esta compañía. El "
+"resultado debe reconciliarse manualmente."
+
+#. module: optima_delivery_ontime
+msgid "OnTime document download URLs must use HTTPS."
+msgstr "Las URL de descarga de documentos OnTime deben usar HTTPS."
+
+#. module: optima_delivery_ontime
+msgid "An OnTime tariff can only contain one rate per carrier, service, zone and weight bracket."
+msgstr "Una tarifa OnTime solo puede contener una tarifa por transportista, servicio, zona y tramo de peso."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "HTTP: %s"
+msgstr "HTTP: %s"
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "code: %s"
+msgstr "código: %s"
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "correlationId: %s"
+msgstr "correlationId: %s"
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "OnTime rate uses volumetric weight: %(billable).3f kg (actual: %(actual).3f kg)."
+msgstr "La tarifa OnTime usa peso volumétrico: %(billable).3f kg (real: %(actual).3f kg)."
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "Package '%s'"
+msgstr "Bulto '%s'"
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "Product '%s'"
+msgstr "Producto '%s'"
+
+#. module: optima_delivery_ontime
+#, python-format
+msgid "The order weight (%(weight).3f kg) exceeds the carrier maximum (%(limit).3f kg)."
+msgstr "El peso del pedido (%(weight).3f kg) supera el máximo del transportista (%(limit).3f kg)."
+
+#. module: optima_delivery_ontime
+msgid "Could not connect to the OnTime API."
+msgstr "No se pudo conectar con la API de OnTime."
+
+#. module: optima_delivery_ontime
+msgid "OnTime API Key is not configured."
+msgstr "La API Key de OnTime no está configurada."
+
+#. module: optima_delivery_ontime
+msgid "OnTime returned an unexpected HTTP redirect."
+msgstr "OnTime devolvió una redirección HTTP inesperada."
+
+#. module: optima_delivery_ontime
+msgid "OnTime returned an unsafe download redirect."
+msgstr "OnTime devolvió una redirección de descarga no segura."
+
+#. module: optima_delivery_ontime
+msgid "The OnTime document exceeds the configured maximum size."
+msgstr "El documento OnTime supera el tamaño máximo configurado."
+
+#. module: optima_delivery_ontime
+msgid "Timeout while connecting to OnTime."
+msgstr "Se agotó el tiempo de espera al conectar con OnTime."
+
+#. module: optima_delivery_ontime
+msgid "Too many redirects while downloading data from OnTime."
+msgstr "Demasiadas redirecciones al descargar datos de OnTime."
+
+#. module: optima_delivery_ontime
+msgid "Unexpected HTTP error while connecting to OnTime."
+msgstr "Error HTTP inesperado al conectar con OnTime."
+
+#. module: optima_delivery_ontime
+msgid "Mensaglobal API Token"
+msgstr "Token API de Mensaglobal"
+
+#. module: optima_delivery_ontime
+msgid "Mensaglobal Preproduction Base URL"
+msgstr "URL base de preproducción de Mensaglobal"
+
+#. module: optima_delivery_ontime
+msgid "Mensaglobal Production Base URL"
+msgstr "URL base de producción de Mensaglobal"
+
+#. module: optima_delivery_ontime
+msgid "Preproduction"
+msgstr "Preproducción"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Network Reference"
+msgstr "Referencia de red OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Barcode"
+msgstr "Código de barras OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Tracking URL"
+msgstr "URL de seguimiento OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime POD URL"
+msgstr "URL POD OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime Network Cancellation"
+msgstr "Cancelación en la red OnTime"
+
+#. module: optima_delivery_ontime
+msgid "Unknown"
+msgstr "Desconocido"
+
+#. module: optima_delivery_ontime
+msgid "Cancelled in OnTime network"
+msgstr "Cancelado en la red OnTime"
+
+#. module: optima_delivery_ontime
+msgid "Not confirmed in OnTime network"
+msgstr "No confirmado en la red OnTime"
+
+#. module: optima_delivery_ontime
+msgid "Cancelled in Mensaglobal; network not confirmed"
+msgstr "Cancelado en Mensaglobal; red no confirmada"
+
+#. module: optima_delivery_ontime
+msgid "Mensaglobal API"
+msgstr "API Mensaglobal"
+
+#. module: optima_delivery_ontime
+msgid "Legacy manual mode"
+msgstr "Modo manual heredado"
+
+#. module: optima_delivery_ontime
+msgid "Mensaglobal API token is not configured."
+msgstr "El token API de Mensaglobal no está configurado."
+
+#. module: optima_delivery_ontime
+msgid "Timeout while connecting to Mensaglobal."
+msgstr "Se agotó el tiempo de espera al conectar con Mensaglobal."
+
+#. module: optima_delivery_ontime
+msgid "Could not connect to the Mensaglobal API."
+msgstr "No se pudo conectar con la API de Mensaglobal."
+
+#. module: optima_delivery_ontime
+msgid "Unexpected HTTP error while connecting to Mensaglobal."
+msgstr "Error HTTP inesperado al conectar con Mensaglobal."
+
+#. module: optima_delivery_ontime
+msgid "Mensaglobal returned an unsafe download redirect."
+msgstr "Mensaglobal devolvió una redirección de descarga no segura."
+
+#. module: optima_delivery_ontime
+msgid "Mensaglobal returned an unexpected HTTP redirect."
+msgstr "Mensaglobal devolvió una redirección HTTP inesperada."
+
+#. module: optima_delivery_ontime
+msgid "Configure the Mensaglobal API token before connecting."
+msgstr "Configura el token API de Mensaglobal antes de conectar."
+
+#. module: optima_delivery_ontime
+msgid "The Mensaglobal base URL must use HTTPS."
+msgstr "La URL base de Mensaglobal debe usar HTTPS."
+
+#. module: optima_delivery_ontime
+msgid "Configure the Mensaglobal service code for XS Economy."
+msgstr "Configura el código de servicio Mensaglobal para XS Economy."
+
+#. module: optima_delivery_ontime
+msgid "Configure the Mensaglobal fallback service code."
+msgstr "Configura el código de servicio Mensaglobal de fallback."
+
+#. module: optima_delivery_ontime
+msgid "Configure the Mensaglobal API token for Real mode."
+msgstr "Configura el token API de Mensaglobal para el modo Real."
+
+#. module: optima_delivery_ontime
+msgid "Mensaglobal connection successful"
+msgstr "Conexión con Mensaglobal correcta"
+
+#. module: optima_delivery_ontime
+msgid "Mensaglobal rejected OnTime shipment creation: %s"
+msgstr "Mensaglobal rechazó la creación del envío OnTime: %s"
+
+#. module: optima_delivery_ontime
+msgid "Mensaglobal tracking request failed: %s"
+msgstr "Falló la consulta de tracking en Mensaglobal: %s"
+
+#. module: optima_delivery_ontime
+msgid "Mensaglobal has not returned a POD URL for this shipment yet."
+msgstr "Mensaglobal todavía no ha devuelto una URL POD para este envío."
+
+#. module: optima_delivery_ontime
+msgid "The Mensaglobal POD URL must use HTTPS."
+msgstr "La URL POD de Mensaglobal debe usar HTTPS."
+
+#. module: optima_delivery_ontime
+msgid "Mensaglobal rejected shipment cancellation: %s"
+msgstr "Mensaglobal rechazó la cancelación del envío: %s"
+
+#. module: optima_delivery_ontime
+msgid "Cancelled in Mensaglobal, but cancellation was not confirmed in OnTime"
+msgstr "Cancelado en Mensaglobal, pero la cancelación no fue confirmada en OnTime"
+
+#. module: optima_delivery_ontime
+msgid "The shipment was cancelled in Mensaglobal, but Mensaglobal returned anuladoEnRed=false. OnTime may still deliver it; verify the shipment with the carrier before assuming it is stopped."
+msgstr "El envío se canceló en Mensaglobal, pero Mensaglobal devolvió anuladoEnRed=false. OnTime podría seguir entregándolo; verifica el envío con la agencia antes de darlo por detenido."
+
+#. module: optima_delivery_ontime
+msgid "Cancellation not confirmed in OnTime network"
+msgstr "Cancelación no confirmada en la red OnTime"
+
+#. module: optima_delivery_ontime
+msgid "Mensaglobal cancelled the shipment, but OnTime may still deliver it."
+msgstr "Mensaglobal canceló el envío, pero OnTime todavía podría entregarlo."
+
+#. module: optima_delivery_ontime
+msgid "Mensaglobal has not returned a public tracking URL for this shipment."
+msgstr "Mensaglobal no ha devuelto una URL pública de seguimiento para este envío."
+
+#. module: optima_delivery_ontime
+msgid "origin"
+msgstr "origen"
+
+#. module: optima_delivery_ontime
+msgid "destination"
+msgstr "destino"
+
+#. module: optima_delivery_ontime
+msgid "name"
+msgstr "nombre"
+
+
+#. module: optima_delivery_ontime
+msgid "OnTime API Service - Fallback XS"
+msgstr "Servicio API OnTime - Fallback XS"
+
+#. module: optima_delivery_ontime
+msgid "Fallback XS (19Horas)"
+msgstr "Fallback XS (19Horas)"
+
+#. module: optima_delivery_ontime
+msgid "Legacy OnTime Origin Center"
+msgstr "Centro de origen OnTime heredado"
+
+#. module: optima_delivery_ontime
+msgid "Simulated (local only)"
+msgstr "Simulado (solo local)"
+
+#. module: optima_delivery_ontime
+msgid "API Test (Test Pruebas)"
+msgstr "Pruebas API (Test Pruebas)"
+
+#. module: optima_delivery_ontime
+msgid "Legacy OnTime Environment"
+msgstr "Entorno OnTime heredado"
+
+#. module: optima_delivery_ontime
+msgid "Legacy Mensaglobal Preproduction Base URL"
+msgstr "URL base de preproducción Mensaglobal heredada"
+
+#. module: optima_delivery_ontime
+msgid "Mensaglobal API Base URL"
+msgstr "URL base de la API de Mensaglobal"
+
+#. module: optima_delivery_ontime
+msgid "Configure the Mensaglobal API base URL."
+msgstr "Configura la URL base de la API de Mensaglobal."
+
+#. module: optima_delivery_ontime
+msgid "Configure the Mensaglobal API token for API Test or Production mode."
+msgstr "Configura el token API de Mensaglobal para el modo Pruebas API o Producción."
+
+#. module: optima_delivery_ontime
+msgid "Switch OnTime Mode to API Test or Production before testing the connection."
+msgstr "Cambia el modo OnTime a Pruebas API o Producción antes de probar la conexión."
+
+#. module: optima_delivery_ontime
+msgid "Bearer authentication and API access are working correctly in %s mode."
+msgstr "La autenticación Bearer y el acceso a la API funcionan correctamente en modo %s."
+
+#. module: optima_delivery_ontime
+msgid "OnTime API Test Shipment"
+msgstr "Envío de prueba API OnTime"
+
+#. module: optima_delivery_ontime
+msgid "OnTime API TEST shipment created. Mensaglobal received the destination recipient name as 'Test Pruebas' per OnTime instructions; this shipment must not be considered a valid delivery."
+msgstr "Envío de PRUEBA API OnTime creado. Mensaglobal recibió el nombre de destinatario 'Test Pruebas' según las indicaciones de OnTime; este envío no debe considerarse una entrega válida."
+
+#. module: optima_delivery_ontime
+msgid "Shipping Sales Taxes"
+msgstr "Impuestos de venta del envío"
+
+#. module: optima_delivery_ontime
+msgid "Configure a sales tax on the OnTime delivery product or a default sales tax on the carrier company."
+msgstr "Configura un impuesto de venta en el producto de envío OnTime o un impuesto de venta por defecto en la compañía del transportista."
+
+#. module: optima_delivery_ontime
+msgid "Company isolation, shipping taxes, tariff, Mensaglobal service codes, base URL and product dimensions are configured."
+msgstr "El aislamiento por compañía, los impuestos del envío, la tarifa, los códigos de servicio de Mensaglobal, la URL base y las dimensiones de producto están configurados."

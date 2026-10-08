@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="stock_picking_view_form_ontime" model="ir.ui.view">
+        <field name="name">stock.picking.form.ontime</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button
+                    name="action_ontime_reconcile"
+                    string="Reconciliar OnTime"
+                    type="object"
+                    class="btn-warning"
+                    icon="fa-exclamation-triangle"
+                    groups="base.group_system"
+                    invisible="ontime_operation_state not in ['create_uncertain', 'cancel_uncertain']"
+                />
+                <button
+                    name="action_ontime_download_label"
+                    string="Etiqueta OnTime"
+                    type="object"
+                    class="btn-secondary"
+                    icon="fa-file-pdf-o"
+                    invisible="not ontime_shipment_reference"
+                />
+                <button
+                    name="action_ontime_refresh_tracking"
+                    string="Actualizar tracking OnTime"
+                    type="object"
+                    class="btn-secondary"
+                    icon="fa-refresh"
+                    invisible="not ontime_shipment_reference"
+                />
+                <button
+                    name="action_ontime_download_pod"
+                    string="POD OnTime"
+                    type="object"
+                    class="btn-secondary"
+                    icon="fa-check-square-o"
+                    invisible="not ontime_shipment_reference"
+                />
+                <button
+                    name="action_ontime_cancel_shipment"
+                    string="Cancelar expedición OnTime"
+                    type="object"
+                    class="btn-secondary"
+                    icon="fa-ban"
+                    confirm="¿Seguro que deseas cancelar esta expedición mediante Mensaglobal?"
+                    invisible="not ontime_shipment_reference or ontime_shipment_cancelled_at or ontime_operation_state in ['create_uncertain', 'cancel_uncertain']"
+                />
+                <button
+                    name="action_ontime_open_tracking"
+                    string="Seguimiento OnTime"
+                    type="object"
+                    class="btn-secondary"
+                    icon="fa-external-link"
+                    invisible="not ontime_shipment_reference"
+                />
+            </xpath>
+
+            <xpath expr="//sheet" position="inside">
+                <group string="OnTime / Mensaglobal" invisible="not ontime_shipment_reference and ontime_operation_state not in ['create_uncertain', 'cancel_uncertain']">
+                    <group>
+                        <field name="ontime_shipment_reference"/>
+                        <field name="ontime_network_reference"/>
+                        <field name="ontime_barcode"/>
+                        <field name="ontime_operation_state"/>
+                        <field name="ontime_shipment_status"/>
+                        <field name="ontime_is_test_shipment"/>
+                        <field name="ontime_shipment_created_at"/>
+                        <field name="ontime_shipment_service"/>
+                        <field name="ontime_shipment_zone"/>
+                        <field name="ontime_shipment_packages"/>
+                    </group>
+                    <group>
+                        <field name="ontime_currency_id" invisible="1"/>
+                        <field name="ontime_shipment_price" widget="monetary" options="{'currency_field': 'ontime_currency_id'}"/>
+                        <field name="ontime_shipment_weight"/>
+                        <field name="ontime_shipment_volumetric_weight"/>
+                        <field name="ontime_shipment_billable_weight"/>
+                        <field name="ontime_tracking_url" widget="url"/>
+                        <field name="ontime_pod_url" widget="url"/>
+                        <field name="ontime_label_attachment_id"/>
+                        <field name="ontime_label_downloaded_at"/>
+                    </group>
+                    <div class="alert alert-info" role="alert" colspan="2" invisible="not ontime_is_test_shipment">
+                        <strong>Envío de prueba API.</strong> Se envió a Mensaglobal con el nombre de destinatario
+                        <code>Test Pruebas</code>, por lo que OnTime ha indicado que no se considera un envío válido.
+                    </div>
+                    <div class="alert alert-warning" role="alert" colspan="2" invisible="ontime_operation_state not in ['create_uncertain', 'cancel_uncertain']">
+                        <strong>Resultado OnTime incierto.</strong> No reintentes la operación automáticamente.
+                        Un administrador debe comprobar Mensaglobal/OnTime y usar <em>Reconciliar OnTime</em>.
+                    </div>
+                    <div class="alert alert-danger" role="alert" colspan="2" invisible="ontime_operation_state != 'cancelled_network_unconfirmed'">
+                        <strong>Cancelación no confirmada en la red OnTime.</strong>
+                        Mensaglobal devolvió <code>anuladoEnRed=false</code>: la expedición está anulada en
+                        Mensaglobal, pero OnTime todavía podría entregarla. Verifica el envío con la agencia.
+                    </div>
+                    <group string="Seguimiento" colspan="2">
+                        <field name="ontime_tracking_last_sync"/>
+                        <field name="ontime_tracking_last_event"/>
+                        <field name="ontime_pod_attachment_id"/>
+                        <field name="ontime_pod_downloaded_at"/>
+                        <field name="ontime_shipment_cancelled_at"/>
+                        <field name="ontime_network_cancellation_state"/>
+                        <field name="ontime_shipment_correlation_id" groups="base.group_system"/>
+                        <field name="ontime_cancel_correlation_id" groups="base.group_system"/>
+                        <field name="ontime_last_api_attempt_at" groups="base.group_system"/>
+                        <field name="ontime_last_api_error" groups="base.group_system"/>
+                        <field name="ontime_shipment_request_hash" groups="base.group_system"/>
+                        <field name="ontime_reconciled_at" groups="base.group_system"/>
+                        <field name="ontime_reconciliation_note" groups="base.group_system"/>
+                        <field name="ontime_shipment_api_service" groups="base.group_system"/>
+                        <field name="ontime_tracking_events_json" groups="base.group_system"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

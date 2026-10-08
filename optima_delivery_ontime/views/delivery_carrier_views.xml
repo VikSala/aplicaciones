@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="delivery_carrier_view_form_ontime" model="ir.ui.view">
+        <field name="name">delivery.carrier.form.ontime</field>
+        <field name="model">delivery.carrier</field>
+        <field name="inherit_id" ref="delivery.view_delivery_carrier_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="OnTime" invisible="delivery_type != 'ontime'">
+                    <group>
+                        <group string="Mensaglobal / OnTime API">
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="ontime_mode"/>
+                            <field name="ontime_api_key" password="True" invisible="ontime_mode == 'simulated'"/>
+                            <field name="ontime_production_base_url"
+                                   string="Mensaglobal API Base URL"
+                                   invisible="ontime_mode == 'simulated'"
+                                   groups="base.group_system"/>
+                            <field name="ontime_base_url" invisible="ontime_mode == 'simulated'"/>
+                            <field name="ontime_timeout" invisible="ontime_mode == 'simulated'"/>
+                            <field name="ontime_read_retries" invisible="ontime_mode == 'simulated'" groups="base.group_system"/>
+                            <field name="ontime_max_document_size_mb" invisible="ontime_mode == 'simulated'" groups="base.group_system"/>
+                            <field name="ontime_shipment_endpoint" invisible="ontime_mode == 'simulated'" groups="base.group_system"/>
+                            <field name="ontime_label_endpoint" invisible="ontime_mode == 'simulated'" groups="base.group_system"/>
+                            <field name="ontime_tracking_endpoint" invisible="ontime_mode == 'simulated'" groups="base.group_system"/>
+                            <field name="ontime_cancel_endpoint" invisible="ontime_mode == 'simulated'" groups="base.group_system"/>
+                            <field name="ontime_api_service_economy" groups="base.group_system"/>
+                            <field name="ontime_api_service_xs24" groups="base.group_system"/>
+                            <field name="ontime_shipping_tax_ids" widget="many2many_tags"/>
+                            <field name="ontime_auto_download_label"/>
+                            <field name="ontime_public_tracking_url" groups="base.group_system"/>
+                            <button
+                                name="action_ontime_validate_configuration"
+                                string="Validar configuración OnTime"
+                                type="object"
+                                class="btn-secondary"
+                                icon="fa-check-circle"
+                                groups="base.group_system"
+                            />
+                            <button
+                                name="action_ontime_test_connection"
+                                string="Probar conexión Mensaglobal"
+                                type="object"
+                                class="btn-primary"
+                                icon="fa-plug"
+                                invisible="ontime_mode == 'simulated'"
+                                groups="base.group_system"
+                            />
+                            <div class="text-muted" colspan="2">
+                                La integración usa la URL y token de producción confirmados por OnTime.
+                                En <strong>API Test</strong> se llama a esa misma API, pero el nombre del destinatario
+                                se sustituye automáticamente por <strong>Test Pruebas</strong>; según OnTime, ese envío
+                                no se considera válido. En Producción se envía el nombre real del destinatario.
+                                Servicio Economy: código 72. Fallback 19Horas XS: código 24.
+                            </div>
+                            <div class="text-muted" colspan="2">
+                                <strong>IVA:</strong> Odoo aplica al transporte los impuestos configurados en el producto
+                                de envío. Si no hay ninguno, OnTime asigna automáticamente el impuesto de venta por
+                                defecto de la compañía; después se respeta la posición fiscal del pedido.
+                            </div>
+                        </group>
+                        <group string="Peso y restricciones XS">
+                            <field name="ontime_require_weight"/>
+                            <field name="ontime_require_dimensions"/>
+                            <field name="ontime_volumetric_divisor"/>
+                            <field name="ontime_max_package_weight_kg"/>
+                            <field name="ontime_max_package_dimension_sum_cm"/>
+                            <field name="max_weight" string="Peso máximo total (opcional)"/>
+                            <field name="ontime_max_length_cm"/>
+                            <field name="ontime_max_width_cm"/>
+                            <field name="ontime_max_height_cm"/>
+                            <field name="ontime_volumetric_factor" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Contrato tarifario OnTime" groups="base.group_system">
+                        <group>
+                            <field name="ontime_tariff_file" filename="ontime_tariff_filename"/>
+                            <field name="ontime_tariff_filename" invisible="1"/>
+                            <button
+                                name="action_ontime_import_tariff"
+                                string="Importar PDF de tarifas"
+                                type="object"
+                                class="btn-secondary"
+                                icon="fa-upload"
+                                invisible="not ontime_tariff_file"
+                            />
+                        </group>
+                        <group>
+                            <field name="ontime_tariff_year" readonly="1"/>
+                            <field name="ontime_tariff_imported_at" readonly="1"/>
+                            <field name="ontime_tariff_source_hash" readonly="1"/>
+                        </group>
+                        <div class="text-muted" colspan="2">
+                            El PDF importado sigue siendo la fuente de precios de Odoo. El servicio API actual
+                            se envía como código 72 (XS Economy 48/72) y el fallback como código 24 (19Horas XS).
+                            El PDF disponible es de 2024, por lo que deberá sustituirse por la tarifa vigente
+                            cuando OnTime la facilite; la lógica de importación no cambia.
+                        </div>
+                    </group>
+
+                    <group string="Zonificación España">
+                        <group>
+                            <field name="ontime_origin_postal_code"/>
+                            <field name="ontime_regional_postal_prefixes"/>
+                        </group>
+                        <group>
+                            <field name="ontime_baleares_minor_prefixes"/>
+                            <field name="ontime_canarias_major_prefixes"/>
+                        </group>
+                        <div class="text-muted" colspan="2">
+                            Provincial = misma provincia que el origen. Regional = prefijos configurados
+                            (por defecto 02 Albacete, 30 Murcia y 46 Valencia, igual que en GLS para origen
+                            Alicante). El resto de península = Iberia. Ceuta, Melilla, Baleares y Canarias
+                            se resuelven antes como zonas especiales.
+                        </div>
+                    </group>
+
+                    <group string="Tarifas importadas" groups="base.group_system">
+                        <field name="ontime_tariff_rule_ids" nolabel="1" colspan="2" readonly="1">
+                            <list>
+                                <field name="service"/>
+                                <field name="zone"/>
+                                <field name="weight_to"/>
+                                <field name="currency_id" column_invisible="True"/>
+                                <field name="price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                                <field name="extra_kg_price" widget="monetary" options="{'currency_field': 'currency_id'}" optional="show"/>
+                            </list>
+                        </field>
+                    </group>
+
+                    <group string="Validación de bultos">
+                        <div class="text-muted" colspan="2">
+                            Con paquetes reales de Odoo, Mensaglobal recibe peso y dimensiones exactas de cada
+                            bulto. Sin paquetes reales, se envían los pesos estimados; solo se envían dimensiones
+                            cuando un producto/unidad se corresponde inequívocamente con un bulto, evitando inventar
+                            geometría para cajas mixtas. El peso facturable sigue calculándose con la lógica de Fase 4.
+                        </div>
+                    </group>
+
+                    <group string="Estado">
+                        <div class="o_form_label">Integración final Mensaglobal / OnTime</div>
+                        <div class="text-muted">
+                            La integración usa Bearer token, servicio 72 para XS Economy y código 24 como fallback,
+                            con creación, etiquetas, tracking, POD y anulación. El modo API Test fuerza el destinatario
+                            <strong>Test Pruebas</strong>. Las tarifas de venta proceden del PDF contractual importado y
+                            los impuestos se toman del producto de envío de Odoo, respetando la posición fiscal.
+                        </div>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

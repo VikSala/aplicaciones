@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_delivery_ontime_tariff_rule_user,delivery.ontime.tariff.rule user,model_delivery_ontime_tariff_rule,base.group_user,1,0,0,0
+access_delivery_ontime_tariff_rule_admin,delivery.ontime.tariff.rule admin,model_delivery_ontime_tariff_rule,base.group_system,1,1,1,1
+access_delivery_ontime_reconcile_wizard_admin,delivery.ontime.reconcile.wizard admin,model_delivery_ontime_reconcile_wizard,base.group_system,1,1,1,1
