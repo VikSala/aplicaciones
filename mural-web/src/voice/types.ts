@@ -20,6 +20,7 @@ export interface VoicePreferences {
 export interface SttSessionOptions {
   language: string;
   pronunciationAssessmentMode?: PronunciationAssessmentMode;
+  phraseHints?: string[];
 }
 
 export interface SttProvider {

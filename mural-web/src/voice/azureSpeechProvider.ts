@@ -112,6 +112,7 @@ export class AzureSpeechProvider implements SttProvider {
   private recognizer: any | null = null;
   private audioConfig: any | null = null;
   private pronunciationConfig: any | null = null;
+  private phraseListGrammar: any | null = null;
   private sessionId: string | null = null;
   private autoStopTimer: number | null = null;
   private stoppingPromise: Promise<void> | null = null;
@@ -176,6 +177,23 @@ export class AzureSpeechProvider implements SttProvider {
       this.audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
       const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, this.audioConfig);
       this.recognizer = recognizer;
+
+      const phraseHints = Array.from(new Set((options.phraseHints || [])
+        .map((phrase) => phrase.trim())
+        .filter((phrase) => phrase.length >= 2 && phrase.length <= 80)))
+        .slice(0, 40);
+
+      if (phraseHints.length > 0 && SpeechSDK.PhraseListGrammar?.fromRecognizer) {
+        const phraseListGrammar = SpeechSDK.PhraseListGrammar.fromRecognizer(recognizer);
+        if (typeof phraseListGrammar.addPhrases === 'function') {
+          phraseListGrammar.addPhrases(phraseHints);
+        } else {
+          phraseHints.forEach((phrase) => phraseListGrammar.addPhrase?.(phrase));
+        }
+        // Sesgo moderado: ayuda con vocabulario esperado sin forzar demasiado el dictado.
+        phraseListGrammar.setWeight?.(1.15);
+        this.phraseListGrammar = phraseListGrammar;
+      }
 
       if (options.pronunciationAssessmentMode === 'basic') {
         const pronunciationConfig = new SpeechSDK.PronunciationAssessmentConfig(
@@ -271,11 +289,13 @@ export class AzureSpeechProvider implements SttProvider {
       const recognizer = this.recognizer;
       const audioConfig = this.audioConfig;
       const pronunciationConfig = this.pronunciationConfig;
+      const phraseListGrammar = this.phraseListGrammar;
       const sessionId = this.sessionId;
 
       this.recognizer = null;
       this.audioConfig = null;
       this.pronunciationConfig = null;
+      this.phraseListGrammar = null;
       this.sessionId = null;
 
       if (recognizer) {
@@ -307,6 +327,14 @@ export class AzureSpeechProvider implements SttProvider {
           pronunciationConfig.close();
         } catch {
           // Nada que liberar adicionalmente.
+        }
+      }
+
+      if (phraseListGrammar && typeof phraseListGrammar.clear === 'function') {
+        try {
+          phraseListGrammar.clear();
+        } catch {
+          // La lista de frases vive asociada al recognizer y desaparece al cerrar la sesión.
         }
       }
 

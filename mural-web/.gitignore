@@ -1,11 +1,13 @@
 node_modules/
 dist/
+.env
 .env.local
 .env.production
 *.log
 .DS_Store
 data/usage.json
 
+mural-chirp.json
 *-service-account.json
 *-credentials.json
 *.pem

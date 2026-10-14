@@ -288,3 +288,9 @@ cp .env.example .env
 # completar .env y colocar mural-chirp.json
 docker compose up -d --build
 ```
+
+## Ajustes posteriores de experiencia móvil
+
+- Azure Speech sigue usando un locale fijo de inglés (`en-US`) en lugar de detección automática.
+- El recognizer recibe una lista breve de `PhraseListGrammar` generada a partir del vocabulario aprendido y de palabras relevantes de la conversación reciente para mejorar el reconocimiento de términos esperables sin forzar el dictado.
+- El historial ya no ejecuta `scrollIntoView()` al recibir mensajes. La vista permanece donde la haya dejado el usuario; desde la pantalla principal la esfera no desaparece por un scroll automático y el historial se consulta desplazándose manualmente.

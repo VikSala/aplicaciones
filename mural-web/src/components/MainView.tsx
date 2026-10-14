@@ -53,6 +53,40 @@ function joinTranscript(parts: string[]): string {
   return parts.map((part) => part.trim()).filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
 }
 
+const SPEECH_HINT_STOP_WORDS = new Set([
+  'about', 'after', 'again', 'also', 'because', 'before', 'being', 'could', 'every', 'from', 'have', 'into',
+  'just', 'like', 'more', 'other', 'really', 'some', 'than', 'that', 'their', 'there', 'these', 'they',
+  'this', 'those', 'very', 'what', 'when', 'where', 'which', 'while', 'with', 'would', 'your',
+]);
+
+function buildSpeechPhraseHints(
+  memory: LearningMemorySnapshot,
+  messages: ConversationMessage[],
+  draftText: string,
+): string[] {
+  const hints = new Set<string>();
+
+  [...memory.vocabulary]
+    .sort((a, b) => new Date(b.lastSeenAt).getTime() - new Date(a.lastSeenAt).getTime())
+    .slice(0, 24)
+    .forEach((item) => {
+      const term = item.term.trim();
+      if (term.length >= 2 && term.length <= 80) hints.add(term);
+    });
+
+  const lastAssistant = [...messages].reverse().find((message) => message.role === 'assistant')?.text || '';
+  const contextualText = `${lastAssistant} ${draftText}`;
+  const contextualWords = contextualText.match(/[A-Za-z][A-Za-z'’-]{4,}/g) || [];
+
+  contextualWords.forEach((word) => {
+    const clean = word.replace(/[’]/g, "'").trim();
+    const normalized = clean.toLowerCase();
+    if (!SPEECH_HINT_STOP_WORDS.has(normalized) && hints.size < 40) hints.add(clean);
+  });
+
+  return Array.from(hints).slice(0, 40);
+}
+
 function addSetValue(current: Set<number>, value: number): Set<number> {
   const next = new Set(current);
   next.add(value);
@@ -158,7 +192,6 @@ export const MainView: React.FC = () => {
   const pronunciationSegmentsRef = useRef<PronunciationSegmentAssessment[]>([]);
   const sessionStartedAtRef = useRef(new Date().toISOString());
   const draftSourceRef = useRef<TurnSource>('keyboard');
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
   if (!sttProviderRef.current) sttProviderRef.current = new AzureSpeechProvider();
@@ -195,11 +228,6 @@ export const MainView: React.FC = () => {
       window.removeEventListener('offline', updateOnlineState);
     };
   }, []);
-
-  useEffect(() => {
-    if (mainSection !== 'conversation') return;
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, [messages.length, mainSection]);
 
   useEffect(() => {
     applyAppearance(appearanceMode);
@@ -692,6 +720,11 @@ export const MainView: React.FC = () => {
       await provider.start({
         language: language.locale,
         pronunciationAssessmentMode: voicePreferencesRef.current.pronunciationAssessmentMode,
+        phraseHints: buildSpeechPhraseHints(
+          learningMemoryRef.current,
+          messagesRef.current,
+          inputText,
+        ),
       });
       setSttNotice(
         voicePreferencesRef.current.voiceSubmitMode === 'auto'
@@ -1022,7 +1055,6 @@ export const MainView: React.FC = () => {
                         </article>
                       );
                     })}
-                    <div ref={messagesEndRef} />
                   </div>
                 )}
               </section>
