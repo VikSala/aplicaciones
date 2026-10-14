@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "mural-511511",
+  "private_key_id": "f143db1d2a3464af7ebffdd9268ff85a041c193d",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDcmyz66NgUIaCA\no2K35h31+av5UuVcJreQiHex1o33foYiB4aS+TNwASDyHfIPJ9+MBSJiWJzKbC88\n/+9aq615WKPIWBLMa4+SajLw50VnPwIUt0n9FlQMq0tnHl4JKkMZIwFxtl88moCS\nojmC4SzaATZJ8wxe/PamhEIju9X+mhcaRDnwgm48fvo2eaPOO8IbDO+7VF+2Up9T\ndIqffG8nwfDw0cGc2f0NXfDRZRCq42MNWtRoDTJCvysooJvF1Z8LpN7sIhX6eqJi\nHliYrSGvHrzPKVs/UZrKIJ2eI/A5ulAY3HtMLoM22sVvkb9tS/N1FmhRCLy8azk4\n2En2o6/NAgMBAAECggEAGjTH3N2Ur52IBMgD9d8c/4ejhYhyrSX/R+jiOSrI7hXm\nZrv4oVR/pwZHTOPAScsdi/NfMIogxA4idW9c1mtO/fuI50eJIiYD5et+Ni5vCPML\n8vyMCkfg/6lImY0atCGEW4PUS9cTjK446FJjnRfVPWeH9LRt64nG3iSXe8m4Q9h/\nNuCS9J6ygu5Tqa4hbEoJtfwAgXw40Q9DKRc1zvFyJ4iorSEzxSDij7a8BQURsGBe\nr/wWReaIzEZ55jxpAgtkyoUIN5zeNa26Cd1TW2Dt3jUcPp+DCySDpFXCLzDc6tP8\nWfqCv5/Rj4PXgFLSoJf6W3EPrFwKJ40cODnJ7JOLkQKBgQD2diKvR+3dQoL6MsTW\nENTL/TYGoNR++GGwu4OFc/FvkmzwrTORBZODY6BX0F4POoCmmkPTgcBBVU18QGD8\nS+6sCt1+t/ubUJpgf25y2sq2DCKU5GuRfPS3MQJLw82W5KVL7q8gdH8E9nGa7HN2\nZXUmJJwQ+O8ChIOzYXA7/ns0MQKBgQDlJN+sxJdj0O1r9bzn5pKWqEj7H6eVAPyB\n+GpT6S9/wr/J9QQOM4EMrabzRFGiXmOBu+yZ3LJpHJ8pmANGcqFNBbNZxTe9fOcd\nTwgltVNW+T7HIJYos/M6Q/KC2YnQpi6mkLn0K4rbE6LRLk+3wfOgFCHy36kewy/Q\nkp+yBHDaXQKBgQCuRLIZxn6GqPT7/NH5m0UcSBrfbPFUJkTNNom031qkTaECPTXt\nIUhA6z0BWrBnjDJTm1jCQUiz6aE0bkElpHtK4xPi+izKkZ/XA8QRKmuTddkt9qWo\n5fYTYnABKp5AR8QpgMgL5tO5qpiBtxeda/f91H0V8y7tVM3bFNbLVRHAwQKBgQCC\n583gpW7XV0RLqNeCo/aamwkWbb8PIMEgfwo/Zbf9BQUMGy1173aKB6qYzy7T05iF\nRRalz68c3X0QBgfY9yOvHNKZNlHhrrlZxQyifjReO4XhvHwMRMFvR+IDXsOcr1N3\nVLbnBvkMrusVFZ/1GphTmyzJ03yKVne6cAlLab4PAQKBgQD0t750mxge3luBizhE\n4rak4E3fVB3FGvtWnNHVLe9OXcutw90pmiwyWB+AO2F1xMh9Y0BXS9rtSjp/xpOC\nB1AwGUtEbUOl+uWT1bkyLSkO5NYo6zEoMuC9V5pM1J7It30eHRuklhmlagq7v+pP\nTnOqpHCuCHaYbrEbEkJYoaw0AA==\n-----END PRIVATE KEY-----\n",
+  "client_email": "chirp-app-service@mural-511511.iam.gserviceaccount.com",
+  "client_id": "103110614360283742089",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/chirp-app-service%40mural-511511.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
