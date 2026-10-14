@@ -1,0 +1,26 @@
+node_modules
+dist
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+*.log
+*.7z
+*.zip
+.DS_Store
+coverage
+.vscode
+.idea
+
+# Credenciales: nunca deben entrar en la imagen.
+mural-chirp.json
+*-service-account.json
+*-credentials.json
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Datos persistentes del runtime.
+data/usage.json
