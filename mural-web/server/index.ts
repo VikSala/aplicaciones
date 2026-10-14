@@ -53,7 +53,7 @@ function staticCacheControl(pathname: string): string {
     return 'no-cache';
   }
   if (pathname.startsWith('/assets/')) return 'public, max-age=31536000, immutable';
-  if (pathname.startsWith('/icons/') || pathname === '/favicon.svg') return 'public, max-age=86400';
+  if (pathname.startsWith('/icons/') || pathname.startsWith('/favicon')) return 'no-cache';
   return 'public, max-age=3600';
 }
 

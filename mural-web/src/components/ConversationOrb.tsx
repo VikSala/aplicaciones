@@ -5,6 +5,7 @@ type OrbState = 'idle' | 'listening' | 'thinking' | 'speaking';
 interface ConversationOrbProps {
   state: OrbState;
   onClick?: () => void;
+  showLabel?: boolean;
 }
 
 const STATE_LABELS: Record<OrbState, string> = {
@@ -95,7 +96,7 @@ function buildMesh(frameMs: number, state: OrbState): MeshFrame {
   return { lines, cells };
 }
 
-export const ConversationOrb: React.FC<ConversationOrbProps> = ({ state, onClick }) => {
+export const ConversationOrb: React.FC<ConversationOrbProps> = ({ state, onClick, showLabel = true }) => {
   const [frameMs, setFrameMs] = useState(0);
 
   useEffect(() => {
@@ -162,7 +163,7 @@ export const ConversationOrb: React.FC<ConversationOrbProps> = ({ state, onClick
         </span>
         <span className="mesh-orb__shine" aria-hidden="true" />
       </button>
-      <p className="orb-stage__label">{STATE_LABELS[state]}</p>
+      {showLabel && <p className="orb-stage__label">{STATE_LABELS[state]}</p>}
     </div>
   );
 };

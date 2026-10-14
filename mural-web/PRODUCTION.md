@@ -99,3 +99,19 @@ Frontend: `http://localhost:5173`
 - cierre limpio con SIGTERM/SIGINT;
 - cabeceras HTTP de seguridad y caché diferenciada para assets/PWA;
 - `/api` y frontend comparten origen, sin CORS abierto.
+
+## Actualizar una instalación existente
+
+Para esta versión de interfaz se ha cambiado la etiqueta de imagen y la versión del service worker para evitar que el navegador o Docker sigan sirviendo una compilación anterior.
+
+Desde la carpeta del proyecto:
+
+```bash
+docker compose down
+docker compose build --no-cache mural
+docker compose up -d --force-recreate
+```
+
+Después abre Mural de nuevo. El nuevo service worker invalida las cachés anteriores y fuerza una recarga única de las ventanas abiertas al activarse.
+
+Si Mural estaba instalada como PWA y el launcher del móvil conserva únicamente el icono antiguo, desinstala y vuelve a instalar la PWA una vez. El código y la interfaz no requieren borrar IndexedDB, por lo que no es necesario eliminar los datos del sitio para actualizar la aplicación.

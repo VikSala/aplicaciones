@@ -5,7 +5,7 @@ services:
     build:
       context: .
       target: runtime
-    image: mural-web:13
+    image: mural-web:13-ui3
     container_name: mural-web
     restart: unless-stopped
     init: true
