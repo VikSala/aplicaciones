@@ -936,16 +936,7 @@ export const MainView: React.FC = () => {
             ? 'Voz no disponible'
             : 'Hablar';
 
-  const lastAssistantIndexForHero = messages.reduce(
-    (latest, message, index) => message.role === 'assistant' ? index : latest,
-    -1,
-  );
-  const lastAssistantMessage = lastAssistantIndexForHero >= 0 && !hiddenAssistantIndexes.has(lastAssistantIndexForHero)
-    ? messages[lastAssistantIndexForHero]?.text
-    : null;
-  const compactAssistantMessage = lastAssistantMessage
-    ? (lastAssistantMessage.length > 92 ? `${lastAssistantMessage.slice(0, 89).trim()}…` : lastAssistantMessage)
-    : null;
+
 
   return (
     <div className="app-shell">
@@ -1005,19 +996,16 @@ export const MainView: React.FC = () => {
               <ConversationOrb
                 state={orbState}
                 onClick={sttDisabled ? undefined : () => void handleToggleMicrophone()}
+                showLabel={messages.length === 0 || orbState !== 'idle'}
               />
 
-              <section className="conversation-hero" aria-live="polite">
-                <p className="conversation-hero__kicker">
-                  {isListening ? 'Mic on' : isSending ? 'One moment' : isSpeaking ? 'Listen' : 'Speak English whenever you want'}
-                </p>
-                <h1>{messages.length === 0 ? 'Hi.' : selectedTheme.title}</h1>
-                <p>
-                  {messages.length === 0
-                    ? 'Habla o escribe cuando quieras.'
-                    : compactAssistantMessage || (lastAssistantIndexForHero >= 0 && hiddenAssistantIndexes.has(lastAssistantIndexForHero) ? 'Escucha la respuesta antes de revelar el texto.' : 'La conversación está lista para continuar.')}
-                </p>
-              </section>
+              {messages.length === 0 && (
+                <section className="conversation-hero" aria-live="polite">
+                  <p className="conversation-hero__kicker">Speak English whenever you want</p>
+                  <h1>Hi.</h1>
+                  <p>Habla o escribe cuando quieras.</p>
+                </section>
+              )}
 
               <section className={`conversation-stream ${messages.length === 0 ? 'is-empty' : ''}`}>
                 {messages.length > 0 && (
@@ -1059,17 +1047,6 @@ export const MainView: React.FC = () => {
                 )}
               </section>
 
-              {lastPronunciationAssessment && voicePreferences.pronunciationAssessmentMode === 'basic' && (
-                <section className="pronunciation-strip">
-                  <div><span>Pronunciation</span><strong>{Math.round(lastPronunciationAssessment.pronunciationScore)}</strong></div>
-                  <div><span>Accuracy</span><strong>{Math.round(lastPronunciationAssessment.accuracyScore)}</strong></div>
-                  <div><span>Fluency</span><strong>{Math.round(lastPronunciationAssessment.fluencyScore)}</strong></div>
-                  {lastPronunciationAssessment.weakWords.length > 0 && (
-                    <p>Revisa: {lastPronunciationAssessment.weakWords.slice(0, 4).map((word) => word.word).join(' · ')}</p>
-                  )}
-                </section>
-              )}
-
               {(persistenceError || error || pronunciationError) && (
                 <div className="error-stack">
                   {persistenceError && <div className="error-note">{persistenceError}</div>}
@@ -1079,68 +1056,81 @@ export const MainView: React.FC = () => {
               )}
             </main>
 
-            <section className="voice-controls" aria-label="Controles de conversación">
-              <button
-                type="button"
-                className="side-action"
-                onClick={clearConversation}
-                disabled={messages.length === 0 || isSending || isListening || persistenceStatus === 'loading'}
-              >
-                <span className="side-action__icon"><AppIcon name="newConversation" /></span>
-                <span>Nueva</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => void handleToggleMicrophone()}
-                disabled={sttDisabled}
-                title={sttButtonTitle}
-                className={`microphone-button ${isListening ? 'is-listening' : ''}`}
-                aria-label={isListening ? 'Detener micrófono' : 'Hablar'}
-              >
-                {isListening ? <span className="stop-mark" /> : <AppIcon name="talk" size={32} strokeWidth={1.65} />}
-              </button>
-
-              <button type="button" className="side-action" onClick={() => inputRef.current?.focus()} disabled={isSending || isListening}>
-                <span className="side-action__icon"><AppIcon name="keyboard" /></span>
-                <span>Escribir</span>
-              </button>
-            </section>
-
-            <p className="microphone-caption">
-              {isListening ? 'Mic on' : voicePreferences.sttMode === 'text' ? 'Voice input off' : 'Microphone off'}
-            </p>
-
-            <footer className="composer-zone">
-              <form onSubmit={handleSend} className="minimal-composer">
-                <textarea
-                  ref={inputRef}
-                  value={inputText}
-                  onChange={(event) => setInputText(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' && !event.shiftKey) {
-                      event.preventDefault();
-                      if (inputText.trim() && !isSending && !isListening && isOnline) void submitTurn(inputText, draftSourceRef.current);
-                    }
-                  }}
-                  rows={1}
-                  placeholder={isListening ? 'Transcribiendo…' : isSending ? 'Esperando respuesta…' : 'Write something…'}
-                  disabled={persistenceStatus === 'loading' || isSending || isListening}
-                  aria-label="Mensaje para el profesor"
-                />
-                <button
-                  type="submit"
-                  className="composer-send"
-                  disabled={!isOnline || persistenceStatus === 'loading' || isSending || isListening || !inputText.trim()}
-                  aria-label="Enviar"
-                >
-                  <AppIcon name="send" size={19} />
-                </button>
-              </form>
-              {(sttNotice || ttsNotice) && (
-                <div className="inline-status" aria-live="polite">{sttNotice || ttsNotice}</div>
+            <section className="conversation-action-dock" aria-label="Controles de conversación">
+              {lastPronunciationAssessment && voicePreferences.pronunciationAssessmentMode === 'basic' && (
+                <section className="pronunciation-strip">
+                  <div><span>Pronunciation</span><strong>{Math.round(lastPronunciationAssessment.pronunciationScore)}</strong></div>
+                  <div><span>Accuracy</span><strong>{Math.round(lastPronunciationAssessment.accuracyScore)}</strong></div>
+                  <div><span>Fluency</span><strong>{Math.round(lastPronunciationAssessment.fluencyScore)}</strong></div>
+                  {lastPronunciationAssessment.weakWords.length > 0 && (
+                    <p>Review: {lastPronunciationAssessment.weakWords.slice(0, 4).map((word) => word.word).join(' · ')}</p>
+                  )}
+                </section>
               )}
-            </footer>
+
+              <section className="voice-controls">
+                <button
+                  type="button"
+                  className="side-action"
+                  onClick={clearConversation}
+                  disabled={messages.length === 0 || isSending || isListening || persistenceStatus === 'loading'}
+                >
+                  <span className="side-action__icon"><AppIcon name="newConversation" /></span>
+                  <span>New</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => void handleToggleMicrophone()}
+                  disabled={sttDisabled}
+                  title={sttButtonTitle}
+                  className={`microphone-button ${isListening ? 'is-listening' : ''}`}
+                  aria-label={isListening ? 'Stop microphone' : 'Talk'}
+                >
+                  {isListening ? <span className="stop-mark" /> : <AppIcon name="talk" size={32} strokeWidth={1.65} />}
+                </button>
+
+                <button type="button" className="side-action" onClick={() => inputRef.current?.focus()} disabled={isSending || isListening}>
+                  <span className="side-action__icon"><AppIcon name="keyboard" /></span>
+                  <span>Write</span>
+                </button>
+              </section>
+
+              <p className="microphone-caption">
+                {isListening ? 'Microphone on' : voicePreferences.sttMode === 'text' ? 'Voice input off' : 'Microphone off'}
+              </p>
+
+              <footer className="composer-zone">
+                <form onSubmit={handleSend} className="minimal-composer">
+                  <textarea
+                    ref={inputRef}
+                    value={inputText}
+                    onChange={(event) => setInputText(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' && !event.shiftKey) {
+                        event.preventDefault();
+                        if (inputText.trim() && !isSending && !isListening && isOnline) void submitTurn(inputText, draftSourceRef.current);
+                      }
+                    }}
+                    rows={1}
+                    placeholder={isListening ? 'Transcribing…' : isSending ? 'Waiting for response…' : 'Write something…'}
+                    disabled={persistenceStatus === 'loading' || isSending || isListening}
+                    aria-label="Message for Mural"
+                  />
+                  <button
+                    type="submit"
+                    className="composer-send"
+                    disabled={!isOnline || persistenceStatus === 'loading' || isSending || isListening || !inputText.trim()}
+                    aria-label="Send"
+                  >
+                    <AppIcon name="send" size={19} />
+                  </button>
+                </form>
+                {(sttNotice || ttsNotice) && (
+                  <div className="inline-status" aria-live="polite">{sttNotice || ttsNotice}</div>
+                )}
+              </footer>
+            </section>
           </>
         ) : mainSection === 'words' ? (
           <main className="secondary-screen"><WordsView memory={learningMemory} /></main>
