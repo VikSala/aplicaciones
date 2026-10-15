@@ -940,7 +940,7 @@ export const MainView: React.FC = () => {
 
   return (
     <div className="app-shell">
-      <div className="app-frame">
+      <div className={`app-frame ${mainSection === 'conversation' && messages.length > 0 ? 'app-frame--conversation-active' : ''}`}>
         <header className="app-header">
           <button type="button" className="brand-mark" onClick={() => setMainSection('conversation')} aria-label="Ir a conversación">
             <span className="brand-mark__dot" aria-hidden="true" />
@@ -1047,16 +1047,6 @@ export const MainView: React.FC = () => {
                 )}
               </section>
 
-              {(persistenceError || error || pronunciationError) && (
-                <div className="error-stack">
-                  {persistenceError && <div className="error-note">{persistenceError}</div>}
-                  {error && <div className="error-note">{error}</div>}
-                  {pronunciationError && <div className="error-note">{pronunciationError}</div>}
-                </div>
-              )}
-            </main>
-
-            <section className="conversation-action-dock" aria-label="Controles de conversación">
               {lastPronunciationAssessment && voicePreferences.pronunciationAssessmentMode === 'basic' && (
                 <section className="pronunciation-strip">
                   <div><span>Pronunciation</span><strong>{Math.round(lastPronunciationAssessment.pronunciationScore)}</strong></div>
@@ -1068,69 +1058,77 @@ export const MainView: React.FC = () => {
                 </section>
               )}
 
-              <section className="voice-controls">
-                <button
-                  type="button"
-                  className="side-action"
-                  onClick={clearConversation}
-                  disabled={messages.length === 0 || isSending || isListening || persistenceStatus === 'loading'}
-                >
-                  <span className="side-action__icon"><AppIcon name="newConversation" /></span>
-                  <span>New</span>
-                </button>
+              {(persistenceError || error || pronunciationError) && (
+                <div className="error-stack">
+                  {persistenceError && <div className="error-note">{persistenceError}</div>}
+                  {error && <div className="error-note">{error}</div>}
+                  {pronunciationError && <div className="error-note">{pronunciationError}</div>}
+                </div>
+              )}
+            </main>
 
-                <button
-                  type="button"
-                  onClick={() => void handleToggleMicrophone()}
-                  disabled={sttDisabled}
-                  title={sttButtonTitle}
-                  className={`microphone-button ${isListening ? 'is-listening' : ''}`}
-                  aria-label={isListening ? 'Stop microphone' : 'Talk'}
-                >
-                  {isListening ? <span className="stop-mark" /> : <AppIcon name="talk" size={32} strokeWidth={1.65} />}
-                </button>
+            <section className="voice-controls" aria-label="Conversation controls">
+              <button
+                type="button"
+                className="side-action"
+                onClick={clearConversation}
+                disabled={messages.length === 0 || isSending || isListening || persistenceStatus === 'loading'}
+              >
+                <span className="side-action__icon"><AppIcon name="newConversation" /></span>
+                <span>New</span>
+              </button>
 
-                <button type="button" className="side-action" onClick={() => inputRef.current?.focus()} disabled={isSending || isListening}>
-                  <span className="side-action__icon"><AppIcon name="keyboard" /></span>
-                  <span>Write</span>
-                </button>
-              </section>
+              <button
+                type="button"
+                onClick={() => void handleToggleMicrophone()}
+                disabled={sttDisabled}
+                title={sttButtonTitle}
+                className={`microphone-button ${isListening ? 'is-listening' : ''}`}
+                aria-label={isListening ? 'Stop microphone' : 'Talk'}
+              >
+                {isListening ? <span className="stop-mark" /> : <AppIcon name="talk" size={32} strokeWidth={1.65} />}
+              </button>
 
-              <p className="microphone-caption">
-                {isListening ? 'Microphone on' : voicePreferences.sttMode === 'text' ? 'Voice input off' : 'Microphone off'}
-              </p>
-
-              <footer className="composer-zone">
-                <form onSubmit={handleSend} className="minimal-composer">
-                  <textarea
-                    ref={inputRef}
-                    value={inputText}
-                    onChange={(event) => setInputText(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' && !event.shiftKey) {
-                        event.preventDefault();
-                        if (inputText.trim() && !isSending && !isListening && isOnline) void submitTurn(inputText, draftSourceRef.current);
-                      }
-                    }}
-                    rows={1}
-                    placeholder={isListening ? 'Transcribing…' : isSending ? 'Waiting for response…' : 'Write something…'}
-                    disabled={persistenceStatus === 'loading' || isSending || isListening}
-                    aria-label="Message for Mural"
-                  />
-                  <button
-                    type="submit"
-                    className="composer-send"
-                    disabled={!isOnline || persistenceStatus === 'loading' || isSending || isListening || !inputText.trim()}
-                    aria-label="Send"
-                  >
-                    <AppIcon name="send" size={19} />
-                  </button>
-                </form>
-                {(sttNotice || ttsNotice) && (
-                  <div className="inline-status" aria-live="polite">{sttNotice || ttsNotice}</div>
-                )}
-              </footer>
+              <button type="button" className="side-action" onClick={() => inputRef.current?.focus()} disabled={isSending || isListening}>
+                <span className="side-action__icon"><AppIcon name="keyboard" /></span>
+                <span>Write</span>
+              </button>
             </section>
+
+            <p className="microphone-caption">
+              {isListening ? 'Microphone on' : voicePreferences.sttMode === 'text' ? 'Voice input off' : 'Microphone off'}
+            </p>
+
+            <footer className="composer-zone">
+              <form onSubmit={handleSend} className="minimal-composer">
+                <textarea
+                  ref={inputRef}
+                  value={inputText}
+                  onChange={(event) => setInputText(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                      event.preventDefault();
+                      if (inputText.trim() && !isSending && !isListening && isOnline) void submitTurn(inputText, draftSourceRef.current);
+                    }
+                  }}
+                  rows={1}
+                  placeholder={isListening ? 'Transcribing…' : isSending ? 'Waiting for response…' : 'Write something…'}
+                  disabled={persistenceStatus === 'loading' || isSending || isListening}
+                  aria-label="Message for Mural"
+                />
+                <button
+                  type="submit"
+                  className="composer-send"
+                  disabled={!isOnline || persistenceStatus === 'loading' || isSending || isListening || !inputText.trim()}
+                  aria-label="Send"
+                >
+                  <AppIcon name="send" size={19} />
+                </button>
+              </form>
+              {(sttNotice || ttsNotice) && (
+                <div className="inline-status" aria-live="polite">{sttNotice || ttsNotice}</div>
+              )}
+            </footer>
           </>
         ) : mainSection === 'words' ? (
           <main className="secondary-screen"><WordsView memory={learningMemory} /></main>

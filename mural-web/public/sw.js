@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mural-web-v13-ui-3';
+const CACHE_NAME = 'mural-web-v13-ui-4-scroll-region';
 const APP_SHELL = ['/', '/manifest.webmanifest', '/favicon-orb-ui3.svg', '/icons/mural-orb-ui3-192.png', '/icons/mural-orb-ui3-512.png'];
 
 self.addEventListener('install', (event) => {
