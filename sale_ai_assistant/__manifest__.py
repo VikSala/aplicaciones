@@ -1,0 +1,31 @@
+{
+    "name": "Asistente IA para Ventas",
+    "summary": "Agente comercial: revisión técnica evolutiva, estimaciones y presupuestos en borrador",
+    "version": "18.0.0.11.12",
+    "category": "Sales/Sales",
+    "author": "Proyecto VICTOR SALA",
+    "license": "LGPL-3",
+    "depends": ["sale"],
+    "data": [
+        "security/ir.model.access.csv",
+        "security/sale_ai_security.xml",
+        "data/sale_ai_models.xml",
+        "views/sale_ai_model_views.xml",
+        "views/sale_ai_model_usage_views.xml",
+        "views/sale_ai_gateway_settings_views.xml",
+        "views/sale_ai_draft_views.xml",
+        "views/sale_ai_session_views.xml",
+        "views/res_config_settings_views.xml",
+        "views/sale_ai_menus.xml",
+        "data/sale_ai_hide_legacy_rules.xml",
+    ],
+    "assets": {
+        "web.assets_backend": [
+            "sale_ai_assistant/static/src/js/sale_ai_chat.js",
+            "sale_ai_assistant/static/src/xml/sale_ai_chat.xml",
+            "sale_ai_assistant/static/src/scss/sale_ai_chat.scss",
+        ],
+    },
+    "application": False,
+    "installable": True,
+}

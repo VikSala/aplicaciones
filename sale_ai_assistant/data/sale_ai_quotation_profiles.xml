@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Global STARTER rule; exact product codes will be resolved in the active
+         company only when unique. Administrators can create per-company overrides. -->
+    <record id="sale_ai_profile_electrical_installation" model="sale.ai.quotation.profile">
+        <field name="name">Instalaciones eléctricas — partida global</field>
+        <field name="code">electrical_installation</field>
+        <field name="company_id" eval="False"/>
+        <field name="priority">80</field>
+        <field name="structure">main_note_global</field>
+        <field name="keywords"><![CDATA[instalacion electrica
+instalacion de cableado
+linea de alimentacion motores
+alimentacion motores ventilacion
+instalacion de motores
+cuadro electrico
+protecciones electricas
+suministro e instalacion electrica]]></field>
+        <field name="main_product_code">IE</field>
+        <field name="global_product_code">TLMEF</field>
+        <field name="global_line_label">TOTAL</field>
+        <field name="notes">Referencia de estructura, no de precios. El cálculo de materiales/mano de obra permanece interno. Configurar productos reales por compañía si las referencias internas no son únicas.</field>
+    </record>
+</odoo>

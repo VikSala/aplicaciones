@@ -1,0 +1,23 @@
+// Actual resize method with DOM measurements simulated; no browser/Odoo required.
+const fs = require('fs');
+const path = require('path');
+const assert = require('assert');
+const source = fs.readFileSync(path.join(__dirname, '../static/src/js/sale_ai_chat.js'), 'utf8');
+const body = source.split('    resizeComposer() {')[1].split('\n    readWidth() {')[0].trim().replace(/\}\s*$/, '');
+const resize = new Function(body);
+global.window = {innerHeight: 900};
+const input = {style: {}, scrollTop: 15, scrollHeight: 450};
+const context = {composerInput: {el: input}};
+resize.call(context);
+assert.equal(input.style.height, '240px');
+assert.equal(input.style.overflowY, 'auto');
+assert.equal(input.scrollTop, 15);
+input.scrollHeight = 32;
+resize.call(context);
+assert.equal(input.style.height, '32px');
+assert.equal(input.style.overflowY, 'hidden');
+window.innerHeight = 400; input.scrollHeight = 450;
+resize.call(context);
+assert.equal(input.style.height, '140px');
+resize.call({composerInput: {el: null}});
+console.log('Composer: límite, desplazamiento, contracción y pantalla baja correctos (DOM simulado).');

@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sale_ai_session_user,sale.ai.session administrador ventas,model_sale_ai_session,sales_team.group_sale_manager,1,1,1,1
+access_sale_ai_message_user,sale.ai.message administrador ventas,model_sale_ai_message,sales_team.group_sale_manager,1,0,1,0
+access_sale_ai_draft_user,sale.ai.draft administrador ventas,model_sale_ai_draft,sales_team.group_sale_manager,1,1,1,0
+access_sale_ai_draft_line_user,sale.ai.draft.line administrador ventas,model_sale_ai_draft_line,sales_team.group_sale_manager,1,1,1,1
+access_sale_ai_model_user,sale.ai.model administrador ventas,model_sale_ai_model,sales_team.group_sale_manager,1,0,0,0
+access_sale_ai_model_manager,sale.ai.model administrador ventas,model_sale_ai_model,sales_team.group_sale_manager,1,1,1,0
+access_sale_ai_gateway_settings_sales_manager,sale.ai.gateway.settings administrador ventas,model_sale_ai_gateway_settings,sales_team.group_sale_manager,1,1,1,1
+access_sale_ai_market_usage_admin,sale.ai.market.usage administrador ventas,model_sale_ai_market_usage,sales_team.group_sale_manager,1,0,1,0
+access_sale_ai_draft_change_manager,sale.ai.draft.change administrador ventas,model_sale_ai_draft_change,sales_team.group_sale_manager,1,1,1,1
+access_sale_ai_model_usage_manager,sale.ai.model.usage manager,model_sale_ai_model_usage,sales_team.group_sale_manager,1,0,0,0

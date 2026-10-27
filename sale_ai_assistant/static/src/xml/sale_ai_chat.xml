@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+  <t t-name="sale_ai_assistant.SaleAIChat" owl="1">
+    <div t-if="state.allowed and state.isSalesApp" class="sale-ai-root">
+      <button t-if="!state.open" type="button" class="sale-ai-fab" t-on-click="openPanel"
+              title="Abrir asistente IA" aria-label="Abrir asistente IA">
+        <span>IA</span>
+      </button>
+      <!-- Desktop preview sits to the LEFT of the chat: conversation stays visible. -->
+      <section t-if="state.open and state.previewOpen" class="sale-ai-preview-panel"
+               t-att-style="'right:' + state.width + 'px; width:min(440px, calc(100vw - ' + state.width + 'px - 20px));'"
+               aria-label="Vista previa del presupuesto">
+        <div class="sale-ai-preview-panel-header">
+          <strong>Vista previa del presupuesto</strong>
+          <button type="button" class="sale-ai-icon-btn" t-on-click="togglePreview" aria-label="Cerrar vista previa"><i class="fa fa-times"/></button>
+        </div>
+        <div class="sale-ai-preview-panel-content">
+          <t t-if="state.session?.draft">
+            <t t-call="sale_ai_assistant.SaleAIDraftPreview"/>
+          </t>
+        </div>
+      </section>
+      <aside t-if="state.open" class="sale-ai-panel" t-att-style="'width:' + state.width + 'px;'"
+             aria-label="Asistente de ventas" role="complementary">
+        <div class="sale-ai-resize-handle" t-on-pointerdown="startResize" title="Arrastrar para cambiar el ancho"/>
+        <header class="sale-ai-header">
+          <div class="sale-ai-title-group">
+            <h2>Ventas <sup>IA</sup></h2>
+            <div class="sale-ai-status" t-if="!readonly">
+              <i class="sale-ai-dot"/> <span>ACTIVO</span>
+              <label class="sale-ai-model-picker" t-if="state.session" title="Cambiar el modelo solo para esta conversación">
+                <span class="sale-ai-model-separator">·</span>
+                <select class="sale-ai-model-select" aria-label="Modelo de IA para esta conversación"
+                        t-att-value="state.session.model_id || ''" t-on-change="changeModel"
+                        t-att-disabled="state.sending || state.busy">
+                  <option t-if="!state.session.model_id" value="" selected="1">Seleccionar modelo</option>
+                  <option t-foreach="state.availableModels" t-as="model" t-key="model.id"
+                          t-att-value="model.id" t-att-selected="model.id === state.session.model_id" t-esc="model.name"/>
+                  <option t-if="state.session.model_id and !selectedModelAvailable"
+                          t-att-value="state.session.model_id" t-esc="state.session.model_name" selected="1" disabled="1"/>
+                </select>
+                <i class="fa fa-chevron-down sale-ai-model-caret"/>
+              </label>
+            </div>
+            <span class="sale-ai-status" t-else=""><i class="sale-ai-dot sale-ai-dot-muted"/> SOLO LECTURA <span t-if="state.session" t-esc="'· ' + (state.session.model_name || 'Sin configurar')"/></span>
+          </div>
+          <div class="sale-ai-header-actions">
+            <button type="button" class="sale-ai-icon-btn" t-on-click="showHistory" t-att-disabled="state.sending" title="Historial" aria-label="Historial">
+              <i class="fa fa-history"/>
+            </button>
+            <button type="button" class="sale-ai-icon-btn" t-on-click="togglePreview" title="Vista previa" aria-label="Vista previa">
+              <i class="fa fa-file-text-o"/>
+            </button>
+            <button type="button" class="sale-ai-icon-btn" t-on-click="closePanel" title="Cerrar panel (conservar conversación)" aria-label="Cerrar panel">
+              <i class="fa fa-times"/>
+            </button>
+          </div>
+        </header>
+        <div class="sale-ai-content">
+          <t t-if="state.mode === 'history'">
+            <div class="sale-ai-view-heading">
+              <button type="button" class="sale-ai-back" t-on-click="returnToActive"><i class="fa fa-arrow-left"/> Volver al chat</button>
+              <h3>Historial</h3>
+              <p>Últimas <t t-esc="state.historyLimit || 'todas las'"/> conversaciones finalizadas.</p>
+            </div>
+            <div t-if="!state.history.length" class="sale-ai-empty">Todavía no hay conversaciones finalizadas.</div>
+            <div t-foreach="state.history" t-as="entry" t-key="entry.id" class="sale-ai-history-item">
+              <button type="button" t-att-data-session-id="entry.id" t-on-click="openHistoryItem">
+                <strong t-esc="entry.name"/>
+                <small t-esc="entry.sale_order_name || (entry.state === 'archived' ? 'Archivada' : 'Conversación finalizada')"/>
+              </button>
+            </div>
+            <button t-if="state.historyHasMore" class="sale-ai-load-more" type="button" t-on-click="loadMoreHistory" t-att-disabled="state.busy">Cargar más conversaciones</button>
+          </t>
+          <t t-elif="state.mode === 'preview'">
+            <div class="sale-ai-view-heading">
+              <button type="button" class="sale-ai-back" t-on-click="showChat"><i class="fa fa-arrow-left"/> Volver al chat</button>
+              <h3>Vista previa del presupuesto</h3>
+            </div>
+            <t t-if="state.session and state.session.draft">
+              <t t-call="sale_ai_assistant.SaleAIDraftPreview"/>
+            </t>
+          </t>
+          <t t-else="">
+            <div t-if="state.viewingHistory" class="sale-ai-view-heading sale-ai-readonly-heading">
+              <button type="button" class="sale-ai-back" t-on-click="returnToActive"><i class="fa fa-arrow-left"/> Volver al chat activo</button>
+              <strong t-esc="state.session?.name"/>
+              <p>Esta conversación se conserva únicamente como referencia.</p>
+              <button t-if="state.session?.sale_order_id" type="button" class="sale-ai-order-link" t-on-click="openSaleOrder">
+                Abrir presupuesto <t t-esc="state.session.sale_order_name"/> <i class="fa fa-external-link"/>
+              </button>
+            </div>
+            <div class="sale-ai-messages">
+              <button t-if="state.session?.messages_has_more" class="sale-ai-load-more" type="button" t-on-click="loadOlderMessages" t-att-disabled="state.busy">Cargar mensajes anteriores</button>
+              <div t-if="!state.viewingHistory" class="sale-ai-msg assistant">
+                <div class="sale-ai-msg-text"><strong>IA:</strong> Hola, ¿en qué puedo ayudarte?</div>
+              </div>
+              <div t-foreach="(state.session?.messages || [])" t-as="message" t-key="message.id"
+                   t-att-class="'sale-ai-msg ' + (message.role === 'user' ? 'user' : 'assistant')">
+                <div class="sale-ai-msg-text"><strong t-esc="message.role === 'user' ? 'Tú:' : 'IA:'"/> <span t-esc="message.content"/></div>
+                <div t-if="message.role === 'assistant' and message.model" class="sale-ai-msg-meta">
+                  <t t-esc="message.model"/>
+                  <t t-if="message.input_tokens or message.output_tokens">
+                    · <t t-esc="message.input_tokens"/> entrada / <t t-esc="message.output_tokens"/> salida
+                  </t>
+                  <t t-if="message.reported_cost_usd">
+                    · USD <t t-esc="formatAmount(message.reported_cost_usd, 6)"/> (proveedor)
+                  </t>
+                  <t t-elif="message.estimated_cost_usd">
+                    · ~USD <t t-esc="formatAmount(message.estimated_cost_usd, 6)"/> (tarifa manual)
+                  </t>
+                </div>
+              </div>
+              <div t-if="state.sending" class="sale-ai-waiting" role="status" aria-live="polite">
+                <i class="fa fa-circle-o-notch fa-spin"/> La IA está preparando su respuesta…
+              </div>
+              <div t-if="!state.sending and canRetry and !state.viewingHistory" class="sale-ai-ai-error" role="alert">
+                <i class="fa fa-exclamation-triangle"/> <span t-esc="state.aiError || 'El último mensaje no tiene respuesta. Puedes reintentar sin duplicarlo.'"/>
+                <button type="button" class="sale-ai-retry" t-on-click="retryLastReply" t-att-disabled="state.sending">Reintentar respuesta</button>
+              </div>
+              <div t-if="state.session?.proposal" class="sale-ai-proposal p-3 border rounded m-2">
+                <strong>Propuesta de nota técnica</strong>
+                <div class="text-muted"><t t-esc="state.session.proposal.author"/></div>
+                <div t-if="state.session.proposal.edited_by_user" class="text-muted">Editada manualmente por ti</div>
+                <textarea t-if="!readonly" class="form-control my-2" rows="12"
+                    aria-label="Editar propuesta de nota técnica"
+                    t-model="state.session.proposal.text" t-att-disabled="state.busy || state.sending"/>
+                <p t-else="" style="white-space: pre-wrap"><t t-esc="state.session.proposal.text"/></p>
+                <small t-if="!readonly" class="text-muted">Puedes editar el texto antes de añadirlo o mejorarlo. Añadir o sustituir incorpora tu versión a la vista previa. Mejorar texto conserva tus cambios como punto de partida. No hay autoguardado.</small>
+                <div t-if="!readonly" class="d-flex gap-2 flex-wrap">
+                  <button class="btn btn-primary" t-att-disabled="state.busy || state.sending" t-on-click="() => this.proposalAction('accept')">
+                    <t t-if="state.session.proposal.line_id">Sustituir nota en vista previa</t>
+                    <t t-else="">Añadir a vista previa</t>
+                  </button>
+                  <button class="btn btn-secondary" t-att-disabled="state.busy || state.sending" t-on-click="() => this.proposalAction('improve')">Mejorar texto</button>
+                  <button class="btn btn-light" t-att-disabled="state.busy || state.sending" t-on-click="() => this.proposalAction('discard')">Descartar</button>
+                </div>
+              </div>
+              <div t-ref="messageEnd"/>
+            </div>
+          </t>
+        </div>
+        <footer class="sale-ai-footer">
+          <t t-if="state.mode === 'chat' and !readonly">
+            <nav class="sale-ai-line-shortcuts" aria-label="Añadir líneas al presupuesto provisional">
+              <button type="button" data-kind="product" t-on-click="prepareLineCommand"
+                      t-att-disabled="state.busy || state.sending" title="Producto: sku IE, o nombre &quot;material electrico&quot; precio 1290 descripcion &quot;TOTAL&quot;. Un producto por línea.">
+                <i class="fa fa-cube"/> Producto
+              </button>
+              <button type="button" data-kind="section" t-on-click="prepareLineCommand"
+                      t-att-disabled="state.busy || state.sending" title="Sección: &quot;Texto literal&quot;, o sin comillas para redactar el título con IA">
+                <i class="fa fa-bars"/> Sección
+              </button>
+              <button type="button" data-kind="note" t-on-click="prepareLineCommand"
+                      t-att-disabled="state.busy || state.sending" title="Nota: &quot;Texto literal&quot;, o sin comillas para que la IA redacte la nota">
+                <i class="fa fa-sticky-note-o"/> Nota
+              </button>
+              <button type="button" class="sale-ai-undo-shortcut" t-on-click="undoLastChange"
+                      t-att-disabled="state.busy || state.sending" title="Deshacer cambios sucesivos del borrador (Ctrl+Z)" aria-label="Deshacer último cambio">
+                <i class="fa fa-undo"/>
+              </button>
+            <button type="button" class="sale-ai-create-quote-btn" t-on-click="requestCreateQuotation"
+                    t-att-disabled="state.busy || state.sending || !state.session?.draft?.lines?.length"
+                    title="Crear presupuesto en estado borrador tras revisión y confirmación">
+              <i class="fa fa-file-text-o"/> Crear presupuesto
+            </button>
+            </nav>
+            <div class="sale-ai-composer-line">
+              <button type="button" class="sale-ai-new-btn" t-on-click="requestNewConversation"
+                      t-att-disabled="state.busy || state.sending" title="Descartar conversación y comenzar otra" aria-label="Nueva conversación">
+                <span class="sale-ai-new-icon"/>
+              </button>
+              <div class="sale-ai-input-container">
+                <textarea rows="1" t-ref="composerInput" t-model="state.composer"
+                          t-on-keydown="onComposerKeydown" t-on-input="resizeComposer" placeholder="Escribe tu mensaje..."
+                          t-att-disabled="state.sending || state.busy" aria-label="Escribe tu mensaje"/>
+                <button type="button" class="sale-ai-send" t-on-click="sendMessage"
+                        t-att-disabled="!state.composer.trim() || state.sending || state.busy" title="Enviar mensaje" aria-label="Enviar">
+                  <i t-att-class="state.sending ? 'fa fa-circle-o-notch fa-spin' : 'fa fa-arrow-right'"/>
+                </button>
+              </div>
+            </div>
+          </t>
+          <t t-elif="state.mode === 'chat'">
+            <p class="sale-ai-footer-hint">Historial en modo consulta · No se puede modificar</p>
+          </t>
+          <t t-else="">
+            <button type="button" class="sale-ai-footer-return" t-on-click="showChat">Volver a conversación</button>
+          </t>
+          <small class="sale-ai-footer-brand">Asistente de ventas</small>
+        </footer>
+      </aside>
+    </div>
+  </t>
+  <t t-name="sale_ai_assistant.SaleAIDraftPreview" owl="1">
+    <div class="sale-ai-preview">
+      <div class="sale-ai-preview-label">CLIENTE</div>
+      <div t-esc="state.session.draft.partner || 'Pendiente de asignar'"/>
+      <div class="sale-ai-preview-label">COMENTARIOS</div>
+      <div style="white-space: pre-wrap" t-esc="state.session.draft.description || 'Sin comentarios todavía'"/>
+      <div class="sale-ai-preview-label">LÍNEAS PROPUESTAS</div>
+      <div t-if="!state.session.draft.lines.length" class="sale-ai-empty">
+        Todavía no hay líneas. Describe el trabajo a la IA para elaborar una propuesta provisional.
+      </div>
+      <div t-foreach="state.session.draft.lines" t-as="line" t-key="line.id"
+           t-att-class="'sale-ai-preview-line sale-ai-preview-line-' + line.kind">
+        <div class="sale-ai-line-body">
+          <small class="sale-ai-line-kind" t-if="line.kind === 'line_note'">NOTA TÉCNICA</small>
+          <small class="sale-ai-line-kind" t-elif="line.kind === 'line_section'">SECCIÓN</small>
+          <small class="sale-ai-line-kind" t-else="">PARTIDA · <t t-esc="line.product_ref || 'Sin referencia de catálogo'"/></small>
+          <strong class="sale-ai-line-description" t-esc="line.name"/>
+          <t t-if="line.kind === 'product'">
+            <small> <t t-esc="line.quantity"/> <t t-esc="line.uom"/> × <t t-esc="formatAmount(line.price_unit)"/> <t t-esc="state.session.draft.currency"/>
+              <t t-if="line.discount"> · Dto. <t t-esc="line.discount"/>%</t>
+            </small>
+          </t>
+        </div>
+        <span class="sale-ai-line-amount" t-if="line.kind === 'product'">
+          <t t-esc="formatAmount(line.amount)"/> <t t-esc="state.session.draft.currency"/>
+        </span>
+      </div>
+      <div class="sale-ai-preview-total">
+        <strong>Base provisional (sin impuestos)</strong>
+        <strong><t t-esc="formatAmount(state.session.draft.amount_untaxed)"/> <t t-esc="state.session.draft.currency"/></strong>
+      </div>
+      <div t-if="state.session.draft.estimate_details" class="sale-ai-preview-internal">
+        <div class="sale-ai-preview-label">CÁLCULO INTERNO ORIENTATIVO</div>
+        <p t-esc="state.session.draft.estimate_details"/>
+      </div>
+      <div t-if="state.session.draft.assumptions" class="sale-ai-preview-internal">
+        <div class="sale-ai-preview-label">PENDIENTE DE REVISAR</div>
+        <p t-esc="state.session.draft.assumptions"/>
+      </div>
+      <p class="sale-ai-disclaimer" t-if="state.session.sale_order_id">Presupuesto creado y archivado en el historial. Consulta el documento real para revisar importes, impuestos y condiciones comerciales.</p>
+      <p class="sale-ai-disclaimer" t-else="">Propuesta provisional: no se ha creado un presupuesto de Odoo. Importes sin cálculo fiscal. Revisión humana obligatoria.</p>
+      <button t-if="!readonly and state.mode === 'preview'" type="button" class="sale-ai-create-quote-btn"
+              t-on-click="requestCreateQuotation" t-att-disabled="state.busy || state.sending || !state.session?.draft?.lines?.length">
+        <i class="fa fa-file-text-o"/> Finalizar y crear presupuesto
+      </button>
+    </div>
+  </t>
+</templates>

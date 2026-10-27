@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Global rules: company isolation CANNOT be relaxed by a future group rule. -->
+    <record id="rule_sale_ai_session_owner_company" model="ir.rule">
+        <field name="name">Conversaciones IA: usuario y compañía</field>
+        <field name="model_id" ref="model_sale_ai_session"/>
+        <field name="domain_force">[('user_id', '=', user.id), ('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_sale_ai_message_owner_company" model="ir.rule">
+        <field name="name">Mensajes IA: usuario y compañía</field>
+        <field name="model_id" ref="model_sale_ai_message"/>
+        <field name="domain_force">[('user_id', '=', user.id), ('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_sale_ai_draft_owner_company" model="ir.rule">
+        <field name="name">Borradores IA: usuario y compañía</field>
+        <field name="model_id" ref="model_sale_ai_draft"/>
+        <field name="domain_force">[('user_id', '=', user.id), ('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_sale_ai_draft_line_owner_company" model="ir.rule">
+        <field name="name">Líneas IA: usuario y compañía</field>
+        <field name="model_id" ref="model_sale_ai_draft_line"/>
+        <field name="domain_force">[('user_id', '=', user.id), ('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_sale_ai_draft_change_owner_company" model="ir.rule">
+        <field name="name">Cambios borrador IA: usuario y compañía</field>
+        <field name="model_id" ref="model_sale_ai_draft_change"/>
+        <field name="domain_force">[('user_id', '=', user.id), ('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_sale_ai_market_company" model="ir.rule">
+        <field name="name">Búsquedas mercado IA: compañía</field>
+        <field name="model_id" ref="model_sale_ai_market_usage"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_sale_ai_model_usage_owner" model="ir.rule">
+        <field name="name">Consumo IA: solo usuario y compañía</field>
+        <field name="model_id" ref="model_sale_ai_model_usage"/>
+        <field name="domain_force">[('user_id', '=', user.id), ('company_id', 'in', company_ids)]</field>
+    </record>
+</odoo>

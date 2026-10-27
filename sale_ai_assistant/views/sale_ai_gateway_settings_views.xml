@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sale_ai_gateway_settings_form" model="ir.ui.view">
+        <field name="name">sale.ai.gateway.settings.form</field>
+        <field name="model">sale.ai.gateway.settings</field>
+        <field name="arch" type="xml">
+            <form string="Conexión Vercel AI Gateway">
+                <sheet>
+                    <div class="alert alert-info" role="alert">
+                        La clave solo se envía al servidor para guardarla y nunca se devuelve al navegador.
+                        Una conversación nueva utiliza el modelo configurado en esta compañía.
+                    </div>
+                    <group>
+                        <field name="company_id" readonly="1"/>
+                        <field name="key_configured" readonly="1"/>
+                    </group>
+                    <group string="Conexión">
+                        <field name="api_key" password="True" placeholder="Pega aquí una clave nueva para sustituir la anterior"/>
+                        <field name="remove_key"/>
+                        <field name="model_id" options="{'no_create': True}"/>
+                    </group>
+                    <group string="Agente experimental — límites reales de ejecución">
+                        <field name="context_mode"/>
+                        <field name="context_budget" invisible="context_mode == 'full'"/>
+                        <field name="max_output_tokens"/>
+                        <field name="request_timeout"/>
+                        <field name="max_tool_rounds"/>
+                        <field name="max_tool_calls"/>
+                        <field name="tool_result_chars"/>
+                        <field name="max_turn_seconds"/>
+                        <div colspan="2" class="text-muted">
+                            En modo completo se envía la conversación íntegra de la sesión (sin recortes artificiales).
+                            El límite de salida configurado se envía literalmente a Vercel en cada llamada, también al redactar notas.
+                            Los límites del modelo y la ventana de contexto del proveedor siguen siendo obligatorios.
+                            Un turno puede realizar varias llamadas y consumir tokens de entrada y salida en cada una.
+                            Aumentar los tiempos puede requerir ajustar limit_time_real en el servidor Odoo.
+                            Salvaguardas estructurales no relacionadas con tokens: máximo 40 líneas provisionales,
+                            8 altas de líneas por herramienta y 2 MB de respuesta HTTP del proveedor.
+                        </div>
+                    </group>
+                    <group string="Historial y consultas">
+                        <field name="chat_history_limit"/>
+                        <field name="historical_examples_limit"/>
+                    </group>
+                    <group string="Búsqueda web de materiales (opcional)">
+                        <field name="market_search_enabled"/>
+                        <field name="market_key_configured" readonly="1"/>
+                        <field name="market_key" password="True" placeholder="Clave de Tavily: se guarda únicamente en Odoo"/>
+                        <field name="market_remove_key"/>
+                        <field name="market_queries_per_turn"/>
+                        <field name="market_queries_per_session"/>
+                        <field name="market_queries_per_month"/>
+                        <field name="market_results"/>
+                        <field name="market_timeout"/>
+                        <div class="text-muted" colspan="2">
+                            Búsqueda desactivada por defecto. Requiere clave de Tavily, conexión saliente HTTPS
+                            y un modelo compatible con herramientas. Los resultados son fragmentos con enlaces:
+                            NO constituyen cotizaciones contrastadas. Las consultas consumen créditos Tavily
+                            independientes del saldo Vercel; se aplican límites por conversación y mes.
+                        </div>
+                    </group>
+                    <div class="text-muted">
+                        En modo acotado, los tokens de contexto son aproximados (conversión por caracteres); en modo completo no se recorta la conversación.
+                        El consumo real y el saldo disponible deben comprobarse en Vercel.
+                        Las herramientas de lectura de Odoo solo se activan si el modelo tiene
+                        marcada la capacidad «Admite herramientas» en Modelos IA. Los resultados
+                        históricos son referencias limitadas, no precios de mercado actualizados.
+                        Los adjuntos aún no están habilitados. La búsqueda web solo se ofrece si
+                        está activada expresamente y hay clave Tavily configurada.
+                    </div>
+                </sheet>
+                <footer>
+                    <button name="action_apply" type="object" string="Guardar configuración" class="btn-primary"/>
+                    <button string="Cancelar" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_sale_ai_gateway_settings" model="ir.actions.act_window">
+        <field name="name">Conexión Vercel IA</field>
+        <field name="res_model">sale.ai.gateway.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

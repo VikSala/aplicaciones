@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_res_config_settings_sale_ai" model="ir.ui.view">
+        <field name="name">res.config.settings.inherit.sale.ai.assistant</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="sale.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//app[@name='sale_management']" position="inside">
+                <block title="Asistente IA de Ventas" name="sale_ai_assistant_settings">
+                    <setting id="sale_ai_default_model" string="Modelo IA predeterminado"
+                             company_dependent="1"
+                             help="Selecciona un modelo del catálogo por compañía. La clave se configura desde Ventas → Asistente IA → Conexión Vercel IA.">
+                        <field name="sale_ai_model_id"/>
+                    </setting>
+                    <setting id="sale_ai_context_budget" string="Presupuesto de contexto (solo modo acotado)"
+                             company_dependent="1"
+                             help="Para usar este ajuste selecciona modo Acotado en Ventas → Asistente IA → Conexión Vercel IA. Por defecto el modo Experimental envía toda la conversación.">
+                        <div class="content-group">
+                            <div class="row mt16">
+                                <label for="sale_ai_context_budget" class="col-lg-5 o_light_label"/>
+                                <field name="sale_ai_context_budget" class="col-lg-3"/>
+                            </div>
+                            <div class="row mt16">
+                                <label for="sale_ai_history_limit" class="col-lg-5 o_light_label"/>
+                                <field name="sale_ai_history_limit" class="col-lg-3"/>
+                            </div>
+                        </div>
+                    </setting>
+                    <setting id="sale_ai_external_research" string="Búsqueda de referencias de precio"
+                             company_dependent="1"
+                             help="Guarda la preferencia de permitir herramientas de búsqueda externas cuando se implemente Fase 5.">
+                        <field name="sale_ai_allow_online_research"/>
+                    </setting>
+                    <setting id="sale_ai_chat_history_limit" string="Historial del chat"
+                             help="Número máximo de conversaciones finalizadas visibles por usuario y compañía. 0 = sin límite. Las conversaciones no se eliminan.">
+                        <field name="sale_ai_chat_history_limit"/>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>

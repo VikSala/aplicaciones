@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_sale_ai_root" name="Asistente IA"
+              parent="sale.sale_menu_root" sequence="85"
+              groups="sales_team.group_sale_manager"/>
+    <menuitem id="menu_sale_ai_sessions" name="Conversaciones"
+              parent="menu_sale_ai_root" action="action_sale_ai_session" sequence="10"/>
+    <menuitem id="menu_sale_ai_drafts" name="Propuestas provisionales"
+              parent="menu_sale_ai_root" action="action_sale_ai_draft" sequence="20"/>
+    <menuitem id="menu_sale_ai_models" name="Modelos disponibles"
+              parent="menu_sale_ai_root" action="action_sale_ai_model" sequence="30"
+              groups="sales_team.group_sale_manager"/>
+    <menuitem id="menu_sale_ai_gateway_settings" name="Conexión Vercel IA"
+              parent="menu_sale_ai_root" action="action_sale_ai_gateway_settings"
+              sequence="40" groups="sales_team.group_sale_manager"/>
+    <menuitem id="menu_sale_ai_usage" name="Consumo por modelo"
+              parent="menu_sale_ai_root" action="action_sale_ai_model_usage"
+              sequence="37" groups="sales_team.group_sale_manager"/>
+</odoo>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sale_ai_draft_list" model="ir.ui.view">
+        <field name="name">sale.ai.draft.list</field>
+        <field name="model">sale.ai.draft</field>
+        <field name="arch" type="xml">
+            <list string="Borradores provisionales" create="0" delete="0">
+                <field name="session_id"/>
+                <field name="partner_id"/>
+                <field name="company_id" optional="show"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="amount_untaxed_estimate" sum="Total orientativo"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_sale_ai_draft_form" model="ir.ui.view">
+        <field name="name">sale.ai.draft.form</field>
+        <field name="model">sale.ai.draft</field>
+        <field name="arch" type="xml">
+            <form string="Propuesta en construcción" create="0" delete="0">
+                <sheet>
+                    <field name="session_state" invisible="1"/>
+                    <div class="oe_title"><h1><field name="description" readonly="session_state != 'active'" placeholder="Comentarios del presupuesto"/></h1></div>
+                    <group>
+                        <group>
+                            <field name="session_id" readonly="1"/>
+                            <field name="partner_id" readonly="session_state != 'active'"/>
+                            <field name="pricelist_id" readonly="session_state != 'active'"/>
+                        </group>
+                        <group>
+                            <field name="company_id" readonly="1"/>
+                            <field name="currency_id" readonly="session_state != 'active'"/>
+                            <field name="review_required" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Líneas propuestas">
+                            <field name="line_ids" readonly="session_state != 'active'">
+                                <list editable="bottom" default_order="sequence,id">
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="line_kind"/>
+                                    <field name="product_id" optional="show"/>
+                                    <field name="name"/>
+                                    <field name="product_uom_qty"/>
+                                    <field name="product_uom_id" optional="hide"/>
+                                    <field name="price_unit"/>
+                                    <field name="discount" optional="hide"/>
+                                    <field name="price_source"/>
+                                    <field name="price_evidence" optional="hide"/>
+                                    <field name="amount_estimate" readonly="1" sum="Total"/>
+                                </list>
+                                <form string="Línea propuesta">
+                                    <group>
+                                        <field name="currency_id" invisible="1"/>
+                                        <field name="line_kind"/>
+                                        <field name="product_id" invisible="line_kind != 'product'"/>
+                                        <field name="name"/>
+                                        <field name="product_uom_qty" invisible="line_kind != 'product'"/>
+                                        <field name="product_uom_id" invisible="line_kind != 'product'"/>
+                                        <field name="price_unit" invisible="line_kind != 'product'"/>
+                                        <field name="discount" invisible="line_kind != 'product'"/>
+                                        <field name="price_source" invisible="line_kind != 'product'"/>
+                                        <field name="price_evidence"/>
+                                    </group>
+                                </form>
+                            </field>
+                            <group class="oe_subtotal_footer oe_right">
+                                <field name="amount_untaxed_estimate" readonly="1"/>
+                            </group>
+                            <div class="text-muted">Importe parcial orientativo sin impuestos. No es un cálculo fiscal de sale.order.</div>
+                        </page>
+                        <page string="Cálculo y verificaciones">
+                            <group>
+                                <field name="estimate_details" readonly="session_state != 'active'" placeholder="Materiales, horas y cálculos auxiliares..."/>
+                                <field name="assumptions" readonly="session_state != 'active'" placeholder="Datos no confirmados y comprobaciones pendientes..."/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_sale_ai_draft" model="ir.actions.act_window">
+        <field name="name">Propuestas de presupuesto IA</field>
+        <field name="res_model">sale.ai.draft</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'create': False}</field>
+    </record>
+</odoo>

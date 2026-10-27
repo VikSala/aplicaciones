@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sale_ai_model_list" model="ir.ui.view">
+        <field name="name">sale.ai.model.list</field>
+        <field name="model">sale.ai.model</field>
+        <field name="arch" type="xml">
+            <list string="Modelos disponibles">
+                <field name="name"/>
+                <field name="model_type"/>
+                <field name="provider"/>
+                <field name="external_model_id"/>
+                <field name="is_default" readonly="1"/>
+                <field name="supports_tools"/>
+                <field name="supports_images"/>
+                <field name="supports_pdf"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_sale_ai_model_form" model="ir.ui.view">
+        <field name="name">sale.ai.model.form</field>
+        <field name="model">sale.ai.model</field>
+        <field name="arch" type="xml">
+            <form string="Modelo de IA">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="model_type"/>
+                            <field name="provider" invisible="model_type == 'profile'"/>
+                            <field name="external_model_id" invisible="model_type == 'profile'" required="model_type == 'individual'"/>
+                            <field name="active"/>
+                            <field name="is_default"/>
+                            <div class="text-muted" colspan="2">
+                                Predeterminado para la compañía activa. Marcarlo sustituye
+                                automáticamente el anterior; no modifica los chats existentes.
+                            </div>
+                        </group>
+                        <group string="Capacidades declaradas (verificar con el proveedor)" invisible="model_type == 'profile'">
+                            <field name="supports_tools"/>
+                            <div class="text-muted" colspan="2">
+                                Necesario para que la IA consulte Odoo. Actívalo solo tras
+                                comprobar que el modelo admite llamadas a funciones en Vercel.
+                            </div>
+                            <field name="supports_images"/>
+                            <field name="supports_pdf"/>
+                            <field name="supports_text_files"/>
+                            <field name="supports_native_web_search"/>
+                            <field name="context_window_tokens"/>
+                        </group>
+                    </group>
+                    <group string="Perfil multimodelo — seleccionar modelos ya registrados" invisible="model_type != 'profile'">
+                        <group>
+                            <field name="description_model_id" required="model_type == 'profile'" options="{'no_create': True}"/>
+                            <field name="market_model_id" required="model_type == 'profile'" options="{'no_create': True}"/>
+                            <field name="commercial_model_id" required="model_type == 'profile'" options="{'no_create': True}"/>
+                            <field name="description_style"/>
+                        </group>
+                        <group>
+                            <field name="tools_model_id" required="model_type == 'profile'" options="{'no_create': True}"/>
+                            <field name="review_model_id" required="model_type == 'profile'" options="{'no_create': True}"/>
+                            <field name="fallback_model_id" required="model_type == 'profile'" options="{'no_create': True}"/>
+                        </group>
+                        <div class="text-muted" colspan="2">
+                            Un perfil comparte conversación y borrador. Las operaciones de Odoo las realiza
+                            el modelo de herramientas; los modelos de redacción y síntesis reciben resultados
+                            de lectura. Se recurrirá al fallback ante errores recuperables, sin repetir escrituras confirmadas.
+                        </div>
+                    </group>
+                    <group string="Coste de referencia (manual, no verificado automáticamente)" invisible="model_type == 'profile'">
+                        <field name="price_input_m_usd"/>
+                        <field name="price_output_m_usd"/>
+                        <field name="price_checked_on"/>
+                    </group>
+                    <group>
+                        <field name="notes" placeholder="Coste, calidad, límites observados, enlaces a la ficha del modelo..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_sale_ai_model" model="ir.actions.act_window">
+        <field name="name">Modelos IA</field>
+        <field name="res_model">sale.ai.model</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

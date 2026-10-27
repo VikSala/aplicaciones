@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sale_ai_quotation_profile_list" model="ir.ui.view">
+        <field name="name">sale.ai.quotation.profile.list</field>
+        <field name="model">sale.ai.quotation.profile</field>
+        <field name="arch" type="xml">
+            <list string="Reglas de presupuestación" create="1">
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="priority"/>
+                <field name="main_product_id" optional="show"/>
+                <field name="global_product_id" optional="show"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_sale_ai_quotation_profile_form" model="ir.ui.view">
+        <field name="name">sale.ai.quotation.profile.form</field>
+        <field name="model">sale.ai.quotation.profile</field>
+        <field name="arch" type="xml">
+            <form string="Regla comercial de presupuestos">
+                <header>
+                    <button name="action_company_copy" string="Personalizar para esta compañía"
+                            type="object" class="btn-secondary" invisible="company_id != False"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="company_id"/>
+                            <field name="active"/>
+                            <field name="priority"/>
+                            <field name="structure"/>
+                        </group>
+                        <group string="Detección del trabajo">
+                            <field name="keywords" placeholder="Una expresión por línea, p. ej. instalación eléctrica"/>
+                        </group>
+                    </group>
+                    <group string="Líneas comerciales en el presupuesto">
+                        <group string="Producto principal (precio 0)">
+                            <field name="main_product_id"/>
+                            <field name="main_product_code"/>
+                            <field name="main_line_label"/>
+                        </group>
+                        <group string="Partida global (cantidad 1)">
+                            <field name="global_product_id"/>
+                            <field name="global_product_code"/>
+                            <field name="global_line_label"/>
+                        </group>
+                    </group>
+                    <div class="text-muted">Entre ambos productos se crea una NOTA técnica de Odoo. Los materiales y la mano de obra no se convierten en líneas facturables independientes; su valoración se conserva como cálculo interno. Si hay varias coincidencias de referencia interna, selecciona el producto explícitamente.</div>
+                    <group><field name="notes"/></group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_sale_ai_quotation_profile" model="ir.actions.act_window">
+        <field name="name">Reglas de presupuestación</field>
+        <field name="res_model">sale.ai.quotation.profile</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

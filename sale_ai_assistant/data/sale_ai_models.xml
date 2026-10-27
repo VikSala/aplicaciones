@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Starter options: model IDs can be changed from the Sales models menu.
+         Pricing/capabilities are intentionally NOT guessed or populated. -->
+    <record id="sale_ai_model_gpt_mini" model="sale.ai.model">
+        <field name="name">GPT-5.4 mini — Vercel</field>
+        <field name="provider">vercel_gateway</field>
+        <field name="external_model_id">openai/gpt-5.4-mini</field>
+        <field name="notes">Modelo de ejemplo. Verifica la disponibilidad y tarifas actuales en Vercel antes de seleccionarlo.</field>
+    </record>
+    <record id="sale_ai_model_beam_free" model="sale.ai.model">
+        <field name="name">Beam 1.0 Free — Vercel</field>
+        <field name="provider">vercel_gateway</field>
+        <field name="external_model_id">reflection/beam-free</field>
+        <field name="notes">Alternativa marcada Free en el catálogo de Vercel en octubre de 2026; verifica disponibilidad y compatibilidad.</field>
+    </record>
+</odoo>

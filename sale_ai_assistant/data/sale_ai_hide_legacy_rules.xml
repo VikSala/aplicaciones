@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <!-- Returning from 18.0.0.7.1: hide its rule menu if it existed.
+       forcecreate=False avoids creating a bogus menu when installing from 7.0. -->
+  <record id="menu_sale_ai_profile" model="ir.ui.menu" forcecreate="False">
+    <!-- In update mode this only affects the old 7.1 menu. In fresh
+         installations forcecreate is ignored; it remains hidden. -->
+    <field name="name">Reglas de presupuestación (desactivadas)</field>
+    <field name="parent_id" ref="menu_sale_ai_root"/>
+    <field name="active" eval="False"/>
+  </record>
+</odoo>

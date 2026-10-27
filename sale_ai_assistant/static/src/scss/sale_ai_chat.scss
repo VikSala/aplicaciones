@@ -1,0 +1,204 @@
+.sale-ai-root {
+    --sale-ai-border: #e7e9ec;
+    --sale-ai-muted: #777d85;
+    --sale-ai-green: #139b74;
+    font-family: inherit;
+    .sale-ai-fab {
+        position: fixed; bottom: 27px; right: 25px; z-index: 1020;
+        width: 60px; height: 60px; border: 0; border-radius: 50%;
+        background: #fff; color: #51565e; font-weight: 750; font-size: 16px;
+        box-shadow: 0 4px 18px rgba(0,0,0,.23); cursor: pointer;
+        transition: transform .14s, box-shadow .14s;
+        &:hover { transform: translateY(-2px); box-shadow: 0 7px 23px rgba(0,0,0,.25); }
+    }
+    .sale-ai-panel {
+        position: fixed; top: 46px; bottom: 0; right: 0; z-index: 1020;
+        min-width: 340px; max-width: calc(100vw - 260px); display: flex; flex-direction: column;
+        background: #fff; color: #202326; box-shadow: -4px 0 16px rgba(0,0,0,.12);
+        .sale-ai-resize-handle {
+            position: absolute; z-index: 2; left: -5px; width: 10px; top: 0; bottom: 0;
+            cursor: ew-resize; touch-action: none;
+            &:hover, &:active { background: rgba(0,108,91,.14); }
+        }
+    }
+    .sale-ai-preview-panel {
+        position: fixed; top: 46px; bottom: 0; z-index: 1019;
+        min-width: 240px; max-width: 440px; background: #fff;
+        border-right: 1px solid var(--sale-ai-border);
+        box-shadow: -3px 0 16px rgba(0,0,0,.09);
+        display: flex; flex-direction: column; overflow: hidden;
+    }
+    .sale-ai-preview-panel-header { padding: 17px 16px; border-bottom: 1px solid var(--sale-ai-border);
+        display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .sale-ai-preview-panel-content { flex: 1; overflow-y: auto; }
+    .sale-ai-header {
+        min-height: 78px; padding: 16px 15px 13px 16px;
+        border-bottom: 1px solid var(--sale-ai-border);
+        display: flex; justify-content: space-between; align-items: flex-start;
+        gap: 10px; flex: none;
+    }
+    .sale-ai-title-group {
+        h2 { margin: 0 0 4px; font-size: 17px; font-weight: 700; line-height: 1.4; }
+        sup { font-weight: 500; font-size: 10px; position: relative; top: -.35em; }
+        .sale-ai-status { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 600; }
+        .sale-ai-dot { background: #16a276; width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+        .sale-ai-dot-muted { background: #a0a7ae; }
+    }
+    .sale-ai-title-group { flex: 1; min-width: 0; }
+    .sale-ai-model-picker { display: inline-flex; align-items: center; gap: 3px;
+        min-width: 0; max-width: 260px; margin: 0; font-weight: 400; cursor: pointer;
+        color: #606870; font-size: 11px; }
+    .sale-ai-model-separator { color: #848b92; }
+    .sale-ai-model-select { width: auto; min-width: 0; max-width: 220px; cursor: pointer;
+        color: inherit; font: inherit; line-height: 1.45; padding: 1px 1px;
+        border: 0; background: transparent; appearance: none; -webkit-appearance: none;
+        text-overflow: ellipsis; white-space: nowrap; overflow: hidden;
+        &:hover { color: #176e64; text-decoration: underline; }
+        &:focus-visible { outline: 2px solid #147c71; outline-offset: 2px; border-radius: 2px; }
+        &:disabled { opacity: .6; cursor: wait; }
+    }
+    .sale-ai-model-caret { font-size: 9px; color: #858b90; pointer-events: none; }
+    .sale-ai-header-actions { display: flex; gap: 2px; flex: none; }
+    .sale-ai-icon-btn { border: 0; background: transparent; color: #343940; padding: 5px 8px; border-radius: 6px; font-size: 15px;
+        &:hover { background: #f1f3f5; }
+    }
+    .sale-ai-content { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+    .sale-ai-messages { padding: 13px 15px 22px; display: flex; flex-direction: column; gap: 12px; min-height: 100%; }
+    .sale-ai-msg {
+        max-width: 90%; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px;
+        line-height: 1.6;
+        &.user { align-self: flex-end; padding: 10px 13px; border-radius: 13px 13px 2px 13px; background: #eef4f3; }
+        &.assistant { align-self: flex-start; }
+    }
+    .sale-ai-footer { border-top: 1px solid var(--sale-ai-border); padding: 13px 14px 10px; background: #fff; flex: none; }
+    .sale-ai-composer-line { display: flex; align-items: center; gap: 9px; }
+    .sale-ai-new-btn { border: 0; padding: 6px; border-radius: 8px; background: transparent; width: 34px; height: 34px;
+        display: flex; align-items: center; justify-content: center; flex: none;
+        &:hover { background: #f0f1f2; }
+    }
+    .sale-ai-new-icon { display: inline-block; width: 22px; height: 22px; background: #363c43;
+        -webkit-mask: url('/sale_ai_assistant/static/src/img/new-conversation.svg') center/contain no-repeat;
+        mask: url('/sale_ai_assistant/static/src/img/new-conversation.svg') center/contain no-repeat;
+    }
+    .sale-ai-input-container { background: #f0f0f0; border: 1px solid #d5d5d5; border-radius: 22px; display: flex;
+        align-items: center; flex: 1; min-width: 0; min-height: 44px; padding: 5px 6px 5px 13px; }
+    .sale-ai-input-container textarea { flex: 1; min-width: 0; max-height: 240px; min-height: 32px; line-height: 20px; box-sizing: border-box; overflow-y: hidden; resize: none; border: 0;
+        background: transparent; color: #232931; font-size: 13px; outline: 0; box-shadow: none; padding: 6px 0; }
+    .sale-ai-send { border: 0; background: transparent; color: #1a1d21; font-size: 15px; width: 32px; height: 32px;
+        &:disabled { opacity: .35; cursor: default; }
+    }
+    .sale-ai-footer-brand { display: block; margin-top: 11px; text-align: center; color: #989da1; font-size: 9px; }
+    .sale-ai-footer-hint { font-size: 11px; color: #737d85; margin: 8px 0; text-align: center; }
+    .sale-ai-view-heading { padding: 16px; border-bottom: 1px solid var(--sale-ai-border);
+        h3 { margin: 12px 0 4px; font-size: 15px; }
+        p { font-size: 12px; color: #798087; margin: 5px 0 0; }
+    }
+    .sale-ai-back, .sale-ai-order-link, .sale-ai-footer-return { background: transparent; border: none; color: #356969; font-size: 12px; padding: 4px 0; }
+    .sale-ai-back i { margin-right: 5px; }
+    .sale-ai-load-more { display: block; margin: 10px auto; padding: 6px 10px; border: 1px solid #d8e2e2;
+        border-radius: 7px; background: #fff; color: #386e6d; font-size: 12px;
+        &:disabled { opacity: .5; }
+    }
+    .sale-ai-empty { margin: 20px 16px; font-size: 13px; line-height: 1.5; color: #737d85; }
+    .sale-ai-history-item { border-bottom: 1px solid #edf0f1;
+        button { text-align: left; width: 100%; padding: 15px 16px; border: 0; background: transparent;
+            display: flex; flex-direction: column; gap: 4px;
+            &:hover { background: #f6f8f8; }
+            strong { color: #252b30; font-size: 13px; }
+            small { color: #78818a; font-size: 11px; }
+        }
+    }
+    .sale-ai-preview { padding: 14px 16px; font-size: 13px; line-height: 1.4; }
+    .sale-ai-preview-label { font-size: 10px; font-weight: 650; margin-top: 19px; color: #77818a; }
+    .sale-ai-preview-line { padding: 12px 0; border-bottom: 1px solid #e9ebed; display: flex; justify-content: space-between;
+        gap: 10px; overflow-wrap: anywhere;
+        small { display: block; margin-top: 5px; color: #737d85; }
+    }
+    .sale-ai-preview-total { padding: 14px 0; display: flex; justify-content: space-between; gap: 15px; }
+    .sale-ai-disclaimer { font-size: 11px; color: #858c92; }
+}
+body.sale-ai-resizing { cursor: ew-resize !important; user-select: none !important; }
+@media (max-width: 767px) {
+    .sale-ai-root {
+        .sale-ai-fab { bottom: 22px; right: 19px; width: 55px; height: 55px; }
+        .sale-ai-panel { top: 46px; left: 0; right: 0; bottom: 0; width: 100vw !important;
+            min-width: 0; max-width: none; box-shadow: none; }
+        .sale-ai-resize-handle { display: none; }
+        .sale-ai-header { min-height: 77px; }
+    }
+}
+
+@media (max-width: 1079px) {
+    .sale-ai-root .sale-ai-preview-panel { display: none; }
+}
+
+// Phase 2: model indicator, response status and safe retry. All model text is t-esc.
+.sale-ai-model-label { font-weight: 400; opacity: .75; font-size: 11px; }
+.sale-ai-waiting { margin: 12px 8px; font-size: 12px; color: #697585; }
+.sale-ai-waiting .fa { margin-right: 7px; }
+.sale-ai-ai-error { margin: 10px 6px; border: 1px solid #f1caca; border-radius: 9px;
+    background: #fff5f5; color: #8d3030; padding: 10px; font-size: 12px; line-height: 1.5; }
+.sale-ai-retry { display: block; background: #fff; color: #8d3030; border: 1px solid #cc9999;
+    border-radius: 6px; padding: 5px 10px; margin-top: 8px; }
+
+.sale-ai-msg-meta { font-size: 10px; margin-top: 5px; color: #8b959f; line-height: 1.5; }
+
+// Phase 4: multiline technical notes and transparent provisional prices.
+.sale-ai-preview-line {
+    align-items: flex-start;
+    gap: 12px;
+    .sale-ai-line-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+    .sale-ai-line-description { white-space: pre-wrap; overflow-wrap: anywhere; font-weight: 500; }
+    .sale-ai-line-kind { color: #6b7280; text-transform: uppercase; font-weight: 600; font-size: 10px; }
+    .sale-ai-line-origin, .sale-ai-line-evidence { color: #777; overflow-wrap: anywhere; }
+    .sale-ai-line-amount { white-space: nowrap; text-align: right; font-weight: 600; }
+    &.sale-ai-preview-line-line_section .sale-ai-line-description { font-weight: 700; }
+    &.sale-ai-preview-line-line_note .sale-ai-line-description { font-size: 12px; line-height: 1.55; }
+}
+.sale-ai-preview-internal {
+    margin-top: 14px; border-top: 1px solid #e4e7eb; padding-top: 9px;
+    p { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; margin: 0; color: #525c68; }
+}
+
+// Phase 6: finalization is a deliberate action separate from sending a chat message.
+.sale-ai-create-quote-btn {
+    display: block; width: calc(100% - 24px); margin: 7px 12px 12px;
+    padding: 10px 12px; border: 1px solid #277e63; border-radius: 8px;
+    background: #267e65; color: #fff; font-size: 12px; font-weight: 600;
+    text-align: center; cursor: pointer;
+    &:hover:not(:disabled) { background: #206d56; }
+    &:disabled { opacity: .46; cursor: not-allowed; }
+    .fa { margin-right: 6px; }
+}
+.sale-ai-preview .sale-ai-create-quote-btn { width: 100%; margin: 14px 0 0; }
+
+// Optional line-type shortcuts. They only prepare a chat prefix; regular chat
+// remains free-form. The undo action is direct and does not erase typed text.
+.sale-ai-line-shortcuts {
+    display: flex; align-items: center; gap: 6px; margin: 8px 12px 4px;
+    flex-wrap: wrap;
+    button {
+        border: 1px solid #dce3e6; background: #f8fafb; color: #394652;
+        border-radius: 7px; font-size: 11px; padding: 6px 9px;
+        cursor: pointer; min-height: 30px;
+        &:hover:not(:disabled) { background: #edf4f3; border-color: #b3d4cb; }
+        &:disabled { opacity: .45; cursor: not-allowed; }
+        .fa { margin-right: 4px; }
+    }
+    .sale-ai-undo-shortcut { margin-left: auto; }
+    .sale-ai-undo-shortcut .fa { margin-right: 0; }
+}
+
+// Keep all quotation actions on one row, including finalization.
+.sale-ai-line-shortcuts {
+    flex-wrap: nowrap; gap: 4px; margin: 0 0 10px; overflow-x: auto;
+    > button { flex: 0 0 auto; white-space: nowrap; padding: 6px; }
+    > .sale-ai-create-quote-btn {
+        width: auto; margin: 0; background: #267e65; color: #fff;
+        border-color: #277e63; font-size: 11px;
+        &:hover:not(:disabled) { background: #206d56; color: #fff; }
+    }
+}
+.sale-ai-root .sale-ai-input-container { align-items: flex-end; }
+.sale-ai-root .sale-ai-send { flex: 0 0 32px; }
