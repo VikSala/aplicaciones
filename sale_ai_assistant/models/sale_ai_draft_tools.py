@@ -190,7 +190,7 @@ class SaleAIDraftTools(SaleAIReadTools):
             "currency_id": draft.currency_id.id,
             "assumptions": draft.assumptions or "",
             "estimate_details": draft.estimate_details or "",
-            "lines": [{"id": line.id, "kind": line.line_kind, "name": line.name,
+            "lines": [{"id": line.id, "source_line_id": line.source_sale_line_id or False, "kind": line.line_kind, "name": line.name,
                        "product_id": line.product_id.id or False,
                        "uom_id": line.product_uom_id.id or False,
                        "quantity": line.product_uom_qty, "price_unit": line.price_unit,
@@ -459,7 +459,7 @@ class SaleAIDraftTools(SaleAIReadTools):
         })
         for item in previous["lines"]:
             values = {
-                "draft_id": draft.id, "line_kind": item["kind"], "name": item["name"],
+                "draft_id": draft.id, "source_sale_line_id": item.get("source_line_id") or False, "line_kind": item["kind"], "name": item["name"],
                 "sequence": item["sequence"], "product_id": item["product_id"],
                 "product_uom_qty": item["quantity"], "price_unit": item["price_unit"],
                 "discount": item["discount"], "price_source": item["price_source"],
@@ -467,7 +467,7 @@ class SaleAIDraftTools(SaleAIReadTools):
             }
             if item["product_id"]:
                 values["product_uom_id"] = item.get("uom_id") or False
-            self.env["sale.ai.draft.line"].create(values)
+            self.env["sale.ai.draft.line"].with_context(sale_ai_internal_edit=True).create(values)
 
     def undo_last_draft_change(self):
         draft = self.draft

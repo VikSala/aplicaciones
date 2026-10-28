@@ -25,3 +25,5 @@ from . import sale_ai_quick_commands
 from . import sale_ai_proposal
 from . import sale_ai_files
 from . import sale_ai_audio
+
+from . import sale_ai_quote_edit

@@ -42,6 +42,14 @@ class SaleAISession(models.Model):
     draft_id = fields.Many2one(
         "sale.ai.draft", compute="_compute_draft_id", string="Borrador"
     )
+    edit_order_id = fields.Many2one(
+        "sale.order", string="Presupuesto en edición", readonly=True, copy=False,
+        check_company=True, index=True,
+    )
+    edit_baseline_json = fields.Text(
+        string="Instantánea original del presupuesto", readonly=True, copy=False,
+        groups="sales_team.group_sale_manager",
+    )
     sale_order_id = fields.Many2one(
         "sale.order", string="Presupuesto resultante", check_company=True,
         readonly=True, copy=False
@@ -63,7 +71,7 @@ class SaleAISession(models.Model):
         sanitized = []
         for incoming in vals_list:
             vals = dict(incoming)
-            if any(key in vals for key in ("draft_ids", "message_ids", "sale_order_id", "ended_at", "reopened_at")):
+            if any(key in vals for key in ("draft_ids", "message_ids", "sale_order_id", "ended_at", "reopened_at", "edit_order_id", "edit_baseline_json")):
                 raise UserError(_("La conversación debe comenzar sin mensajes ni presupuesto asociado."))
             # El creador no se puede suplantar mediante RPC.
             vals["user_id"] = self.env.uid
@@ -88,6 +96,10 @@ class SaleAISession(models.Model):
         return records
 
     def write(self, vals):
+        if not self.env.context.get("sale_ai_internal_edit") and any(
+            key in vals for key in ("edit_order_id", "edit_baseline_json")
+        ):
+            raise UserError(_("La asociación a presupuestos solo puede establecerla el asistente."))
         if "user_id" in vals or "company_id" in vals:
             raise UserError(_("No se puede reasignar una conversación a otro usuario o compañía."))
         transitions = {
@@ -102,6 +114,8 @@ class SaleAISession(models.Model):
             ):
                 raise UserError(_("La conversación finalizada es un historial de solo lectura."))
             if "sale_order_id" in vals:
+                if session.edit_order_id:
+                    raise UserError(_("Una sesión de edición no puede crear un presupuesto nuevo."))
                 if session.sale_order_id or session.state != "active":
                     raise UserError(_("No se puede sustituir ni volver a crear el presupuesto asociado."))
                 order = self.env["sale.order"].browse(vals["sale_order_id"])

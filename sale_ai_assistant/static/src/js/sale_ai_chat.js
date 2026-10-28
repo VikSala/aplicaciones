@@ -4,7 +4,31 @@ import { Component, onMounted, onPatched, onWillStart, onWillUnmount, useRef, us
 import { registry } from "@web/core/registry";
 import { useBus, useService } from "@web/core/utils/hooks";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
+import { Dialog } from "@web/core/dialog/dialog";
 import { _t } from "@web/core/l10n/translation";
+
+// Three explicit choices: neither the archive nor the deletion is implicit.
+export class SaleAIReplaceConversationDialog extends Component {
+    static template = "sale_ai_assistant.SaleAIReplaceConversationDialog";
+    static components = { Dialog };
+    static props = {
+        title: String,
+        body: String,
+        onArchive: Function,
+        onDiscard: Function,
+        close: Function, // injected by Odoo's dialog service
+    };
+
+    chooseArchive() {
+        this.props.close();
+        this.props.onArchive();
+    }
+
+    chooseDiscard() {
+        this.props.close();
+        this.props.onDiscard();
+    }
+}
 
 const STORAGE_KEY = "sale_ai_assistant_panel_width";
 
@@ -45,16 +69,29 @@ export class SaleAIChat extends Component {
             historyLimit: 10,
             historyHasMore: false,
             availableModels: [],
+            currentPVId: false,
+            currentPVName: "",
         });
 
-        useBus(this.env.bus, "MENUS:APP-CHANGED", () => this.syncSalesApp());
-        useBus(this.env.bus, "ROUTE_CHANGE", () => this.syncSalesApp());
+        useBus(this.env.bus, "MENUS:APP-CHANGED", () => {
+            this.syncSalesApp();
+            this.refreshCurrentPV();
+        });
+        useBus(this.env.bus, "ROUTE_CHANGE", () => {
+            this.syncSalesApp();
+            this.refreshCurrentPV();
+        });
+        // Refresh after Odoo mounts the new form: its currentController is then
+        // authoritative, unlike an optional router service or a stale URL.
+        useBus(this.env.bus, "ACTION_MANAGER:UPDATE", () => this.refreshCurrentPV());
+        useBus(this.env.bus, "ACTION_MANAGER:UI-UPDATED", () => this.refreshCurrentPV());
         onWillStart(async () => {
             // No dependency on the optional JS "user" service: the Odoo backend
             // checks the native Sales Administrator group and supplies a boolean.
             // Some installations do not expose the JS service in this component.
             this.syncSalesApp();
             await this.refreshBootstrap();
+            await this.refreshCurrentPV();
         });
         this.onComposerResize = () => this.resizeComposer();
         onMounted(() => {
@@ -149,6 +186,169 @@ export class SaleAIChat extends Component {
     syncSalesApp() {
         const app = this.menu.getCurrentApp();
         this.state.isSalesApp = Boolean(app && app.xmlid === "sale.sale_menu_root");
+    }
+
+    getCurrentPVId() {
+        // Odoo 18 exposes the active view through the action service.
+        // There is NO guarantee of a registered "router" service in the
+        // main_components environment, so never call useService("router").
+        // The active action controller also protects against accidentally
+        // loading an ID left over from a different screen or a list view.
+        const controller = this.action?.currentController;
+        if (!controller || controller.action?.type !== "ir.actions.act_window") {
+            return false;
+        }
+        const props = controller.props || {};
+        const model = props.resModel || controller.action.res_model;
+        const view = props.type || controller.view?.type;
+        // currentState is kept in sync by the FormController when using
+        // next/previous record navigation within the same action.
+        const id = Number(controller.currentState?.resId || props.resId);
+        if (model !== "sale.order" || view !== "form" || !Number.isSafeInteger(id) || id <= 0) {
+            return false;
+        }
+        return id;
+    }
+
+    async refreshCurrentPV() {
+        const id = this.state.isSalesApp && this.state.allowed ? this.getCurrentPVId() : false;
+        const sequence = (this._pvSequence || 0) + 1;
+        this._pvSequence = sequence;
+        this.state.currentPVId = false;
+        this.state.currentPVName = "";
+        if (!id) return;
+        try {
+            const records = await this.orm.read("sale.order", [id], ["name", "state"]);
+            if (this._pvSequence !== sequence) return;
+            if (records.length && records[0].state === "draft") {
+                this.state.currentPVId = id;
+                this.state.currentPVName = records[0].name;
+            }
+        } catch (error) {
+            // Only eligible quotation forms show the action; the backend always
+            // rechecks state, company and Sales Administrator permissions.
+            console.warn("sale_ai_assistant: cannot inspect current quotation", error);
+        }
+    }
+
+    get editingQuotation() {
+        return Boolean(this.state.session?.edit_order_id);
+    }
+
+    requestLoadQuotation() {
+        if (this.readonly || this.state.busy || this.state.sending || !this.state.currentPVId) return;
+        const orderId = this.state.currentPVId;
+        // Actions that return a refreshed session can replace state.session
+        // without replacing state.active. Prefer the current live snapshot.
+        const current = this.state.session?.id === this.state.active?.id
+            ? this.state.session : this.state.active;
+        const sameOrder = current?.edit_order_id === orderId;
+        const hasWork = Boolean(current?.has_work || this.state.composer.trim() || this.state.pendingFiles.length);
+        if (!hasWork) {
+            // Loading a PV only seeds a baseline. Without a message, pending
+            // attachment or actual draft edit there is nothing to archive.
+            this.loadQuotation(orderId, "auto");
+            return;
+        }
+        this.dialog.add(SaleAIReplaceConversationDialog, {
+            title: sameOrder ? _t("Recargar presupuesto desde Odoo") : _t("Cargar presupuesto en borrador"),
+            body: _t("La conversación actual contiene mensajes o cambios provisionales. Puedes conservarla en el historial o descartarla definitivamente. El presupuesto real de Odoo no se modificará. El texto sin enviar y los adjuntos pendientes se perderán en ambos casos."),
+            onArchive: () => this.loadQuotation(orderId, "archive"),
+            onDiscard: () => this.loadQuotation(orderId, "discard"),
+        });
+    }
+
+    async loadQuotation(orderId, replaceMode = "auto") {
+        if (this.state.busy || this.state.sending) return;
+        this.state.busy = true;
+        try {
+            const previous = this.state.active?.id || false;
+            const loaded = await this.orm.call("sale.ai.session", "assistant_panel_load_quotation", [
+                orderId, previous, replaceMode === "archive", replaceMode === "discard",
+            ]);
+            this.state.active = loaded;
+            this.state.session = loaded;
+            this.state.viewingHistory = false;
+            this.state.mode = window.innerWidth < 1080 ? "preview" : "chat";
+            this.state.previewOpen = window.innerWidth >= 1080;
+            this.state.composer = "";
+            this.state.pendingFiles = [];
+            this.state.pendingFileSessionId = loaded.id;
+            this.state.aiError = "";
+            this.state.uploadError = "";
+            try {
+                const updated = await this.orm.call("sale.ai.session", "assistant_panel_bootstrap", []);
+                this.state.history = updated.history || [];
+                this.state.historyHasMore = updated.history_has_more || false;
+            } catch (historyError) {
+                console.warn("sale_ai_assistant: history refresh after load", historyError);
+            }
+            this.notification.add(_t("Presupuesto ") + loaded.edit_order_name + _t(" cargado para edición. Los cambios son provisionales."), {type: "success"});
+        } catch (error) {
+            this.notifyError(_t("No se pudo cargar el presupuesto en borrador."), error);
+        } finally {
+            this.state.busy = false;
+        }
+    }
+
+    async requestUpdateQuotation() {
+        if (this.readonly || this.state.busy || this.state.sending || !this.editingQuotation) return;
+        if (this.state.composer.trim() || this.state.pendingFiles.length) {
+            this.notification.add(_t("Envía o elimina el texto y los adjuntos pendientes antes de actualizar el presupuesto."), {type: "warning"});
+            return;
+        }
+        const sessionId = this.state.session.id;
+        this.state.busy = true;
+        try {
+            const review = await this.orm.call("sale.ai.session", "assistant_panel_update_preflight", [sessionId]);
+            const detail = [
+                _t("Presupuesto: ") + review.sale_order_name,
+                _t("Cliente: ") + review.partner,
+                _t("Cambios propuestos: ") + review.changes_count,
+                _t("Base provisional: ") + this.formatAmount(review.amount_untaxed_estimate) + " " + review.currency,
+            ];
+            if (review.external_changes.length) {
+                detail.push("", _t("Otros cambios detectados en Odoo (se conservarán salvo los campos que modificas):"),
+                    ...review.external_changes.slice(0, 16).map((x) => "• " + x));
+            }
+            if (review.conflicts.length) {
+                detail.push("", _t("CONFLICTOS: tu propuesta y Odoo han cambiado los mismos datos:"),
+                    ...(review.conflict_details || review.conflicts).slice(0, 16).map((x) => "• " + x), "",
+                    _t("Si confirmas, tus valores prevalecerán SOLO en los campos indicados. El resto se conservará."));
+            }
+            if (review.warnings?.length) detail.push("", ...review.warnings);
+            detail.push("", _t("Solo se modificará el presupuesto existente, en estado borrador. El chat continuará abierto."));
+            this.dialog.add(ConfirmationDialog, {
+                title: review.conflicts.length ? _t("Conflictos detectados: revisar antes de sobrescribir") : _t("Actualizar presupuesto en borrador"),
+                body: detail.join("\n"),
+                confirmLabel: review.conflicts.length ? _t("Sobrescribir mis campos") : _t("Confirmar actualización"),
+                cancelLabel: _t("Cancelar y revisar"),
+                confirm: () => this.confirmUpdateQuotation(sessionId, review),
+            });
+        } catch (error) {
+            this.notifyError(_t("No se puede actualizar todavía. Revisa el borrador y el estado del presupuesto."), error);
+        } finally {
+            this.state.busy = false;
+        }
+    }
+
+    async confirmUpdateQuotation(sessionId, review) {
+        if (this.state.busy || this.state.sending) return;
+        this.state.busy = true;
+        try {
+            const result = await this.orm.call("sale.ai.session", "assistant_panel_update_quotation", [
+                sessionId, review.signature, review.current_signature, true, review.conflicts.length > 0,
+            ]);
+            this.state.session = result.session;
+            this.state.active = result.session;
+            this.state.previewOpen = window.innerWidth >= 1080;
+            this.state.mode = window.innerWidth < 1080 ? "preview" : "chat";
+            this.notification.add(_t("Presupuesto ") + result.sale_order_name + _t(" actualizado. La vista previa ya refleja la versión guardada."), {type: "success"});
+        } catch (error) {
+            this.notifyError(_t("No se ha sobrescrito el presupuesto. Revisa los cambios y vuelve a confirmar."), error);
+        } finally {
+            this.state.busy = false;
+        }
     }
 
     async refreshBootstrap() {
@@ -470,6 +670,7 @@ export class SaleAIChat extends Component {
     }
 
     async requestCreateQuotation() {
+        if (this.editingQuotation) return this.requestUpdateQuotation();
         if (this.readonly || this.state.busy || this.state.sending || !this.state.session?.id) return;
         const sessionId = this.state.session.id;
         this.state.busy = true;
@@ -551,8 +752,9 @@ export class SaleAIChat extends Component {
 
     requestNewConversation() {
         if (this.state.busy || this.state.sending) return;
-        const current = this.state.active;
-        const hasChanges = Boolean(current?.has_work);
+        const current = this.state.session?.id === this.state.active?.id
+            ? this.state.session : this.state.active;
+        const hasChanges = Boolean(current?.has_work || this.state.composer.trim() || this.state.pendingFiles.length);
         if (!hasChanges) {
             // Empty conversations are discarded silently, but a genuinely new
             // session is always created when the user requests a fresh chat.
@@ -560,9 +762,11 @@ export class SaleAIChat extends Component {
             return;
         }
         this.dialog.add(ConfirmationDialog, {
-            title: _t("Descartar conversación"),
-            body: _t("Se eliminarán los mensajes y el borrador provisional de esta conversación. No se podrá recuperar. ¿Quieres empezar otra?"),
-            confirmLabel: _t("Descartar y empezar"),
+            title: current?.edit_order_id ? _t("Archivar edición y empezar") : _t("Descartar conversación"),
+            body: current?.edit_order_id
+                ? _t("Esta edición se archivará en el historial sin modificar el presupuesto real. ¿Comenzar una conversación nueva?")
+                : _t("Se eliminarán los mensajes y el borrador provisional de esta conversación. No se podrá recuperar. ¿Quieres empezar otra?"),
+            confirmLabel: current?.edit_order_id ? _t("Archivar y empezar") : _t("Descartar y empezar"),
             cancelLabel: _t("Conservar conversación"),
             confirm: () => this.startNewConversation(),
         });
@@ -580,8 +784,15 @@ export class SaleAIChat extends Component {
             this.state.composer = "";
             this.state.pendingFiles = [];
             this.state.aiError = "";
+            try {
+                const updated = await this.orm.call("sale.ai.session", "assistant_panel_bootstrap", []);
+                this.state.history = updated.history || [];
+                this.state.historyHasMore = updated.history_has_more || false;
+            } catch (historyError) {
+                console.warn("sale_ai_assistant: history refresh after new chat", historyError);
+            }
         } catch (error) {
-            this.notifyError(_t("No se pudo descartar la conversación."), error);
+            this.notifyError(_t("No se pudo abrir una nueva conversación."), error);
         } finally {
             this.state.busy = false;
         }

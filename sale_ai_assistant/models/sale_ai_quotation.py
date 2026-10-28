@@ -34,6 +34,8 @@ class SaleAIQuotationSession(models.Model):
         if self.user_id != self.env.user or self.company_id != self.env.company:
             raise AccessError(_("Solo puedes finalizar tu conversación de la compañía activa."))
 
+        if self.edit_order_id and not self.env.context.get("sale_ai_edit_validation"):
+            raise UserError(_("Esta conversación edita un presupuesto existente; utiliza Actualizar presupuesto."))
         draft = self.draft_id
         if not draft:
             raise UserError(_("No se ha encontrado el borrador de la conversación."))
@@ -44,9 +46,9 @@ class SaleAIQuotationSession(models.Model):
         if not partner.exists() or (partner.company_id and partner.company_id != self.company_id):
             raise UserError(_("El cliente no pertenece a la compañía activa."))
         lines = draft.line_ids.sorted(key=lambda line: (line.sequence, line.id))
-        if not lines or not any(line.line_kind == "product" for line in lines):
+        if (not lines or not any(line.line_kind == "product" for line in lines)) and not self.env.context.get("sale_ai_edit_validation"):
             raise UserError(_("Añade al menos una partida comercial, además de las notas o secciones."))
-        if len(lines) > 40:
+        if len(lines) > 40 and not self.env.context.get("sale_ai_edit_validation"):
             raise UserError(_("El borrador supera el límite de 40 líneas."))
 
         commercial_pricelist = draft.pricelist_id or partner.property_product_pricelist
@@ -69,7 +71,10 @@ class SaleAIQuotationSession(models.Model):
             warnings.append(_('Hay precios estimados o basados en referencias, no precios definitivos de venta.'))
         for line in lines:
             if line.product_id:
-                if (not line.product_id.exists() or not line.product_id.sale_ok or
+                if (not line.product_id.exists() or
+                    (not line.product_id.sale_ok and not (
+                        self.env.context.get("sale_ai_edit_validation") and line.source_sale_line_id
+                    )) or
                     (line.product_id.company_id and line.product_id.company_id != self.company_id)):
                     raise UserError(_('Producto no disponible para la venta en la compañía activa: %s') % line.name[:100])
             if line.line_kind == 'product':

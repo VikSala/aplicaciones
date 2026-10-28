@@ -132,6 +132,13 @@ class SaleAISessionEngine(models.Model):
         company = self.company_id
         draft = self.draft_id
         state = ["ESTADO REAL DEL BORRADOR DE ESTA CONVERSACIÓN (no sale.order):"]
+        if self.edit_order_id:
+            state.append(
+                "MODO EDICIÓN: presupuesto existente %s (ID %s) cargado en vista previa. "
+                "Solo modifica el borrador mediante las herramientas; no modifiques sale.order directamente. "
+                "El usuario confirmará los cambios con el botón Actualizar presupuesto."
+                % (self.edit_order_id.name, self.edit_order_id.id)
+            )
         if draft:
             state.append("cliente_id=%s; cliente=%s; comentarios=%s; base_sin_iva=%.2f %s" % (
                 draft.partner_id.id if draft.partner_id else 0,

@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
+  <t t-name="sale_ai_assistant.SaleAIReplaceConversationDialog" owl="1">
+    <Dialog title="props.title" size="'md'">
+      <p class="mb-0" t-esc="props.body"/>
+      <t t-set-slot="footer">
+        <button type="button" class="btn btn-secondary" t-on-click="props.close">Cancelar</button>
+        <button type="button" class="btn btn-outline-danger" t-on-click="chooseDiscard">Descartar y cargar</button>
+        <button type="button" class="btn btn-primary" t-on-click="chooseArchive">Archivar y cargar</button>
+      </t>
+    </Dialog>
+  </t>
   <t t-name="sale_ai_assistant.SaleAIChat" owl="1">
     <div t-if="state.allowed and state.isSalesApp" class="sale-ai-root">
       <button t-if="!state.open" type="button" class="sale-ai-fab" t-on-click="openPanel"
@@ -11,7 +21,7 @@
                t-att-style="'right:' + state.width + 'px; width:min(440px, calc(100vw - ' + state.width + 'px - 20px));'"
                aria-label="Vista previa del presupuesto">
         <div class="sale-ai-preview-panel-header">
-          <strong>Vista previa del presupuesto</strong>
+          <strong t-esc="editingQuotation ? 'Edición · ' + state.session.edit_order_name : 'Vista previa del presupuesto'"/>
           <button type="button" class="sale-ai-icon-btn" t-on-click="togglePreview" aria-label="Cerrar vista previa"><i class="fa fa-times"/></button>
         </div>
         <div class="sale-ai-preview-panel-content">
@@ -84,7 +94,7 @@
           <t t-else="">
             <div t-if="state.viewingHistory" class="sale-ai-view-heading sale-ai-readonly-heading">
               <button type="button" class="sale-ai-back" t-on-click="returnToActive"><i class="fa fa-arrow-left"/> Volver al chat activo</button>
-              <strong t-esc="state.session?.name"/>
+              <strong class="sale-ai-archive-title" t-esc="state.session?.name"/>
               <p>Esta conversación se conserva únicamente como referencia.</p>
               <button t-if="state.session?.sale_order_id" type="button" class="sale-ai-order-link" t-on-click="openSaleOrder">
                 Abrir presupuesto <t t-esc="state.session.sale_order_name"/> <i class="fa fa-external-link"/>
@@ -155,15 +165,24 @@
                       t-att-disabled="state.busy || state.sending" title="Nota: &quot;Texto literal&quot;, o sin comillas para que la IA redacte la nota">
                 <i class="fa fa-sticky-note-o"/> Nota
               </button>
+              <div class="sale-ai-quotation-actions">
               <button type="button" class="sale-ai-undo-shortcut" t-on-click="undoLastChange"
                       t-att-disabled="state.busy || state.sending" title="Deshacer cambios sucesivos del borrador (Ctrl+Z)" aria-label="Deshacer último cambio">
                 <i class="fa fa-undo"/>
               </button>
+              <button t-if="state.currentPVId" type="button" class="sale-ai-load-quote-btn"
+                      t-on-click="requestLoadQuotation" t-att-disabled="state.busy || state.sending"
+                      t-att-title="'Cargar en vista previa el presupuesto ' + state.currentPVName"
+                      aria-label="Cargar presupuesto abierto en la vista previa">
+                <i class="fa fa-refresh" aria-hidden="true"/>
+              </button>
             <button type="button" class="sale-ai-create-quote-btn" t-on-click="requestCreateQuotation"
-                    t-att-disabled="state.busy || state.sending || !state.session?.draft?.lines?.length"
-                    title="Crear presupuesto en estado borrador tras revisión y confirmación">
-              <i class="fa fa-file-text-o"/> Crear presupuesto
+                    t-att-disabled="state.busy || state.sending || (!editingQuotation &amp;&amp; !state.session?.draft?.lines?.length)"
+                    t-att-title="editingQuotation ? 'Actualizar el presupuesto cargado tras revisar cambios y conflictos' : 'Crear presupuesto en borrador tras revisión y confirmación'">
+              <i t-att-class="editingQuotation ? 'fa fa-save' : 'fa fa-file-text-o'"/>
+              <t t-if="editingQuotation">Actualizar presupuesto</t><t t-else="">Crear presupuesto</t>
             </button>
+              </div>
             </nav>
             <div t-if="state.uploadError" class="sale-ai-upload-error" role="alert">
               <i class="fa fa-exclamation-circle" aria-hidden="true"/>
@@ -194,11 +213,23 @@
               </div>
             </div>
           </t>
+          <t t-elif="state.mode === 'chat' and state.viewingHistory">
+            <button type="button" class="sale-ai-footer-return" t-on-click="returnToActive" t-att-disabled="state.busy || state.sending" title="Volver a la conversación activa">
+              Volver a conversación
+            </button>
+          </t>
           <t t-elif="state.mode === 'chat'">
             <p class="sale-ai-footer-hint">Historial en modo consulta · No se puede modificar</p>
           </t>
+          <t t-elif="state.mode === 'history'">
+            <button type="button" class="sale-ai-footer-return" t-on-click="returnToActive" t-att-disabled="state.busy || state.sending" title="Volver a la conversación activa">
+              Volver a conversación
+            </button>
+          </t>
           <t t-else="">
-            <button type="button" class="sale-ai-footer-return" t-on-click="showChat">Volver a conversación</button>
+            <button type="button" class="sale-ai-footer-return" t-on-click="showChat">
+              Volver a conversación
+            </button>
           </t>
           <small class="sale-ai-footer-brand">Asistente de ventas</small>
         </footer>
@@ -207,6 +238,9 @@
   </t>
   <t t-name="sale_ai_assistant.SaleAIDraftPreview" owl="1">
     <div class="sale-ai-preview">
+      <div t-if="editingQuotation" class="sale-ai-edit-context">
+        <i class="fa fa-pencil-square-o"/> Editando <strong t-esc="state.session.edit_order_name"/> · Los cambios son provisionales.
+      </div>
       <div class="sale-ai-preview-label">CLIENTE</div>
       <div t-esc="state.session.draft.partner || 'Pendiente de asignar'"/>
       <div class="sale-ai-preview-label">COMENTARIOS</div>
@@ -245,10 +279,12 @@
         <p t-esc="state.session.draft.assumptions"/>
       </div>
       <p class="sale-ai-disclaimer" t-if="state.session.sale_order_id">Presupuesto creado y archivado en el historial. Consulta el documento real para revisar importes, impuestos y condiciones comerciales.</p>
+      <p class="sale-ai-disclaimer" t-elif="editingQuotation">Edición provisional del presupuesto existente. Solo se guardará cuando confirmes Actualizar presupuesto; los cambios concurrentes se revisarán.</p>
       <p class="sale-ai-disclaimer" t-else="">Propuesta provisional: no se ha creado un presupuesto de Odoo. Importes sin cálculo fiscal. Revisión humana obligatoria.</p>
       <button t-if="!readonly and state.mode === 'preview'" type="button" class="sale-ai-create-quote-btn"
-              t-on-click="requestCreateQuotation" t-att-disabled="state.busy || state.sending || !state.session?.draft?.lines?.length">
-        <i class="fa fa-file-text-o"/> Finalizar y crear presupuesto
+              t-on-click="requestCreateQuotation" t-att-disabled="state.busy || state.sending || (!editingQuotation &amp;&amp; !state.session?.draft?.lines?.length)">
+        <i t-att-class="editingQuotation ? 'fa fa-save' : 'fa fa-file-text-o'"/>
+        <t t-if="editingQuotation">Actualizar presupuesto</t><t t-else="">Finalizar y crear presupuesto</t>
       </button>
     </div>
   </t>

@@ -48,10 +48,41 @@ class SaleAISessionPanel(models.Model):
             "ended_at": fields.Datetime.to_string(session.ended_at) if session.ended_at else "",
             "sale_order_id": session.sale_order_id.id or False,
             "sale_order_name": session.sale_order_id.name or "",
+            "edit_order_id": session.edit_order_id.id or False,
+            "edit_order_name": session.edit_order_id.name or "",
             "message_count": self.env["sale.ai.message"].search_count([("session_id", "=", session.id)]),
             "model_id": (session.model_id or session.company_id.sale_ai_model_id).id or False,
             "model_name": (session.model_id or session.company_id.sale_ai_model_id).name or "Sin configurar",
         }
+
+    @api.model
+    def _panel_session_has_work(self, session):
+        """Check actual work, excluding the original PV copied to its preview.
+
+        This single check is used for both the frontend confirmation and the
+        backend archive/discard decision, avoiding client/server mismatches.
+        """
+        if session.message_ids or session.technical_proposal:
+            return True
+        draft = session.draft_id
+        if not draft:
+            return False
+        if session.edit_order_id:
+            # The seeded lines, customer and comments do NOT count as work.
+            # Undo history and internal draft notes DO count as interaction.
+            if draft.change_ids or draft.assumptions or draft.estimate_details:
+                return True
+            try:
+                original = session._edit_original()
+                return bool(session._edit_plan(original, original)["changes_count"])
+            except (UserError, ValidationError, ValueError, KeyError, TypeError):
+                # Broken baseline must never silently discard a potentially
+                # valuable provisional conversation.
+                return True
+        return bool(
+            draft.line_ids or draft.partner_id or draft.pricelist_id or
+            draft.description or draft.assumptions or draft.estimate_details
+        )
 
     @api.model
     def _panel_details(self, session):
@@ -78,12 +109,7 @@ class SaleAISessionPanel(models.Model):
             for msg in reversed(messages)
         ]
         draft = session.draft_id
-        info["has_work"] = bool(
-            info["message_count"] or (draft and (
-                draft.line_ids or draft.partner_id or draft.pricelist_id or
-                draft.description or draft.assumptions or draft.estimate_details
-            ))
-        )
+        info["has_work"] = self._panel_session_has_work(session)
         info["proposal"] = session.technical_proposal or False
         info["draft"] = self._panel_draft_payload(session)
         return info
@@ -106,6 +132,7 @@ class SaleAISessionPanel(models.Model):
             "lines": [
                 {
                     "id": line.id,
+                    "source_sale_line_id": line.source_sale_line_id or False,
                     "kind": line.line_kind,
                     "name": line.name,
                     "product_ref": line.product_id.default_code or "" if line.product_id else "",
@@ -328,6 +355,10 @@ class SaleAISessionPanel(models.Model):
             current = self._panel_find(current_session_id)
             if current.state != "active" or current.sale_order_id:
                 raise UserError(_("Esta conversación está cerrada y no puede descartarse."))
-            current.unlink()  # ondelete=cascade removes messages, drafts and lines.
+            current._ai_lock_session()
+            if current.edit_order_id and self._panel_session_has_work(current):
+                current.action_close()  # Preserve edits with actual user work.
+            else:
+                current.unlink()  # A pristine loaded PV is not a conversation.
         session = self.create({"name": _("Nuevo presupuesto IA")})
         return self._panel_details(session)

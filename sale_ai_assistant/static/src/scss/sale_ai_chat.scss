@@ -96,6 +96,11 @@
     }
     .sale-ai-back, .sale-ai-order-link, .sale-ai-footer-return { background: transparent; border: none; color: #356969; font-size: 12px; padding: 4px 0; }
     .sale-ai-back i { margin-right: 5px; }
+    .sale-ai-readonly-heading {
+        display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+        .sale-ai-archive-title { display: block; max-width: 100%; font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+        p { margin: 0; }
+    }
     .sale-ai-load-more { display: block; margin: 10px auto; padding: 6px 10px; border: 1px solid #d8e2e2;
         border-radius: 7px; background: #fff; color: #386e6d; font-size: 12px;
         &:disabled { opacity: .5; }
@@ -188,13 +193,21 @@ body.sale-ai-resizing { cursor: ew-resize !important; user-select: none !importa
     }
     .sale-ai-undo-shortcut { margin-left: auto; }
     .sale-ai-undo-shortcut .fa { margin-right: 0; }
+    // Icon-only refresh action should not inherit the margin for labeled buttons.
+    .sale-ai-load-quote-btn .fa { margin-right: 1px; }
 }
 
 // Keep all quotation actions on one row, including finalization.
 .sale-ai-line-shortcuts {
-    flex-wrap: nowrap; gap: 4px; margin: 0 0 10px; overflow-x: auto;
+    flex-wrap: wrap; gap: 4px; margin: 0 0 10px; overflow-x: visible;
     > button { flex: 0 0 auto; white-space: nowrap; padding: 6px; }
-    > .sale-ai-create-quote-btn {
+    .sale-ai-quotation-actions {
+        display: inline-flex; align-items: center; flex-wrap: nowrap;
+        gap: 4px; margin-left: auto;
+        > button { flex: 0 0 auto; white-space: nowrap; padding: 6px; }
+        .sale-ai-undo-shortcut { margin-left: 0; }
+    }
+    .sale-ai-quotation-actions > .sale-ai-create-quote-btn {
         width: auto; margin: 0; background: #267e65; color: #fff;
         border-color: #277e63; font-size: 11px;
         &:hover:not(:disabled) { background: #206d56; color: #fff; }
@@ -223,3 +236,18 @@ body.sale-ai-resizing { cursor: ew-resize !important; user-select: none !importa
 }
 .sale-ai-file-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 .sale-ai-file-chip { display: inline-flex; align-items: center; max-width: 100%; overflow-wrap: anywhere; gap: 6px; background: #eef4f3; border-radius: 12px; padding: 4px 9px; font-size: 11px; button { background: transparent; border: 0; font-size: 17px; } }
+
+.sale-ai-root {
+    .sale-ai-load-quote-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 30px; min-width: 30px; height: 30px; padding: 0;
+        border: 1px solid #d5e3df; border-radius: 8px;
+        background: #eef7f4; color: #19735e; font-size: 14px;
+        &:hover { background: #dcf0e9; }
+        &:disabled { opacity: .4; cursor: wait; }
+    }
+    .sale-ai-edit-context {
+        border: 1px solid #d9e7e2; background: #f3faf7; border-radius: 8px;
+        padding: 9px 10px; font-size: 11px; color: #426257;
+    }
+}

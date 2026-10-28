@@ -27,3 +27,5 @@ from . import test_sale_ai_multimodel
 
 from . import test_sale_ai_multimodel_recovery
 from . import test_sale_ai_proposals
+
+from . import test_sale_ai_quotation_edit

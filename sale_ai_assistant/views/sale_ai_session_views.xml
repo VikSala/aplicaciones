@@ -53,6 +53,7 @@
                         </group>
                         <group>
                             <field name="sale_order_id" readonly="1"/>
+                            <field name="edit_order_id" readonly="1"/>
                             <field name="ended_at" readonly="1"/>
                             <field name="reopened_at" readonly="1"/>
                         </group>

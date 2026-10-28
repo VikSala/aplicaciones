@@ -28,6 +28,10 @@ class SaleAIDraftLine(models.Model):
          ("line_note", "Nota")],
         default="product", required=True, string="Tipo de línea"
     )
+    source_sale_line_id = fields.Integer(
+        string="ID de línea del presupuesto de origen", readonly=True, copy=False,
+        help="Identificador estable aunque otro usuario elimine la línea en Odoo.",
+    )
     product_id = fields.Many2one("product.product", string="Producto", check_company=True)
     name = fields.Text(string="Descripción propuesta", required=True)
     product_uom_qty = fields.Float(string="Cantidad", default=1.0, digits="Product Unit of Measure")
@@ -69,6 +73,8 @@ class SaleAIDraftLine(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
+            if vals.get("source_sale_line_id") and not self.env.context.get("sale_ai_internal_edit"):
+                raise UserError(_("No se puede asociar manualmente una línea del presupuesto."))
             draft = self.env["sale.ai.draft"].browse(vals["draft_id"])
             draft.session_id._ensure_can_edit_draft()
             if vals.get("line_kind") in ("line_section", "line_note"):
@@ -77,6 +83,8 @@ class SaleAIDraftLine(models.Model):
         return super().create(vals_list)
 
     def write(self, vals):
+        if "source_sale_line_id" in vals and not self.env.context.get("sale_ai_internal_edit"):
+            raise UserError(_("No se puede modificar la línea real asociada al borrador."))
         if "draft_id" in vals:
             raise UserError(_("No se puede trasladar una línea a otro presupuesto."))
         self.mapped("draft_id.session_id")._ensure_can_edit_draft()
