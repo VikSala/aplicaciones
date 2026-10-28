@@ -2,8 +2,10 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import AccessError, ValidationError
 
-from .sale_ai_gateway import get_gateway_key
+from .sale_ai_gateway import (get_gateway_key, get_transcription_model,
+                              validate_transcription_model, GatewayError)
 from .sale_ai_market import market_setting
+from .sale_ai_attachment_limits import ATTACHMENT_LIMITS, PARAM_PREFIX, get_attachment_limits
 
 
 class SaleAIGatewaySettings(models.TransientModel):
@@ -17,6 +19,26 @@ class SaleAIGatewaySettings(models.TransientModel):
     remove_key = fields.Boolean(string="Eliminar clave existente")
     model_id = fields.Many2one("sale.ai.model", string="Modelo predeterminado",
                               domain="[('provider','=','vercel_gateway'),('active','=',True)]")
+    transcription_model = fields.Char(
+        string="Modelo de transcripción (ID Vercel)", required=True,
+        default="microsoft/mai-transcribe-1.5",
+        help="Identificador exacto de un modelo de transcripción DE ARCHIVOS compatible con Vercel AI Gateway, por ejemplo microsoft/mai-transcribe-2. Independiente del modelo conversacional; se guarda por compañía.")
+    # 0 means that the assistant does not impose this particular ceiling;
+    # Odoo, proxy, provider and image libraries retain their own limits.
+    attachment_max_files = fields.Integer(string="Archivos máximos por mensaje (0 = sin límite)", default=5)
+    attachment_total_mb = fields.Integer(string="Total de adjuntos por mensaje (MiB)", default=30)
+    attachment_image_mb = fields.Integer(string="Máximo por imagen (MiB)", default=10)
+    attachment_pdf_mb = fields.Integer(string="Máximo por PDF (MiB)", default=5)
+    attachment_txt_mb = fields.Integer(string="Máximo por TXT (MiB)", default=5)
+    attachment_mp3_mb = fields.Integer(string="Máximo por MP3 (MiB)", default=25)
+    attachment_pdf_pages = fields.Integer(string="Páginas máximas por PDF", default=10)
+    attachment_image_megapixels = fields.Integer(string="Resolución máxima de origen por imagen (megapíxeles)", default=25)
+    attachment_image_edge_px = fields.Integer(string="Lado máximo de imagen enviada a IA (px)", default=1800,
+        help="0 conserva resolución original (se convierte a PNG). Una imagen grande puede provocar rechazo o consumo elevado del proveedor.")
+    attachment_pdf_edge_px = fields.Integer(string="Lado máximo de vista de página PDF (px)", default=1600,
+        help="0 no reduce por tamaño de página; se mantiene el factor de rasterización 1,5.")
+    attachment_text_chars = fields.Integer(string="Caracteres máximos extraídos por archivo", default=50000)
+    attachment_transcription_response_kb = fields.Integer(string="Máximo de respuesta HTTP de transcripción (KiB)", default=1024)
     max_output_tokens = fields.Integer(string="Máximo de tokens de respuesta (por llamada)", default=8192, help="Se envía al proveedor exactamente como figura aquí, también para notas y secciones. Los modelos pueden tener límites propios.")
     request_timeout = fields.Integer(string="Tiempo máximo de espera por llamada (segundos)", default=90)
     context_mode = fields.Selection([
@@ -77,8 +99,10 @@ class SaleAIGatewaySettings(models.TransientModel):
         defaults = super().default_get(field_names)
         company = self.env.company
         defaults.update({
+            **{"attachment_" + key: value for key, value in get_attachment_limits(self.env, company.id).items()},
             "company_id": company.id,
             "model_id": company.sale_ai_model_id.id or False,
+            "transcription_model": get_transcription_model(self.env, company.id),
             "max_output_tokens": company.sale_ai_max_output_tokens,
             "request_timeout": company.sale_ai_request_timeout,
             "context_budget": company.sale_ai_context_budget,
@@ -105,6 +129,18 @@ class SaleAIGatewaySettings(models.TransientModel):
             raise AccessError(_("Solo un administrador de Ventas puede configurar el asistente."))
         if self.model_id and (not self.model_id.active or self.model_id.provider != "vercel_gateway"):
             raise ValidationError(_("Selecciona un modelo activo de Vercel AI Gateway."))
+        transcription_model = (self.transcription_model or "").strip()
+        try:
+            validate_transcription_model(transcription_model)
+        except GatewayError as exc:
+            raise ValidationError(str(exc)) from None
+        # We validate type/sign but deliberately impose no upper bound from
+        # application policy. The provider/server decides what can be processed.
+        for key in ATTACHMENT_LIMITS:
+            value = getattr(self, "attachment_" + key)
+            if not isinstance(value, int) or value < 0:
+                raise ValidationError(_("%s debe ser un entero igual o mayor que 0 (sin límite).") %
+                                      self._fields["attachment_" + key].string)
         if not 128 <= self.max_output_tokens <= 65536:
             raise ValidationError(_("El límite de respuesta debe estar entre 128 y 65.536 tokens."))
         if not 5 <= self.request_timeout <= 300:
@@ -159,6 +195,10 @@ class SaleAIGatewaySettings(models.TransientModel):
         })
         param = "sale_ai_assistant.vercel_key.%d" % company.id
         params = self.env["ir.config_parameter"].sudo()
+        params.set_param("sale_ai_assistant.transcription_model.%d" % company.id, transcription_model)
+        for key, (slug, _default, _unit) in ATTACHMENT_LIMITS.items():
+            params.set_param("%s%s.%d" % (PARAM_PREFIX, slug, company.id),
+                             str(getattr(self, "attachment_" + key)))
         if self.remove_key:
             params.set_param(param, "")
         elif self.api_key and self.api_key.strip():

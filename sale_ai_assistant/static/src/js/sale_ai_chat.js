@@ -20,6 +20,7 @@ export class SaleAIChat extends Component {
         this.notification = useService("notification");
         this.messageEnd = useRef("messageEnd");
         this.composerInput = useRef("composerInput");
+        this.fileInput = useRef("fileInput");
         this.onPointerMove = this.onPointerMove.bind(this);
         this.onPointerUp = this.onPointerUp.bind(this);
 
@@ -30,10 +31,13 @@ export class SaleAIChat extends Component {
             busy: false,
             sending: false,
             aiError: "",
+            uploadError: "",
             width: this.readWidth(),
             mode: "chat", // chat, history, or mobile-only preview
             previewOpen: false,
             composer: "",
+            pendingFiles: [],
+            attachmentLimits: null,
             session: null,
             active: null,
             viewingHistory: false,
@@ -63,6 +67,59 @@ export class SaleAIChat extends Component {
             this.cleanupResize();
             window.removeEventListener("resize", this.onComposerResize);
         });
+    }
+
+    openFilePicker() {
+        if (!this.state.busy && !this.state.sending && !this.readonly) this.fileInput.el?.click();
+    }
+
+    async selectFiles(event) {
+        if (this.state.pendingFileSessionId !== this.state.session?.id) this.state.pendingFiles = [];
+        const files = Array.from(event.target.files || []);
+        event.target.value = "";
+        const limits = this.state.attachmentLimits;
+        // Config comes from the same company's server-side configuration.
+        // A zero disables that module limit; the server always rechecks.
+        // If bootstrap has not completed, do not invent client-side limits.
+        if (limits) {
+            const count = files.length + this.state.pendingFiles.length;
+            if (limits.max_files > 0 && count > limits.max_files) {
+                this.notification.add(`Límite configurado: ${limits.max_files} archivos por mensaje. Se cambia en Conexión Vercel IA.`, {type: "warning"});
+                return;
+            }
+            for (const file of files) {
+                const kind = /\.mp3$/i.test(file.name) ? "mp3" :
+                    /\.(png|jpe?g|webp)$/i.test(file.name) ? "image" :
+                    /\.pdf$/i.test(file.name) ? "pdf" :
+                    /\.txt$/i.test(file.name) ? "txt" : null;
+                if (!kind) {
+                    this.notification.add("Formatos admitidos: TXT, PDF, PNG, JPG, WebP y MP3.", {type: "warning"});
+                    return;
+                }
+                const maxMb = limits[`${kind}_mb`];
+                if (maxMb > 0 && file.size > maxMb * 1024 * 1024) {
+                    this.notification.add(`${file.name} supera el máximo configurado de ${maxMb} MiB para ${kind.toUpperCase()}.`, {type: "warning"});
+                    return;
+                }
+            }
+            const pendingBytes = this.state.pendingFiles.reduce(
+                (sum, file) => sum + Math.floor((file.data || "").length * 3 / 4), 0);
+            const selectedBytes = files.reduce((sum, file) => sum + file.size, 0);
+            if (limits.total_mb > 0 && pendingBytes + selectedBytes > limits.total_mb * 1024 * 1024) {
+                this.notification.add(`Los adjuntos superan el máximo conjunto configurado de ${limits.total_mb} MiB.`, {type: "warning"});
+                return;
+            }
+        }
+        const uploadSessionId = this.state.session?.id;
+        this.state.busy = true;
+        try {
+            this.state.pendingFileSessionId = uploadSessionId;
+            this.state.pendingFiles = this.state.pendingFiles.concat(await Promise.all(files.map(file => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve({name: file.name, data: reader.result.split(",")[1]});
+                reader.onerror = reject; reader.readAsDataURL(file);
+            }))));
+        } catch (_) { this.notification.add("No se pudo leer el archivo.", {type: "danger"}); } finally { this.state.busy = false; }
     }
 
     resizeComposer() {
@@ -98,6 +155,7 @@ export class SaleAIChat extends Component {
         try {
             const result = await this.orm.call("sale.ai.session", "assistant_panel_bootstrap", []);
             this.state.allowed = result.allowed === true;
+            this.state.attachmentLimits = result.attachment_limits || null;
             if (!this.state.allowed) {
                 return;
             }
@@ -143,7 +201,9 @@ export class SaleAIChat extends Component {
             this.state.viewingHistory = false;
             this.state.mode = "chat";
             this.state.composer = "";
+            this.state.pendingFiles = [];
             this.state.aiError = "";
+            this.state.uploadError = "";
         } catch (error) {
             this.notifyError(_t("No se pudo abrir una nueva conversación."), error);
         } finally {
@@ -297,8 +357,20 @@ export class SaleAIChat extends Component {
         return this.submitContent(this.state.composer, false);
     }
 
+    restoreFailedSubmission(target, temporaryId, content, preserveComposer) {
+        const index = target.messages.findIndex((msg) => msg.id === temporaryId);
+        if (index !== -1) target.messages.splice(index, 1);
+        if (!preserveComposer) this.state.composer = content;
+        // Never clear pendingFiles on error: the user must be able to retry.
+    }
+
     async submitContent(raw, preserveComposer = false) {
         const content = (raw || "").trim();
+        if (this.state.pendingFiles.length && this.state.pendingFileSessionId !== this.state.session?.id) {
+            this.state.pendingFiles = [];
+            this.notification.add("Vuelve a adjuntar los archivos en esta conversación.", {type: "warning"});
+            return;
+        }
         if (!content || this.state.sending || this.state.busy || this.readonly || !this.state.session) return;
         const target = this.state.session;
         const beforeDraft = this.draftSignature(target.draft);
@@ -308,8 +380,19 @@ export class SaleAIChat extends Component {
         if (!preserveComposer) this.state.composer = "";
         this.state.sending = true;
         this.state.aiError = "";
+        this.state.uploadError = "";
         try {
-            const result = await this.orm.call("sale.ai.session", "assistant_panel_send", [target.id, content]);
+            const result = await this.orm.call("sale.ai.session", "assistant_panel_send", [target.id, content, this.state.pendingFiles]);
+            if (result.file_error) {
+                // The backend rolled back all partially prepared attachments and
+                // intentionally did NOT save a user message. Keep everything.
+                this.restoreFailedSubmission(target, temporaryId, content, preserveComposer);
+                this.state.uploadError = result.file_error;
+                this.notification.add(result.file_error, {type: "warning"});
+                return;
+            }
+            // Only a successful acknowledged send consumes the queued files.
+            this.state.pendingFiles = [];
             const index = target.messages.findIndex((msg) => msg.id === temporaryId);
             if (index !== -1) {
                 target.messages.splice(index, 1, {
@@ -330,7 +413,12 @@ export class SaleAIChat extends Component {
             }
             target.has_work = true;
         } catch (error) {
-            this.notifyError(_t("No se pudo completar el envío. Comprueba la conversación antes de reintentar."), error);
+            // A transport/proxy/Odoo exception may happen before the request
+            // even reaches Python. Keep the prompt and attachment queue even if
+            // the subsequent conversation refresh succeeds.
+            this.restoreFailedSubmission(target, temporaryId, content, preserveComposer);
+            this.state.uploadError = _t("Error de comunicación con Odoo. El mensaje y los adjuntos siguen preparados. Comprueba la conversación antes de reintentar; si persiste, consulta los logs del servidor.");
+            this.notifyError(this.state.uploadError, error);
             try {
                 const refreshed = await this.orm.call("sale.ai.session", "assistant_panel_open", [target.id]);
                 this.state.session = refreshed;
@@ -338,10 +426,8 @@ export class SaleAIChat extends Component {
                 if (beforeDraft !== this.draftSignature(refreshed.draft)) {
                     this.showPreviewAfterDraftChange(null, refreshed.draft);
                 }
-            } catch (_) {
-                const index = target.messages.findIndex((msg) => msg.id === temporaryId);
-                if (index !== -1) target.messages.splice(index, 1);
-                if (!preserveComposer) this.state.composer = content;
+            } catch (refreshError) {
+                console.error("sale_ai_assistant: refresh after failed send", refreshError);
             }
         } finally {
             this.state.sending = false;
@@ -492,6 +578,7 @@ export class SaleAIChat extends Component {
             this.state.viewingHistory = false;
             this.state.mode = "chat";
             this.state.composer = "";
+            this.state.pendingFiles = [];
             this.state.aiError = "";
         } catch (error) {
             this.notifyError(_t("No se pudo descartar la conversación."), error);

@@ -6,6 +6,7 @@ The provider's catalogue/prices/capabilities are not presumed to be stable.
 import json
 import logging
 import os
+import re
 import socket
 import time
 from urllib.error import HTTPError, URLError
@@ -143,3 +144,141 @@ def call_gateway(api_key, model_id, messages, timeout, max_tokens, tools=None, t
     except (ValueError, KeyError, IndexError, TypeError, OverflowError):
         _logger.warning("sale_ai_assistant: Provider response format could not be parsed (no payload logged)")
         raise GatewayError(_("El modelo ha devuelto una respuesta incompatible o vacía. Prueba otro modelo.")) from None
+
+
+# AI Gateway's native AI SDK transcription protocol (different from the /v1/chat URL).
+# https://github.com/vercel/ai/blob/main/packages/gateway/src/gateway-transcription-model.ts
+TRANSCRIPTION_ENDPOINT = "https://ai-gateway.vercel.sh/v4/ai/transcription-model"
+DEFAULT_TRANSCRIPTION_MODEL = "microsoft/mai-transcribe-1.5"
+TRANSCRIPTION_MODEL_PATTERN = re.compile(r"[a-zA-Z0-9][a-zA-Z0-9._-]*/[a-zA-Z0-9][a-zA-Z0-9._-]*\Z")
+
+
+def get_transcription_model(env, company_id):
+    """Read a per-company transcription model; legacy 11.15 remains the default."""
+    key = "sale_ai_assistant.transcription_model.%d" % company_id
+    return (env["ir.config_parameter"].sudo().get_param(key, "") or DEFAULT_TRANSCRIPTION_MODEL).strip()
+
+
+def validate_transcription_model(model_id):
+    """Reject malformed IDs before sending any audio to the gateway."""
+    if not isinstance(model_id, str) or len(model_id) > 128 or not TRANSCRIPTION_MODEL_PATTERN.fullmatch(model_id):
+        raise GatewayError(_("Identificador de transcripción no válido. Usa proveedor/modelo (por ejemplo microsoft/mai-transcribe-2)."))
+
+
+
+def _safe_transcription_error_detail(exc, api_key):
+    """Return a bounded, redacted upstream diagnostic, never the raw HTTP body.
+
+    Vercel can return useful 400 error descriptions (missing headers, invalid
+    audio data, unsupported inputs). The 11.18 code discarded those messages,
+    making every distinct cause appear as an identical generic HTTP 400.
+    Only the structured error message/code is examined, not arbitrary payloads.
+    """
+    try:
+        raw = exc.read(8192)
+        data = json.loads(raw.decode('utf-8'))
+        if not isinstance(data, dict):
+            return ''
+        error = data.get('error')
+        if isinstance(error, dict):
+            message = error.get('message')
+            code = error.get('code') or error.get('type')
+        else:
+            message = error if isinstance(error, str) else data.get('message')
+            code = data.get('code')
+        elements = []
+        if isinstance(code, str) and re.fullmatch(r'[A-Za-z0-9_.:-]{1,80}', code):
+            elements.append('código: %s' % code)
+        if isinstance(message, str):
+            # Upstream text is untrusted: prevent raw bytes, HTML, line breaks,
+            # long identifiers and credential strings from reaching the UI.
+            message = re.sub(r'[\x00-\x1f\x7f]+', ' ', message)
+            message = re.sub(r'<[^>]*>', '', message)
+            if api_key:
+                message = message.replace(api_key, '[oculto]')
+            message = re.sub(r'(?i)bearer\s+\S+', 'Bearer [oculto]', message)
+            message = re.sub(r'(?i)\b(?:sk|vck|vcst|ai_gateway)[-_][A-Za-z0-9_-]{8,}', '[oculto]', message)
+            message = re.sub(r'(?i)data:audio/[^,\s]+,[^\s]+', '[audio oculto]', message)
+            message = re.sub(r'[A-Za-z0-9+/=_-]{65,}', '[datos ocultos]', message)
+            message = ' '.join(message.split()).strip()
+            if message:
+                elements.append('detalle: %s' % message[:300])
+        return ' (%s)' % '; '.join(elements) if elements else ''
+    except (AttributeError, ValueError, TypeError, UnicodeError, OSError):
+        return ''
+
+
+
+def transcribe_audio_gateway(api_key, audio, model_id=DEFAULT_TRANSCRIPTION_MODEL, timeout=90,
+                             max_response_bytes=1024 * 1024, max_transcript_chars=50000):
+    """Transcribe MP3 remotely using the existing company Vercel API key.
+
+    No audio analysis or decoding is done in Odoo. The native Gateway endpoint
+    expects base64-encoded audio in JSON, not OpenAI multipart form data.
+    """
+    import base64
+
+    if not api_key:
+        raise GatewayError(_("Falta configurar la clave de Vercel AI Gateway."))
+    validate_transcription_model(model_id)
+    if not isinstance(audio, bytes) or not audio:
+        raise GatewayError(_("No se ha recibido un archivo de audio válido."))
+    payload = {
+        "audio": base64.b64encode(audio).decode("ascii"),
+        "mediaType": "audio/mpeg",
+    }
+    request = Request(
+        TRANSCRIPTION_ENDPOINT,
+        data=json.dumps(payload, separators=(",", ":")).encode("utf-8"),
+        headers={
+            "Authorization": "Bearer %s" % api_key,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "User-Agent": "Odoo-sale-ai-assistant/18.0",
+            "ai-transcription-model-specification-version": "4",
+            "ai-model-id": model_id,
+            # These native-protocol headers are sent by the official Vercel
+            # AI SDK Gateway provider (not used for /v1/chat/completions).
+            "ai-gateway-protocol-version": "0.0.1",
+            "ai-gateway-auth-method": "api-key",
+        },
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=timeout) as response:
+            raw_response = response.read(max_response_bytes + 1) if max_response_bytes else response.read()
+    except HTTPError as exc:
+        # Expose only a short, sanitized diagnostic from Vercel. Never log the
+        # raw HTTP response or the audio, and redact the Gateway credential.
+        provider_code = _safe_transcription_error_detail(exc, api_key)
+        if exc.code in (401, 403):
+            raise GatewayError(_("Vercel ha rechazado la API key o el acceso al modelo (HTTP %s).") % exc.code) from None
+        if exc.code == 402:
+            raise GatewayError(_("Vercel indica saldo insuficiente o un problema de facturación (HTTP 402).")) from None
+        if exc.code == 413:
+            raise GatewayError(_("Vercel o el proveedor rechaza el tamaño del archivo (HTTP 413)%s. Aunque el módulo lo admita, prueba otro tamaño o modelo.") % provider_code) from None
+        if exc.code == 429:
+            raise GatewayError(_("Límite de solicitudes de Vercel alcanzado (HTTP 429).")) from None
+        if exc.code in (502, 503, 504):
+            raise GatewayError(_("El servicio de transcripción no está disponible temporalmente (HTTP %s).") % exc.code) from None
+        if exc.code in (400, 404, 415, 422):
+            raise GatewayError(_("Vercel o el proveedor ha rechazado la transcripción con el modelo %s (HTTP %s)%s.") % (model_id, exc.code, provider_code)) from None
+        raise GatewayError(_("Vercel no ha podido transcribir el archivo (HTTP %s).") % exc.code) from None
+    except (URLError, socket.timeout, TimeoutError, ConnectionError, OSError):
+        raise GatewayError(_("No se ha podido conectar con Vercel para transcribir el audio.")) from None
+    if max_response_bytes and len(raw_response) > max_response_bytes:
+        raise GatewayError(_("La respuesta de transcripción supera el límite de respuesta configurado en Conexión Vercel IA."))
+    try:
+        result = json.loads(raw_response.decode("utf-8"))
+        transcript = result["text"]
+        if not isinstance(transcript, str):
+            raise ValueError("Invalid transcript")
+        transcript = transcript.strip()
+        if not transcript:
+            raise GatewayError(_("No se ha detectado voz transcribible en el MP3."))
+        if max_transcript_chars and len(transcript) > max_transcript_chars:
+            raise GatewayError(_("La transcripción supera el límite configurado de %s caracteres.") % max_transcript_chars)
+        return transcript
+    except (ValueError, KeyError, TypeError, UnicodeError):
+        _logger.warning("sale_ai_assistant: Unrecognized Gateway transcription response (no payload logged)")
+        raise GatewayError(_("Vercel ha devuelto una respuesta de transcripción incompatible.")) from None

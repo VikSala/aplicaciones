@@ -19,6 +19,37 @@
                         <field name="remove_key"/>
                         <field name="model_id" options="{'no_create': True}"/>
                     </group>
+                    <group string="Transcripción de MP3 (Vercel AI Gateway)">
+                        <field name="transcription_model" placeholder="microsoft/mai-transcribe-2"/>
+                        <div colspan="2" class="text-muted">
+                            Introduce el ID exacto del modelo de transcripción de archivos de Vercel (proveedor/modelo).
+                            Es independiente del modelo conversacional y se guarda por compañía. Solo admite modelos
+                            compatibles con transcripción por archivo; el proveedor puede establecer sus propios límites.
+                        </div>
+                    </group>
+                    <group string="Adjuntos — límites configurables por compañía">
+                        <field name="attachment_max_files"/>
+                        <field name="attachment_total_mb"/>
+                        <field name="attachment_image_mb"/>
+                        <field name="attachment_pdf_mb"/>
+                        <field name="attachment_txt_mb"/>
+                        <field name="attachment_mp3_mb"/>
+                        <field name="attachment_pdf_pages"/>
+                        <field name="attachment_image_megapixels"/>
+                        <field name="attachment_image_edge_px"/>
+                        <field name="attachment_pdf_edge_px"/>
+                        <field name="attachment_text_chars"/>
+                        <field name="attachment_transcription_response_kb"/>
+                        <div colspan="2" class="text-muted">
+                            Todos los valores admiten 0 para desactivar ESE límite del módulo.
+                            Los tamaños usan MiB (1 MiB = 1.048.576 bytes) y KiB.
+                            El archivo viaja a Odoo en base64 (aprox. 33 % de sobrecarga):
+                            Odoo, el proxy, el navegador, Pillow, Vercel y el modelo pueden
+                            rechazarlo aunque el módulo no imponga límite. Los errores
+                            de proveedor se notifican con su código HTTP; cambia el modelo
+                            o los valores y repite la prueba.
+                        </div>
+                    </group>
                     <group string="Agente experimental — límites reales de ejecución">
                         <field name="context_mode"/>
                         <field name="context_budget" invisible="context_mode == 'full'"/>
@@ -65,7 +96,7 @@
                         Las herramientas de lectura de Odoo solo se activan si el modelo tiene
                         marcada la capacidad «Admite herramientas» en Modelos IA. Los resultados
                         históricos son referencias limitadas, no precios de mercado actualizados.
-                        Los adjuntos aún no están habilitados. La búsqueda web solo se ofrece si
+                        Los adjuntos TXT, imágenes, PDF y MP3 están habilitados. La búsqueda web solo se ofrece si
                         está activada expresamente y hay clave Tavily configurada.
                     </div>
                 </sheet>

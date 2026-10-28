@@ -6,6 +6,8 @@ from odoo.exceptions import AccessError, UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
 
+from .sale_ai_attachment_limits import get_attachment_limits
+
 
 class SaleAISessionPanel(models.Model):
     _inherit = "sale.ai.session"
@@ -140,6 +142,7 @@ class SaleAISessionPanel(models.Model):
                 "history": [],
                 "history_has_more": False,
                 "models": [],
+                "attachment_limits": {},
             }
         company = self.env.company
         domain = [("user_id", "=", self.env.uid), ("company_id", "=", company.id)]
@@ -155,6 +158,7 @@ class SaleAISessionPanel(models.Model):
         return {
             "allowed": True,
             "company_id": company.id,
+            "attachment_limits": get_attachment_limits(self.env, company.id),
             "history_limit": history_limit,
             "active": self._panel_details(active) if active else False,
             "history": [self._panel_info(rec) for rec in history_plus_one[:page_size]],
@@ -251,12 +255,32 @@ class SaleAISessionPanel(models.Model):
         return self._panel_details(active)
 
     @api.model
-    def assistant_panel_send(self, session_id, content):
+    def assistant_panel_send(self, session_id, content, files=None):
         session = self._panel_find(session_id)
         session._ensure_can_edit_draft()
         if not isinstance(content, str) or not content.strip():
             raise ValidationError(_("Escribe un mensaje antes de enviarlo."))
         session._ai_lock_session()
+        if files:
+            # A failed attachment/transcription must not abort the whole RPC.
+            # Return a readable error to the composer (which keeps the draft
+            # and original files) and roll back *all* partial attachments and
+            # billing records from this attempt.
+            try:
+                with self.env.cr.savepoint():
+                    content += '\n' + session._ai_prepare_files(files)
+            except (UserError, ValidationError, AccessError) as exc:
+                return {"file_error": str(exc)}
+            except Exception:
+                _logger.exception(
+                    'sale_ai_assistant: unexpected attachment or MP3 processing failure; '
+                    'session=%s', session.id
+                )
+                return {"file_error": _(
+                    "Error interno al procesar los adjuntos (sesión %s). "
+                    "No se ha enviado el mensaje. Consulta el log de Odoo "
+                    "buscando 'sale_ai_assistant' para conocer la causa."
+                ) % session.id}
         message = self.env["sale.ai.message"].create({
             "session_id": session.id,
             "role": "user",

@@ -1,3 +1,39 @@
+## Novedad 18.0.0.11.19: corrección de protocolo Vercel y diagnóstico de HTTP 400
+
+Se añaden las cabeceras obligatorias del protocolo nativo que envía el SDK de Vercel a su endpoint de transcripción (`ai-gateway-protocol-version` y `ai-gateway-auth-method`). Los rechazos JSON con error del proveedor ahora muestran su descripción acotada y depurada, sin exponer API keys, tokens ni datos codificados de audio. No cambia la configuración por compañía ni los límites de adjuntos. Más detalles en `CORRECCION_TRANSCRIPCION_11_19.md`.
+
+## Novedad 18.0.0.11.18: errores de MP3 sin pérdida de borrador
+
+Los errores de adjuntos y transcripción se muestran junto al cuadro de envío y conservan el texto y los MP3 preparados para reintentar. Los rechazos conocidos de Vercel muestran el código HTTP; los errores internos dejan rastro en el log de Odoo. El botón «+» vuelve a estar centrado. Consulta `CORRECCION_MP3_11_18.md` para detalles y límites de la verificación.
+
+## Actualización 18.0.0.11.16 — Modelo de transcripción configurable y mayores límites de imagen
+
+En Ventas → Asistente IA → Conexión Vercel IA puedes configurar, por compañía,
+«Modelo de transcripción (ID Vercel)». Admite identificadores válidos publicados por
+Vercel para transcripción de archivos MP3, p. ej. `microsoft/mai-transcribe-2`.
+Si no cambias nada, se mantiene el predeterminado anterior
+`microsoft/mai-transcribe-1.5`. El modelo de chat continúa independiente.
+
+Subida: hasta 5 adjuntos por mensaje (antes 3), 10 MiB por imagen PNG/JPG/WebP
+(antes 5 MiB), 5 MiB por TXT/PDF y 25 MiB por MP3; máximo combinado de
+30 MiB de archivos sin codificar. Son controles propios de Odoo y NO límites
+universales de Vercel ni de sus proveedores. El tamaño final de JSON/base64
+es mayor; sigue siendo importante el proxy y la memoria del servidor.
+Ver `ADJUNTOS_Y_AUDIO_11_16.md` para detalles y pruebas.
+
+---
+
+## Actualización 18.0.0.11.15 — Audio MP3 por Vercel AI Gateway
+
+El chat ahora acepta MP3 (hasta 25 MB, 3 adjuntos por mensaje). Transcribe con
+`microsoft/mai-transcribe-1.5` a través de la API key de Vercel ya configurada;
+incorpora el texto al chat y lo guarda como TXT privado. **No necesita instalar
+FFmpeg, faster-whisper ni modelos locales**. No admite MP4 ni otros contenedores
+de vídeo: convierte el vídeo a MP3 antes de adjuntarlo. Ver `AUDIO_11_15.md`
+para instrucciones, limitaciones y privacidad. PDF mantiene PyMuPDF.
+
+---
+
 ## Actualización 18.0.0.7.5 — Notas técnicas completas
 
 - `Nota:` sin comillas sigue generando la nota con la IA. La generación de notas recibe un presupuesto específico de 2.400 a 3.200 tokens, separado del límite ordinario del chat (habitualmente 900), para evitar cortar descripciones largas. Esto puede incrementar ligeramente el consumo de una nota.

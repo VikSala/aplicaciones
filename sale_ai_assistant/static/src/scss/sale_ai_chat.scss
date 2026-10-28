@@ -200,5 +200,26 @@ body.sale-ai-resizing { cursor: ew-resize !important; user-select: none !importa
         &:hover:not(:disabled) { background: #206d56; color: #fff; }
     }
 }
-.sale-ai-root .sale-ai-input-container { align-items: flex-end; }
+.sale-ai-root .sale-ai-input-container { align-items: center; }
 .sale-ai-root .sale-ai-send { flex: 0 0 32px; }
+
+.sale-ai-root .sale-ai-attach {
+    display: inline-flex; align-items: center; justify-content: center;
+    flex: 0 0 32px; width: 32px; height: 32px; padding: 0;
+    border: 0; border-radius: 50%; background: transparent;
+    color: #51565e; line-height: 1; margin-right: 4px; cursor: pointer;
+    .fa { font-size: 15px; line-height: 1; }
+    &:hover { background: #e2e6e5; }
+    &:disabled { opacity: .4; cursor: default; }
+}
+.sale-ai-root .sale-ai-upload-error {
+    display: flex; gap: 8px; align-items: flex-start; padding: 9px 10px;
+    margin-bottom: 8px; border: 1px solid #e5b7b7; border-radius: 9px;
+    background: #fff5f5; color: #933838; font-size: 12px;
+    overflow-wrap: anywhere;
+    > .fa { flex: 0 0 auto; margin-top: 2px; }
+    > span { flex: 1; min-width: 0; }
+    > button { flex: 0 0 auto; background: transparent; border: 0; font-size: 17px; color: inherit; padding: 0 3px; }
+}
+.sale-ai-file-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.sale-ai-file-chip { display: inline-flex; align-items: center; max-width: 100%; overflow-wrap: anywhere; gap: 6px; background: #eef4f3; border-radius: 12px; padding: 4px 9px; font-size: 11px; button { background: transparent; border: 0; font-size: 17px; } }

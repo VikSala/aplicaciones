@@ -165,12 +165,25 @@
               <i class="fa fa-file-text-o"/> Crear presupuesto
             </button>
             </nav>
+            <div t-if="state.uploadError" class="sale-ai-upload-error" role="alert">
+              <i class="fa fa-exclamation-circle" aria-hidden="true"/>
+              <span t-esc="state.uploadError"/>
+              <button type="button" t-on-click="() => this.state.uploadError = ''" aria-label="Cerrar aviso">×</button>
+            </div>
+            <div t-if="state.pendingFiles.length" class="sale-ai-file-chips">
+              <span t-foreach="state.pendingFiles" t-as="file" t-key="file_index" class="sale-ai-file-chip">
+                <t t-esc="file.name"/>
+                <button type="button" t-on-click="() => this.state.pendingFiles.splice(file_index, 1)" t-att-disabled="state.busy || state.sending" aria-label="Quitar archivo">×</button>
+              </span>
+            </div>
             <div class="sale-ai-composer-line">
               <button type="button" class="sale-ai-new-btn" t-on-click="requestNewConversation"
                       t-att-disabled="state.busy || state.sending" title="Descartar conversación y comenzar otra" aria-label="Nueva conversación">
                 <span class="sale-ai-new-icon"/>
               </button>
               <div class="sale-ai-input-container">
+                <input type="file" class="d-none" t-ref="fileInput" multiple="multiple" accept=".txt,.pdf,.png,.jpg,.jpeg,.webp,.mp3" t-on-change="selectFiles"/>
+                <button type="button" class="sale-ai-attach" t-on-click="openFilePicker" t-att-disabled="state.busy || state.sending" title="Adjuntar archivos o MP3" aria-label="Adjuntar archivos"><i class="fa fa-plus" aria-hidden="true"/></button>
                 <textarea rows="1" t-ref="composerInput" t-model="state.composer"
                           t-on-keydown="onComposerKeydown" t-on-input="resizeComposer" placeholder="Escribe tu mensaje..."
                           t-att-disabled="state.sending || state.busy" aria-label="Escribe tu mensaje"/>
