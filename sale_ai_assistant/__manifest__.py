@@ -1,7 +1,7 @@
 {
     "name": "Asistente IA para Ventas",
     "summary": "Agente comercial: revisión técnica evolutiva, estimaciones y presupuestos en borrador",
-    "version": "18.0.0.11.24",
+    "version": "18.0.0.11.25",
     "category": "Sales/Sales",
     "author": "Proyecto VICTOR SALA",
     "license": "LGPL-3",

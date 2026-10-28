@@ -51,11 +51,13 @@ handler.call({readonly:false,state:{busy:false,sending:false,currentPVId:51,acti
     loadQuotation:()=>{throw new Error('must confirm')},dialog:{add:(type,config)=>alerts.push(config)}});
 assert.equal(alerts.length,1,'Use latest session snapshot when prompt is required');
 assert.match(xml,/t-name="sale_ai_assistant\.SaleAIReplaceConversationDialog"/);
-assert.match(xml,/t-on-click="chooseArchive">Archivar y cargar/);
-assert.match(xml,/t-on-click="chooseDiscard">Descartar y cargar/);
-assert.match(xml,/t-on-click="props\.close">Cancelar/);
+assert.match(xml,/t-on-click="chooseArchive"><t t-esc="props.archiveLabel"/);
+assert.match(xml,/t-on-click="chooseDiscard"><t t-esc="props.discardLabel"/);
+assert.doesNotMatch(xml,/t-on-click="props\.close">Cancelar/);
 assert.match(source,/replaceMode === "archive", replaceMode === "discard"/);
 assert.match(panel,/info\["has_work"\] = self\._panel_session_has_work\(session\)/);
-assert.match(panel,/current\.edit_order_id and self\._panel_session_has_work\(current\)/);
+assert.match(panel,/has_work = self\._panel_session_has_work\(current\)/);
+assert.match(panel,/replace_mode == "archive"/);
+assert.match(panel,/replace_mode == "auto" and current\.edit_order_id/);
 assert.match(edit,/has_work = self\._panel_session_has_work\(current\)/);
-console.log('OK: 11.24 three choices, clean PV, pending content, safe backend contract');
+console.log('OK: replacement dialogs offer archive then discard; X closes without action, safe backend contract');

@@ -7,7 +7,7 @@ import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_d
 import { Dialog } from "@web/core/dialog/dialog";
 import { _t } from "@web/core/l10n/translation";
 
-// Three explicit choices: neither the archive nor the deletion is implicit.
+// Two explicit actions; closing with the X keeps the current conversation.
 export class SaleAIReplaceConversationDialog extends Component {
     static template = "sale_ai_assistant.SaleAIReplaceConversationDialog";
     static components = { Dialog };
@@ -16,6 +16,8 @@ export class SaleAIReplaceConversationDialog extends Component {
         body: String,
         onArchive: Function,
         onDiscard: Function,
+        archiveLabel: String,
+        discardLabel: String,
         close: Function, // injected by Odoo's dialog service
     };
 
@@ -253,6 +255,8 @@ export class SaleAIChat extends Component {
         this.dialog.add(SaleAIReplaceConversationDialog, {
             title: sameOrder ? _t("Recargar presupuesto desde Odoo") : _t("Cargar presupuesto en borrador"),
             body: _t("La conversación actual contiene mensajes o cambios provisionales. Puedes conservarla en el historial o descartarla definitivamente. El presupuesto real de Odoo no se modificará. El texto sin enviar y los adjuntos pendientes se perderán en ambos casos."),
+            archiveLabel: _t("Archivar y cargar"),
+            discardLabel: _t("Descartar y cargar"),
             onArchive: () => this.loadQuotation(orderId, "archive"),
             onDiscard: () => this.loadQuotation(orderId, "discard"),
         });
@@ -761,22 +765,22 @@ export class SaleAIChat extends Component {
             this.startNewConversation();
             return;
         }
-        this.dialog.add(ConfirmationDialog, {
-            title: current?.edit_order_id ? _t("Archivar edición y empezar") : _t("Descartar conversación"),
-            body: current?.edit_order_id
-                ? _t("Esta edición se archivará en el historial sin modificar el presupuesto real. ¿Comenzar una conversación nueva?")
-                : _t("Se eliminarán los mensajes y el borrador provisional de esta conversación. No se podrá recuperar. ¿Quieres empezar otra?"),
-            confirmLabel: current?.edit_order_id ? _t("Archivar y empezar") : _t("Descartar y empezar"),
-            cancelLabel: _t("Conservar conversación"),
-            confirm: () => this.startNewConversation(),
+        this.dialog.add(SaleAIReplaceConversationDialog, {
+            title: current?.edit_order_id ? _t("Nueva conversación desde edición") : _t("Nueva conversación"),
+            body: _t("La conversación actual contiene mensajes o cambios provisionales. Puedes archivarla en el historial o descartarla definitivamente. El presupuesto real de Odoo no se modificará. El texto sin enviar y los adjuntos pendientes se perderán en ambos casos."),
+            archiveLabel: _t("Archivar y empezar"),
+            discardLabel: _t("Descartar y empezar"),
+            onArchive: () => this.startNewConversation("archive"),
+            onDiscard: () => this.startNewConversation("discard"),
         });
     }
 
-    async startNewConversation() {
+    async startNewConversation(replaceMode = "auto") {
+        if (this.state.busy || this.state.sending) return;
         this.state.busy = true;
         try {
             const activeId = this.state.active?.id || false;
-            const newSession = await this.orm.call("sale.ai.session", "assistant_panel_new", [activeId]);
+            const newSession = await this.orm.call("sale.ai.session", "assistant_panel_new", [activeId, replaceMode]);
             this.state.active = newSession;
             this.state.session = newSession;
             this.state.viewingHistory = false;

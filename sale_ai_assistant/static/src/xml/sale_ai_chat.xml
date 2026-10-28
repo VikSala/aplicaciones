@@ -4,9 +4,8 @@
     <Dialog title="props.title" size="'md'">
       <p class="mb-0" t-esc="props.body"/>
       <t t-set-slot="footer">
-        <button type="button" class="btn btn-secondary" t-on-click="props.close">Cancelar</button>
-        <button type="button" class="btn btn-outline-danger" t-on-click="chooseDiscard">Descartar y cargar</button>
-        <button type="button" class="btn btn-primary" t-on-click="chooseArchive">Archivar y cargar</button>
+        <button type="button" class="btn btn-primary" t-on-click="chooseArchive"><t t-esc="props.archiveLabel"/></button>
+        <button type="button" class="btn btn-outline-danger" t-on-click="chooseDiscard"><t t-esc="props.discardLabel"/></button>
       </t>
     </Dialog>
   </t>

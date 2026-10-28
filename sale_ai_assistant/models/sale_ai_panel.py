@@ -349,16 +349,24 @@ class SaleAISessionPanel(models.Model):
         return result
 
     @api.model
-    def assistant_panel_new(self, current_session_id=False):
-        """One RPC transaction: discard the given active session and start a fresh one."""
+    def assistant_panel_new(self, current_session_id=False, replace_mode="auto"):
+        """Start a new chat, explicitly archiving or discarding user work.
+
+        auto preserves pre-existing RPC behavior for older clients. The UI only
+        sends auto when no work was detected, and always asks for a choice when
+        there is work. A pristine PV load never creates a history entry.
+        """
+        if replace_mode not in ("auto", "archive", "discard") or not isinstance(replace_mode, str):
+            raise ValidationError(_("Acción no válida al comenzar una conversación."))
         if current_session_id:
             current = self._panel_find(current_session_id)
             if current.state != "active" or current.sale_order_id:
-                raise UserError(_("Esta conversación está cerrada y no puede descartarse."))
+                raise UserError(_("Esta conversación está cerrada y no puede sustituirse."))
             current._ai_lock_session()
-            if current.edit_order_id and self._panel_session_has_work(current):
-                current.action_close()  # Preserve edits with actual user work.
+            has_work = self._panel_session_has_work(current)
+            if has_work and (replace_mode == "archive" or (replace_mode == "auto" and current.edit_order_id)):
+                current.action_close()
             else:
-                current.unlink()  # A pristine loaded PV is not a conversation.
+                current.unlink()  # Explicit discard or a clean loaded baseline.
         session = self.create({"name": _("Nuevo presupuesto IA")})
         return self._panel_details(session)

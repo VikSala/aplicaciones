@@ -142,6 +142,35 @@ class TestSaleAIQuotationEditing(TransactionCase):
         self.assertTrue(fresh['id'])
         self.assertEqual(self.session.state, 'archived')
 
+    def test_new_chat_discard_started_edit_keeps_existing_history(self):
+        earlier = self.panel.create({'name': 'Conversación archivada anterior'})
+        earlier.action_close()
+        self.env['sale.ai.message'].create({
+            'session_id': self.session.id, 'role': 'user', 'content': 'Texto que descarto',
+        })
+        old_id = self.session.id
+        new = self.panel.assistant_panel_new(old_id, 'discard')
+        self.assertNotEqual(new['id'], old_id)
+        self.assertFalse(self.session.exists())
+        self.assertTrue(earlier.exists())
+        self.assertEqual(earlier.state, 'archived')
+        self.assertEqual(self.order.state, 'draft')
+
+    def test_new_chat_archive_started_edit(self):
+        self.env['sale.ai.message'].create({
+            'session_id': self.session.id, 'role': 'user', 'content': 'Conservar este mensaje',
+        })
+        new = self.panel.assistant_panel_new(self.session.id, 'archive')
+        self.assertNotEqual(new['id'], self.session.id)
+        self.assertEqual(self.session.state, 'archived')
+        self.assertEqual(self.session.message_ids[:1].content, 'Conservar este mensaje')
+
+    def test_new_chat_invalid_replace_action_rejected(self):
+        from odoo.exceptions import ValidationError
+        with self.assertRaises(ValidationError):
+            self.panel.assistant_panel_new(self.session.id, 'unknown')
+        self.assertTrue(self.session.exists())
+
     def test_mutually_exclusive_replace_actions(self):
         with self.assertRaisesRegex(UserError, 'Selecciona archivar o descartar'):
             self.panel.assistant_panel_load_quotation(self.order.id, self.session.id, True, True)
