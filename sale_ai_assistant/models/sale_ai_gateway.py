@@ -11,6 +11,7 @@ import socket
 import time
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+from urllib.parse import urlencode
 
 from odoo import _
 
@@ -18,6 +19,8 @@ _logger = logging.getLogger(__name__)
 
 GATEWAY_ENDPOINT = "https://ai-gateway.vercel.sh/v1/chat/completions"
 MAX_RESPONSE_BYTES = 2 * 1024 * 1024
+GENERATION_ENDPOINT = 'https://ai-gateway.vercel.sh/v1/generation'
+GENERATION_ID_PATTERN = re.compile(r'[a-zA-Z0-9_-]{1,140}\Z')
 
 
 class GatewayError(Exception):
@@ -33,7 +36,7 @@ def get_gateway_key(env, company_id):
     ).strip()
 
 
-def call_gateway(api_key, model_id, messages, timeout, max_tokens, tools=None, tool_choice="auto"):
+def call_gateway(api_key, model_id, messages, timeout, max_tokens, tools=None, tool_choice="auto", routing=None):
     """Synchronous non-streaming request; phase-2 frontend provides loading feedback."""
     if not api_key:
         raise GatewayError(_("Falta configurar la clave de Vercel AI Gateway."))
@@ -42,6 +45,26 @@ def call_gateway(api_key, model_id, messages, timeout, max_tokens, tools=None, t
         "messages": messages,
         "stream": False,
     }
+    if routing:
+        if not isinstance(routing, dict) or set(routing) - {'sort', 'only', 'order'}:
+            raise GatewayError(_('La configuración de enrutamiento Vercel no es válida.'))
+        if 'sort' in routing and routing['sort'] not in ('cost', 'ttft', 'tps'):
+            raise GatewayError(_('El criterio de enrutamiento Vercel no es válido.'))
+        provider_pattern = r'[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}'
+        for field in ('only', 'order'):
+            if field in routing:
+                values = routing[field]
+                if (not isinstance(values, list) or not values
+                        or any(not isinstance(p, str) or not re.fullmatch(provider_pattern, p) for p in values)
+                        or len({p.lower() for p in values}) != len(values)):
+                    raise GatewayError(_('Los proveedores Vercel configurados no son válidos.'))
+        if 'order' in routing:
+            # Without an 'only' allowlist Vercel may silently try other
+            # providers after those in 'order'. The configuration is strict.
+            if ('only' not in routing or 'sort' in routing
+                    or set(routing['order']) != set(routing['only'])):
+                raise GatewayError(_('El orden de respaldo debe coincidir con la lista de proveedores permitidos.'))
+        payload['providerOptions'] = {'gateway': routing}
     # GPT-5/o-series require max_completion_tokens in Chat Completions.
     # Most other OpenAI-compatible providers still use max_tokens.
     limit_field = "max_completion_tokens" if model_id.startswith(("openai/gpt-5", "openai/o")) else "max_tokens"
@@ -130,20 +153,68 @@ def call_gateway(api_key, model_id, messages, timeout, max_tokens, tools=None, t
             usage = {}
         metadata = decoded.get("providerMetadata") or decoded.get("provider_metadata") or {}
         gateway_meta = metadata.get("gateway", {}) if isinstance(metadata, dict) else {}
-        cost = gateway_meta.get("cost") if isinstance(gateway_meta, dict) else None
-        # The REST chat response does not guarantee that gateway cost is present.
+        cost = gateway_meta.get('cost') if isinstance(gateway_meta, dict) else None
+        cost_known = isinstance(cost, (int, float)) and not isinstance(cost, bool) and 0 <= cost < 1e9
+        routing_meta = gateway_meta.get('routing') if isinstance(gateway_meta, dict) else None
+        provider = (routing_meta.get('finalProvider') if isinstance(routing_meta, dict) else None)
+        generation_id = gateway_meta.get('generationId') if isinstance(gateway_meta, dict) else None
+        generation_id = generation_id or decoded.get('id')
+        if not isinstance(generation_id, str) or not GENERATION_ID_PATTERN.fullmatch(generation_id):
+            generation_id = False
+        if not isinstance(provider, str) or len(provider) > 100:
+            provider = False
         return {
+            'generation_id': generation_id or False,
+            'provider_name': provider or False,
+            'cost_status': 'obtained' if cost_known else ('pending' if generation_id else 'unavailable'),
             "content": content.strip(),
             "finish_reason": finish_reason,
             "tool_calls": parsed_calls,
             "input_tokens": max(0, int(usage.get("prompt_tokens") or 0)),
             "output_tokens": max(0, int(usage.get("completion_tokens") or 0)),
-            "reported_cost_usd": float(cost) if isinstance(cost, (int, float)) and cost >= 0 else 0.0,
+            "reported_cost_usd": float(cost) if cost_known else 0.0,
             "latency_ms": elapsed,
         }
     except (ValueError, KeyError, IndexError, TypeError, OverflowError):
         _logger.warning("sale_ai_assistant: Provider response format could not be parsed (no payload logged)")
         raise GatewayError(_("El modelo ha devuelto una respuesta incompatible o vacía. Prueba otro modelo.")) from None
+
+
+def lookup_generation(api_key, generation_id, timeout=8):
+    """Return settled generation receipt or None (not yet indexed / unavailable).
+
+    The documented REST endpoint uses snake_case fields in data. This request
+    must NEVER interrupt an AI conversation or expose credentials in logs.
+    """
+    if not api_key or not isinstance(generation_id, str) or not GENERATION_ID_PATTERN.fullmatch(generation_id):
+        return None
+    url = GENERATION_ENDPOINT + '?' + urlencode({'id': generation_id})
+    request = Request(url, headers={
+        'Authorization': 'Bearer %s' % api_key,
+        'Accept': 'application/json',
+        'User-Agent': 'Odoo-sale-ai-assistant/18.0',
+    }, method='GET')
+    try:
+        with urlopen(request, timeout=timeout) as response:
+            raw = response.read(65537)
+        if len(raw) > 65536:
+            return None
+        obj = json.loads(raw.decode('utf-8'))
+        data = obj.get('data', obj) if isinstance(obj, dict) else None
+        if not isinstance(data, dict):
+            return None
+        amount = data.get('total_cost', data.get('totalCost'))
+        if not isinstance(amount, (float, int)) or isinstance(amount, bool) or not 0 <= amount < 1e9:
+            return None
+        provider = data.get('provider_name', data.get('providerName'))
+        if not isinstance(provider, str) or len(provider) > 100:
+            provider = False
+        return {'reported_cost_usd': float(amount), 'provider_name': provider or False,
+                'input_tokens': data.get('prompt_tokens', data.get('promptTokens')),
+                'output_tokens': data.get('completion_tokens', data.get('completionTokens'))}
+    except (HTTPError, URLError, socket.timeout, TimeoutError, ConnectionError, OSError,
+            ValueError, TypeError, UnicodeError):
+        return None
 
 
 # AI Gateway's native AI SDK transcription protocol (different from the /v1/chat URL).

@@ -292,6 +292,7 @@ class SaleAISessionEngine(models.Model):
                         key, candidate.external_model_id, prompt_messages,
                         timeout=min(options.get('timeout', timeout), remaining),
                         max_tokens=response_tokens,
+                        routing=candidate._gateway_routing_options(),
                         **{k: v for k, v in options.items() if k not in ('timeout',)},
                     )
                 except Exception as exc:
@@ -321,9 +322,7 @@ class SaleAISessionEngine(models.Model):
                 total_output += response['output_tokens']
                 total_latency += elapsed
                 total_cost += response['reported_cost_usd']
-                estimate = (response['input_tokens'] * candidate.price_input_m_usd +
-                            response['output_tokens'] * candidate.price_output_m_usd) / 1000000.0
-                total_estimated_cost += estimate
+                estimate = 0.0  # no manual price fallback: Vercel's actual receipt is authoritative
                 per_model_usage.append({'model_id': candidate.id, 'stage': stage,
                     'status': 'ok', 'turn_ref': turn_ref, 'event_kind': 'call',
                     'diagnostic_operation': 'llamada al proveedor',
@@ -333,7 +332,10 @@ class SaleAISessionEngine(models.Model):
                     'output_tokens': response['output_tokens'],
                     'latency_ms': elapsed,
                     'reported_cost_usd': response['reported_cost_usd'],
-                    'estimated_cost_usd': estimate})
+                    'estimated_cost_usd': estimate,
+                    'generation_id': response.get('generation_id') or False,
+                    'provider_name': response.get('provider_name') or False,
+                    'cost_status': response.get('cost_status', 'unavailable')})
                 return response, candidate
             raise last_error or sale_ai_gateway.GatewayError(_("No hay un modelo disponible para esta tarea."))
 
@@ -784,6 +786,10 @@ class SaleAISessionEngine(models.Model):
             "output_tokens": total_output, "latency_ms": total_latency,
             "reported_cost_usd": total_cost, "estimated_cost_usd": estimated,
         })
+        self.env['sale.ai.model.usage'].sudo().search([
+            ('session_id', '=', self.id), ('turn_ref', '=', turn_ref),
+            ('status', '=', 'ok'), ('message_id', '=', False),
+        ]).write({'message_id': assistant.id})
         if not self.model_id:
             self.write({"model_id": model.id})
         return {"proposal": self.technical_proposal or False, "assistant_message": {
@@ -792,7 +798,10 @@ class SaleAISessionEngine(models.Model):
             "model": (model.name + (' · ' + route_label if model.model_type == 'profile' and route_label else '')),
             "input_tokens": total_input, "output_tokens": total_output,
             "latency_ms": total_latency, "reported_cost_usd": total_cost,
-            "estimated_cost_usd": estimated,
+            "estimated_cost_usd": 0.0,
+            "gateway_cost_status": assistant.gateway_cost_status,
+            "gateway_cost_usd": assistant.gateway_cost_usd,
+            "gateway_providers": assistant.gateway_providers,
         }}
 
     def _ai_error_or_saved_draft_notice(self, message, before_signature):

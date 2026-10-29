@@ -31,6 +31,25 @@ class SaleAIMessage(models.Model):
     latency_ms = fields.Integer(string="Latencia (ms)", readonly=True)
     reported_cost_usd = fields.Float(string="Coste comunicado por proveedor (USD)", digits=(12, 6), readonly=True)
 
+    gateway_usage_ids = fields.One2many('sale.ai.model.usage', 'message_id', string='Llamadas Vercel')
+    gateway_cost_usd = fields.Float(compute='_compute_gateway_receipt', digits=(16, 9), string='Coste confirmado Vercel (USD)')
+    gateway_cost_status = fields.Selection([
+        ('none','Sin llamadas facturables'), ('pending','Pendiente'), ('obtained','Confirmado'), ('unavailable','No disponible'),
+    ], compute='_compute_gateway_receipt', string='Estado del coste')
+    gateway_providers = fields.Char(compute='_compute_gateway_receipt', string='Proveedores utilizados')
+
+    @api.depends('gateway_usage_ids.cost_status', 'gateway_usage_ids.reported_cost_usd',
+                 'gateway_usage_ids.provider_name')
+    def _compute_gateway_receipt(self):
+        for rec in self:
+            calls = rec.gateway_usage_ids.filtered(lambda row: row.status == 'ok')
+            rec.gateway_cost_usd = sum(calls.filtered(lambda row: row.cost_status == 'obtained').mapped('reported_cost_usd'))
+            rec.gateway_cost_status = ('none' if not calls else
+                                       'pending' if any(row.cost_status == 'pending' for row in calls) else
+                                       'unavailable' if any(row.cost_status != 'obtained' for row in calls) else
+                                       'obtained')
+            rec.gateway_providers = ', '.join(sorted(set(calls.mapped('provider_name')) - {False, ''}))
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:

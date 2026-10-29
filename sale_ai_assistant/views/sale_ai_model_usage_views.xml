@@ -5,6 +5,7 @@
         <field name="model">sale.ai.model.usage</field>
         <field name="arch" type="xml">
             <list string="Consumo por modelo" create="0" edit="0" delete="0">
+                <header><button name="action_refresh_gateway_costs" type="object" string="Consultar costes pendientes en Vercel" display="always" class="btn-primary"/></header>
                 <field name="create_date"/>
                 <field name="session_id"/>
                 <field name="model_id"/>
@@ -17,8 +18,10 @@
                 <field name="turn_elapsed_ms"/>
                 <field name="input_tokens" sum="Tokens"/>
                 <field name="output_tokens" sum="Tokens"/>
-                <field name="estimated_cost_usd" sum="USD"/>
-                <field name="reported_cost_usd" sum="USD"/>
+                <field name="provider_name"/>
+                <field name="generation_id" optional="hide"/>
+                <field name="cost_status"/>
+                <field name="reported_cost_usd" sum="USD confirmados"/>
                 <field name="latency_ms"/>
             </list>
         </field>
@@ -37,7 +40,12 @@
                 <field name="error_type"/>
                 <field name="turn_elapsed_ms"/>
                         <field name="input_tokens"/><field name="output_tokens"/>
-                        <field name="latency_ms"/></group>
+                        <field name="latency_ms"/>
+                        <field name="generation_id"/>
+                        <field name="provider_name"/>
+                        <field name="cost_status"/>
+                        <field name="reported_cost_usd"/>
+                        <field name="cost_lookup_attempts"/></group>
                     <group><field name="error_message"/><field name="fallback_reason"/><field name="result_text"/></group>
                 </sheet>
             </form>
@@ -53,6 +61,8 @@
                 <field name="model_id"/>
                 <field name="error_type"/>
                 <filter name="failed" string="Fallos" domain="[('status', '=', 'failed')]"/>
+                <filter name="pending_cost" string="Coste pendiente" domain="[('cost_status', '=', 'pending')]"/>
+                <filter name="confirmed_cost" string="Coste confirmado" domain="[('cost_status', '=', 'obtained')]"/>
                 <group expand="0" string="Agrupar por">
                     <filter name="by_turn" string="Referencia" context="{'group_by': 'turn_ref'}"/>
                 </group>

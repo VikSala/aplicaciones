@@ -124,6 +124,7 @@ class SaleAIQualityReview(models.Model):
                         timeout=self.company_id.sale_ai_request_timeout,
                         max_tokens=self.company_id.sale_ai_max_output_tokens,
                         tools=[tool], tool_choice='required',
+                        routing=candidate._gateway_routing_options(),
                     )
                 except sale_ai_gateway.GatewayError:
                     response = None
@@ -136,9 +137,10 @@ class SaleAIQualityReview(models.Model):
                     'output_tokens': response['output_tokens'],
                     'latency_ms': response['latency_ms'],
                     'reported_cost_usd': response['reported_cost_usd'],
-                    'estimated_cost_usd': (
-                        response['input_tokens'] * candidate.price_input_m_usd +
-                        response['output_tokens'] * candidate.price_output_m_usd) / 1000000.0,
+                    'estimated_cost_usd': 0.0,
+                    'generation_id': response.get('generation_id') or False,
+                    'provider_name': response.get('provider_name') or False,
+                    'cost_status': response.get('cost_status', 'unavailable'),
                 })
                 break
             if response is None:

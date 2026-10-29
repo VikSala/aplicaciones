@@ -198,10 +198,7 @@ class SaleAIQuickCommands(models.Model):
 
     def _quick_response(self, content, model=False, usage=None):
         usage = usage or {}
-        estimated_cost = (
-            (usage.get("input_tokens", 0) * model.price_input_m_usd +
-             usage.get("output_tokens", 0) * model.price_output_m_usd) / 1000000.0
-        ) if model else 0.0
+        estimated_cost = 0.0
         record = self.env["sale.ai.message"].sudo().create({
             "session_id": self.id, "role": "assistant", "content": content,
             **({"model_id": model.id} if model else {}),
@@ -211,13 +208,22 @@ class SaleAIQuickCommands(models.Model):
             "reported_cost_usd": usage.get("reported_cost_usd", 0),
             "estimated_cost_usd": estimated_cost,
         })
+        if usage and usage.get('generation_id'):
+            self.env['sale.ai.model.usage'].sudo().search([
+                ('session_id', '=', self.id),
+                ('generation_id', '=', usage['generation_id']),
+                ('message_id', '=', False),
+            ], limit=1).write({'message_id': record.id})
         return {"assistant_message": {
             "id": record.id, "role": "assistant", "content": content,
             "created_at": fields.Datetime.to_string(record.create_date) if record.create_date else "",
             "model": model.name if model else "Asistente de Ventas",
             "input_tokens": record.input_tokens, "output_tokens": record.output_tokens,
             "latency_ms": record.latency_ms,
-            "reported_cost_usd": record.reported_cost_usd, "estimated_cost_usd": record.estimated_cost_usd,
+            "reported_cost_usd": record.reported_cost_usd, "estimated_cost_usd": 0.0,
+            "gateway_cost_status": record.gateway_cost_status,
+            "gateway_cost_usd": record.gateway_cost_usd,
+            "gateway_providers": record.gateway_providers,
         }}
 
     def _quick_find_product(self, tools, criteria):
@@ -363,6 +369,7 @@ class SaleAIQuickCommands(models.Model):
             [{"role": "system", "content": instruction}] + context,
             timeout=self.company_id.sale_ai_request_timeout,
             max_tokens=configured_tokens,
+            routing=concrete_model._gateway_routing_options(),
         )
         self.env['sale.ai.model.usage'].sudo().create({
             'session_id': self.id, 'model_id': concrete_model.id,
@@ -370,9 +377,10 @@ class SaleAIQuickCommands(models.Model):
             'input_tokens': result['input_tokens'], 'output_tokens': result['output_tokens'],
             'latency_ms': result['latency_ms'],
             'reported_cost_usd': result['reported_cost_usd'],
-            'estimated_cost_usd': (
-                result['input_tokens'] * concrete_model.price_input_m_usd +
-                result['output_tokens'] * concrete_model.price_output_m_usd) / 1000000.0,
+            'estimated_cost_usd': 0.0,
+            'generation_id': result.get('generation_id') or False,
+            'provider_name': result.get('provider_name') or False,
+            'cost_status': result.get('cost_status', 'unavailable'),
         })
         generated = (result.get("content") or "").strip()
         # Providers normally report finish_reason='length' when their response

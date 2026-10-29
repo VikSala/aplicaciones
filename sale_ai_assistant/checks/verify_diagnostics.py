@@ -20,6 +20,7 @@ def harness(outcomes, budget=10):
     clock = Clock(); calls = []; log = Mock(); saved = []
     first = NS(id=1, external_model_id='first', supports_tools=True,
                price_input_m_usd=1, price_output_m_usd=2)
+    first._gateway_routing_options = lambda: {'sort': 'cost'}
     second = NS(**dict(vars(first), id=2, external_model_id='second'))
     def gateway(*args, **kwargs):
         calls.append(kwargs)

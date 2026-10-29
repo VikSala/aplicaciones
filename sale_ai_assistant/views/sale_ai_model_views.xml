@@ -9,6 +9,9 @@
                 <field name="model_type"/>
                 <field name="provider"/>
                 <field name="external_model_id"/>
+                <field name="gateway_routing" optional="show"/>
+                <field name="gateway_fixed_provider" optional="hide"/>
+                <field name="gateway_fallback_provider" optional="hide"/>
                 <field name="is_default" readonly="1"/>
                 <field name="supports_tools"/>
                 <field name="supports_images"/>
@@ -67,10 +70,12 @@
                             de lectura. Se recurrirá al fallback ante errores recuperables, sin repetir escrituras confirmadas.
                         </div>
                     </group>
-                    <group string="Coste de referencia (manual, no verificado automáticamente)" invisible="model_type == 'profile'">
-                        <field name="price_input_m_usd"/>
-                        <field name="price_output_m_usd"/>
-                        <field name="price_checked_on"/>
+                    <group string="Enrutamiento Vercel por modelo" invisible="model_type == 'profile'">
+                        <field name="gateway_routing"/>
+                        <field name="gateway_fixed_provider" invisible="gateway_routing != 'fixed'" required="model_type == 'individual' and gateway_routing == 'fixed'"/>
+                        <field name="gateway_fallback_provider" invisible="gateway_routing != 'fixed'" placeholder="Opcional: slug del segundo proveedor"/>
+                        <div class="text-muted" colspan="2">En «Proveedor específico» se intenta el principal y, si configuras un respaldo, únicamente ese segundo proveedor si el primero falla o no está disponible. No se permite usar otros proveedores. Ambos deben ofrecer el mismo modelo. Sin respaldo solo se utiliza el principal. Las demás políticas mantienen el enrutamiento habitual de Vercel.</div>
+                        <div class="text-muted" colspan="2">La prioridad por coste clasifica por tarifa de entrada. El coste final y el proveedor que atendió la solicitud se consultan desde «Consumo por modelo», sin tarifas manuales.</div>
                     </group>
                     <group>
                         <field name="notes" placeholder="Coste, calidad, límites observados, enlaces a la ficha del modelo..."/>

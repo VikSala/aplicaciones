@@ -55,6 +55,55 @@ class SaleAIModel(models.Model):
     supports_text_files = fields.Boolean(string="Admite archivos de texto", default=False)
     supports_native_web_search = fields.Boolean(string="Búsqueda web nativa", default=False)
     context_window_tokens = fields.Integer(string="Ventana de contexto (tokens)")
+    gateway_routing = fields.Selection([
+        ('cost', 'Priorizar menor coste'),
+        ('auto', 'Automático de Vercel'),
+        ('ttft', 'Priorizar menor latencia (TTFT)'),
+        ('tps', 'Priorizar mayor velocidad (TPS)'),
+        ('fixed', 'Proveedor específico'),
+    ], string='Selección del proveedor Vercel', default='cost', required=True,
+       help='Se aplica a todas las llamadas de este modelo, incluso cuando se usa dentro de un perfil multimodelo. Coste ordena por precio de entrada, no garantiza el menor coste final.')
+    gateway_fixed_provider = fields.Char(string='Proveedor Vercel principal',
+       help='Slug exacto del proveedor según Vercel (p. ej. anthropic, morph o wafer). Se intenta primero.')
+    gateway_fallback_provider = fields.Char(string='Proveedor Vercel de respaldo (opcional)',
+       help='Slug exacto de un segundo proveedor que ofrezca ESTE MISMO modelo. '
+            'Solo se intentará cuando falle o no esté disponible el principal. '
+            'Vacío: se permite únicamente el proveedor principal.')
+
+    @api.constrains('gateway_routing', 'gateway_fixed_provider', 'gateway_fallback_provider')
+    def _validate_gateway_routing(self):
+        import re
+        for record in self:
+            if record.model_type == 'individual' and record.gateway_routing == 'fixed':
+                slug = (record.gateway_fixed_provider or '').strip()
+                backup = (record.gateway_fallback_provider or '').strip()
+                pattern = r'[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}'
+                if not re.fullmatch(pattern, slug):
+                    raise ValidationError(_('Indica un slug de proveedor principal válido para Vercel.'))
+                if backup and not re.fullmatch(pattern, backup):
+                    raise ValidationError(_('El proveedor de respaldo debe ser un slug válido de Vercel.'))
+                if backup and slug.lower() == backup.lower():
+                    raise ValidationError(_('El proveedor de respaldo debe ser diferente del principal.'))
+
+    def _gateway_routing_options(self):
+        self.ensure_one()
+        mode = self.gateway_routing or 'cost'
+        if mode == 'fixed':
+            slug = (self.gateway_fixed_provider or '').strip()
+            backup = (self.gateway_fallback_provider or '').strip()
+            if not slug:
+                raise ValidationError(_('El modelo requiere configurar un proveedor Vercel específico.'))
+            if backup:
+                if slug.lower() == backup.lower():
+                    raise ValidationError(_('El proveedor de respaldo debe ser diferente del principal.'))
+                # 'order' alone would allow unexpected providers. Combining
+                # 'order' + 'only' enforces precisely principal -> fallback.
+                providers = [slug, backup]
+                return {'order': providers, 'only': providers}
+            return {'only': [slug]}
+        return {'sort': mode} if mode in ('cost', 'ttft', 'tps') else {}
+
+    # Legacy manual price fields retained for database compatibility; no longer used.
     price_input_m_usd = fields.Float(
         string="Coste entrada ($ / millón tokens)", digits=(12, 6),
         help="Referencia manual; valor 0 significa NO informado, no modelo gratuito."

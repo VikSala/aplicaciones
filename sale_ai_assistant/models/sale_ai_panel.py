@@ -104,7 +104,10 @@ class SaleAISessionPanel(models.Model):
                 "output_tokens": msg.output_tokens,
                 "latency_ms": msg.latency_ms,
                 "reported_cost_usd": msg.reported_cost_usd,
-                "estimated_cost_usd": msg.estimated_cost_usd,
+                "estimated_cost_usd": 0.0,
+                "gateway_cost_status": msg.gateway_cost_status,
+                "gateway_cost_usd": msg.gateway_cost_usd,
+                "gateway_providers": msg.gateway_providers,
             }
             for msg in reversed(messages)
         ]
@@ -260,7 +263,10 @@ class SaleAISessionPanel(models.Model):
                     "output_tokens": msg.output_tokens,
                     "latency_ms": msg.latency_ms,
                     "reported_cost_usd": msg.reported_cost_usd,
-                    "estimated_cost_usd": msg.estimated_cost_usd,
+                    "estimated_cost_usd": 0.0,
+                "gateway_cost_status": msg.gateway_cost_status,
+                "gateway_cost_usd": msg.gateway_cost_usd,
+                "gateway_providers": msg.gateway_providers,
                 }
                 for msg in reversed(messages[:100])
             ],

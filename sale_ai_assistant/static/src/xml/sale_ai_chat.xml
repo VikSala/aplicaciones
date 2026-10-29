@@ -112,12 +112,12 @@
                   <t t-if="message.input_tokens or message.output_tokens">
                     · <t t-esc="message.input_tokens"/> entrada / <t t-esc="message.output_tokens"/> salida
                   </t>
-                  <t t-if="message.reported_cost_usd">
-                    · USD <t t-esc="formatAmount(message.reported_cost_usd, 6)"/> (proveedor)
+                  <t t-if="message.gateway_providers"> · Proveedor: <t t-esc="message.gateway_providers"/></t>
+                  <t t-if="message.gateway_cost_status === 'obtained'">
+                    · USD <t t-esc="formatAmount(message.gateway_cost_usd, 8)"/> (Vercel)
                   </t>
-                  <t t-elif="message.estimated_cost_usd">
-                    · ~USD <t t-esc="formatAmount(message.estimated_cost_usd, 6)"/> (tarifa manual)
-                  </t>
+                  <t t-elif="message.gateway_cost_status === 'pending'"> · Coste Vercel pendiente</t>
+                  <t t-elif="message.gateway_cost_status === 'unavailable'"> · Coste Vercel no disponible</t>
                 </div>
               </div>
               <div t-if="state.sending" class="sale-ai-waiting" role="status" aria-live="polite">
