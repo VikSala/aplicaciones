@@ -1,8 +1,9 @@
-"""Safely load/update an existing draft quotation through a provisional AI draft.
+"""Safely load/update an existing sale.order through a provisional AI draft.
 
-The assistant never writes a sale.order. Only the Sales Administrator may
-commit a reviewed, signed patch. Concurrent edits are detected *under row locks*.
-An explicit 'keep_mine' override affects conflicting editable fields only.
+Loading and chatting never modify the real order. Only a Sales Administrator
+can explicitly commit a reviewed, signed patch, regardless of order state.
+Concurrent edits are detected *under row locks*. An explicit 'keep_mine'
+override affects conflicting editable fields only.
 """
 import hashlib
 import json
@@ -47,8 +48,6 @@ class SaleAIQuotationEditing(models.Model):
         order = self.edit_order_id
         if not order or not order.exists() or order.company_id != self.company_id:
             raise UserError(_('No se encuentra el presupuesto de esta compañía.'))
-        if order.state != 'draft':
-            raise UserError(_('Solo se pueden actualizar presupuestos en borrador. Este presupuesto ya ha cambiado de estado.'))
         return order
 
     def _edit_comments(self, order):
@@ -78,6 +77,7 @@ class SaleAIQuotationEditing(models.Model):
             })
         return {
             'order_id': order.id,
+            'state': order.state,
             'stamp': _timestamp(order.write_date),
             'currency_id': order.currency_id.id or False,
             'partner_id': order.partner_id.id or False,
@@ -148,8 +148,6 @@ class SaleAIQuotationEditing(models.Model):
         ], limit=1)
         if not order:
             raise UserError(_('No se encuentra el presupuesto en la compañía activa.'))
-        if order.state != 'draft':
-            raise UserError(_('Solo se pueden cargar presupuestos en borrador.'))
         current = self._panel_find(current_session_id) if current_session_id else self.browse()
         selected_model_id = current.model_id.id if current else self.env.company.sale_ai_model_id.id
         if current:
@@ -263,6 +261,11 @@ class SaleAIQuotationEditing(models.Model):
                 external_labels.append(_('Línea %s: otros campos modificados') % source_id)
         for source_id in now.keys() - baseline.keys():
             external_labels.append(_('Línea %s añadida') % source_id)
+        # State changes are relevant concurrent changes, never a reason to
+        # prevent editing. Older sessions may have a baseline without 'state'.
+        if 'state' in original and current.get('state') != original['state']:
+            external_labels.append(_('Estado del documento cambiado en Odoo: %s → %s') % (
+                original['state'], current.get('state') or '-'))
         if (current.get('stamp') != original.get('stamp') and
                 not external_labels and not any(current.get(k) != original.get(k) for k in EDIT_HEADER_FIELDS)):
             external_labels.append(_('Otros datos del presupuesto modificados en Odoo'))
@@ -315,6 +318,10 @@ class SaleAIQuotationEditing(models.Model):
             'current_signature': check['current_signature'],
             'sale_order_id': check['order'].id,
             'sale_order_name': check['order'].name,
+            'sale_order_state': check['order'].state,
+            'sale_order_state_label': dict(
+                check['order'].fields_get(['state'], ['selection'])['state']['selection']
+            ).get(check['order'].state, check['order'].state),
             'partner': check['review']['partner'],
             'line_count': check['review']['line_count'],
             'amount_untaxed_estimate': check['review']['amount_untaxed_estimate'],
@@ -402,8 +409,6 @@ class SaleAIQuotationEditing(models.Model):
             vals = session._edit_sale_line_vals(line)
             vals['order_id'] = order.id
             lines_model.create(vals)
-        if order.state != 'draft':
-            raise UserError(_('El presupuesto dejó de estar en borrador; se cancela la actualización.'))
         order.invalidate_recordset()
         order.order_line.invalidate_recordset()
         # The saved version becomes the NEW origin. Never apply subsequent

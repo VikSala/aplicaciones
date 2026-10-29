@@ -85,12 +85,66 @@ class TestSaleAIQuotationEditing(TransactionCase):
             )
         self.assertEqual(self.line.product_uom_qty, 10)
 
-    def test_cannot_update_sent_quotation(self):
-        self.draft_line.write({'product_uom_qty': 17})
+    def test_update_sent_quotation_without_changing_state(self):
         self.order.write({'state': 'sent'})
-        with self.assertRaisesRegex(UserError, 'en borrador'):
-            self.panel.assistant_panel_update_preflight(self.session.id)
-        self.assertEqual(self.line.product_uom_qty, 10)
+        self.draft_line.write({'product_uom_qty': 17})
+        review = self.panel.assistant_panel_update_preflight(self.session.id)
+        self.assertEqual(review['sale_order_state'], 'sent')
+        self.panel.assistant_panel_update_quotation(
+            self.session.id, review['signature'], review['current_signature'], True,
+        )
+        self.assertEqual(self.line.product_uom_qty, 17)
+        self.assertEqual(self.order.state, 'sent')
+
+    def test_update_confirmed_order_without_changing_state(self):
+        self.order.write({'state': 'sale'})
+        self.draft_line.write({'product_uom_qty': 17})
+        review = self.panel.assistant_panel_update_preflight(self.session.id)
+        self.assertEqual(review['sale_order_state'], 'sale')
+        self.panel.assistant_panel_update_quotation(
+            self.session.id, review['signature'], review['current_signature'], True,
+        )
+        self.assertEqual(self.line.product_uom_qty, 17)
+        self.assertEqual(self.order.state, 'sale')
+
+    def test_update_cancelled_order_without_changing_state(self):
+        self.order.write({'state': 'cancel'})
+        self.draft_line.write({'product_uom_qty': 17})
+        review = self.panel.assistant_panel_update_preflight(self.session.id)
+        self.assertEqual(review['sale_order_state'], 'cancel')
+        self.panel.assistant_panel_update_quotation(
+            self.session.id, review['signature'], review['current_signature'], True,
+        )
+        self.assertEqual(self.line.product_uom_qty, 17)
+        self.assertEqual(self.order.state, 'cancel')
+
+    def test_load_confirmed_order(self):
+        self.order.write({'state': 'sale'})
+        loaded = self.panel.assistant_panel_load_quotation(self.order.id, self.session.id)
+        self.assertEqual(loaded['edit_order_id'], self.order.id)
+        self.assertEqual(self.order.state, 'sale')
+
+    def test_load_cancelled_order(self):
+        self.order.write({'state': 'cancel'})
+        loaded = self.panel.assistant_panel_load_quotation(self.order.id, self.session.id)
+        self.assertEqual(loaded['edit_order_id'], self.order.id)
+        self.assertEqual(self.order.state, 'cancel')
+
+    def test_state_change_after_review_requires_new_confirmation(self):
+        self.draft_line.write({'product_uom_qty': 17})
+        review = self.panel.assistant_panel_update_preflight(self.session.id)
+        self.order.write({'state': 'sale'})
+        with self.assertRaisesRegex(UserError, 'cambiaron'):
+            self.panel.assistant_panel_update_quotation(
+                self.session.id, review['signature'], review['current_signature'], True,
+            )
+        refreshed = self.panel.assistant_panel_update_preflight(self.session.id)
+        self.assertTrue(any('Estado' in label for label in refreshed['external_changes']))
+        self.panel.assistant_panel_update_quotation(
+            self.session.id, refreshed['signature'], refreshed['current_signature'], True,
+        )
+        self.assertEqual(self.line.product_uom_qty, 17)
+        self.assertEqual(self.order.state, 'sale')
 
     def test_archive_previous_chat_instead_of_deleting(self):
         self.env['sale.ai.message'].create({

@@ -222,13 +222,13 @@ export class SaleAIChat extends Component {
         try {
             const records = await this.orm.read("sale.order", [id], ["name", "state"]);
             if (this._pvSequence !== sequence) return;
-            if (records.length && records[0].state === "draft") {
+            if (records.length) {
                 this.state.currentPVId = id;
                 this.state.currentPVName = records[0].name;
             }
         } catch (error) {
-            // Only eligible quotation forms show the action; the backend always
-            // rechecks state, company and Sales Administrator permissions.
+            // Only accessible order forms show the action; the backend
+            // rechecks company and Sales Administrator permissions.
             console.warn("sale_ai_assistant: cannot inspect current quotation", error);
         }
     }
@@ -253,7 +253,7 @@ export class SaleAIChat extends Component {
             return;
         }
         this.dialog.add(SaleAIReplaceConversationDialog, {
-            title: sameOrder ? _t("Recargar presupuesto desde Odoo") : _t("Cargar presupuesto en borrador"),
+            title: sameOrder ? _t("Recargar presupuesto desde Odoo") : _t("Cargar presupuesto desde Odoo"),
             body: _t("La conversación actual contiene mensajes o cambios provisionales. Puedes conservarla en el historial o descartarla definitivamente. El presupuesto real de Odoo no se modificará. El texto sin enviar y los adjuntos pendientes se perderán en ambos casos."),
             archiveLabel: _t("Archivar y cargar"),
             discardLabel: _t("Descartar y cargar"),
@@ -289,7 +289,7 @@ export class SaleAIChat extends Component {
             }
             this.notification.add(_t("Presupuesto ") + loaded.edit_order_name + _t(" cargado para edición. Los cambios son provisionales."), {type: "success"});
         } catch (error) {
-            this.notifyError(_t("No se pudo cargar el presupuesto en borrador."), error);
+            this.notifyError(_t("No se pudo cargar el presupuesto desde Odoo."), error);
         } finally {
             this.state.busy = false;
         }
@@ -307,6 +307,7 @@ export class SaleAIChat extends Component {
             const review = await this.orm.call("sale.ai.session", "assistant_panel_update_preflight", [sessionId]);
             const detail = [
                 _t("Presupuesto: ") + review.sale_order_name,
+                _t("Estado actual: ") + (review.sale_order_state_label || review.sale_order_state),
                 _t("Cliente: ") + review.partner,
                 _t("Cambios propuestos: ") + review.changes_count,
                 _t("Base provisional: ") + this.formatAmount(review.amount_untaxed_estimate) + " " + review.currency,
@@ -321,16 +322,19 @@ export class SaleAIChat extends Component {
                     _t("Si confirmas, tus valores prevalecerán SOLO en los campos indicados. El resto se conservará."));
             }
             if (review.warnings?.length) detail.push("", ...review.warnings);
-            detail.push("", _t("Solo se modificará el presupuesto existente, en estado borrador. El chat continuará abierto."));
+            detail.push("", _t("Solo se modificará el documento existente; su estado no cambiará por esta operación. El chat continuará abierto."));
+            if (review.sale_order_state === "sale" || review.sale_order_state === "cancel") {
+                detail.push(_t("Si existen entregas o facturas relacionadas, comprueba su coherencia después de actualizar las líneas comerciales."));
+            }
             this.dialog.add(ConfirmationDialog, {
-                title: review.conflicts.length ? _t("Conflictos detectados: revisar antes de sobrescribir") : _t("Actualizar presupuesto en borrador"),
+                title: review.conflicts.length ? _t("Conflictos detectados: revisar antes de sobrescribir") : _t("Actualizar presupuesto"),
                 body: detail.join("\n"),
                 confirmLabel: review.conflicts.length ? _t("Sobrescribir mis campos") : _t("Confirmar actualización"),
                 cancelLabel: _t("Cancelar y revisar"),
                 confirm: () => this.confirmUpdateQuotation(sessionId, review),
             });
         } catch (error) {
-            this.notifyError(_t("No se puede actualizar todavía. Revisa el borrador y el estado del presupuesto."), error);
+            this.notifyError(_t("No se puede actualizar todavía. Revisa la propuesta y los cambios del documento."), error);
         } finally {
             this.state.busy = false;
         }

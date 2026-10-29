@@ -31,5 +31,5 @@ assert archive_heading[0].xpath('./strong[@class="sale-ai-archive-title"]')
 assert 'display: flex; flex-direction: column; align-items: flex-start; gap: 6px' in css
 assert '.sale-ai-load-quote-btn .fa { margin-right: 1px; }' in css
 assert '.sale-ai-footer-return {' in css and '&:focus-visible' in css
-assert '18.0.0.11.25' in manifest_path.read_text()
+assert '"version": "18.0.0.11.' in manifest_path.read_text()
 print('OK: 11.22 archived chat footer, history return, heading spacing and refresh icon')
